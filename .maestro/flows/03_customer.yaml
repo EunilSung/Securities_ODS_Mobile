@@ -1,0 +1,56 @@
+appId: com.eunilsung.ods
+name: 고객을 전화번호로 찾아 상담을 기록하고, 신규 고객을 등록
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_customer
+- tapOn:
+    id: customer_search
+- inputText: "4587"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: customer_item
+    index: 0
+- assertVisible:
+    id: customer_detail_name
+    text: "강하늘"
+- scrollUntilVisible:
+    element:
+      id: consult_add
+    direction: DOWN
+- tapOn:
+    id: consult_add
+- tapOn:
+    id: consult_content
+- inputText: "Follow up on bond funds"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: consult_save
+- scrollUntilVisible:
+    element:
+      text: "Follow up on bond funds"
+    direction: DOWN
+- runFlow:
+    when:
+      visible:
+        id: top_back
+    commands:
+      - tapOn:
+          id: top_back
+- tapOn:
+    id: customer_new
+- tapOn:
+    id: new_customer_name
+- inputText: "Hong Gildong"
+- tapOn:
+    id: new_customer_birth
+- inputText: "19900102"
+- tapOn:
+    id: new_customer_phone
+- inputText: "01011112222"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: new_customer_submit
+- assertVisible:
+    id: customer_detail_name
+    text: "Hong Gildong"

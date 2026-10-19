@@ -1,15 +1,6 @@
 appId: com.eunilsung.ods
-name: 키보드를 내린다
+name: 입력을 마치고 키보드를 내린다
 ---
-- runFlow:
-    when:
-      platform: Android
-    label: Android 는 뒤로 가기를 키보드가 받아 내려간다
-    commands:
-      - hideKeyboard
-- runFlow:
-    when:
-      platform: iOS
-    label: iOS 는 바깥을 눌러도 내려가지 않아 키보드의 return 을 누른다
-    commands:
-      - pressKey: Enter
+# Android 의 hideKeyboard 는 뒤로 가기를 누른다. 하드웨어 키보드가 있는 태블릿 에뮬레이터처럼 키보드가 없으면 앱이 닫힌다.
+# 그래서 양쪽 모두 키보드의 완료(Enter)를 누른다 — 검색칸은 찾기, 비밀번호 칸은 로그인, 여러 줄 칸은 줄바꿈이 된다.
+- pressKey: Enter

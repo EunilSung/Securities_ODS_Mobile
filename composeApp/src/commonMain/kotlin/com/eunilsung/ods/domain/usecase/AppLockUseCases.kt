@@ -29,7 +29,7 @@ class RegisterAppPinUseCase(private val repository: AppLockRepository) {
 class UnlockWithPinUseCase(
     private val repository: AppLockRepository,
     private val wiper: LocalDataWiper,
-    private val login: LoginRepository,
+    private val logout: LogoutUseCase,
 ) {
     suspend operator fun invoke(pin: String): UnlockResult =
         when (val check = repository.checkPin(pin)) {
@@ -41,8 +41,7 @@ class UnlockWithPinUseCase(
                 if (check.failures >= AppLockPolicy.MAX_ATTEMPTS) {
                     wiper.wipe()
                     repository.clearAll()
-                    repository.endSession()
-                    login.logout(LogoutReason.WIPED)
+                    logout(LogoutReason.WIPED)
                     UnlockResult.Wiped
                 } else {
                     UnlockResult.Wrong(AppLockPolicy.MAX_ATTEMPTS - check.failures)
@@ -138,4 +137,5 @@ class MainUseCases(
     val recordBackground: RecordBackgroundUseCase,
     val lockIfInactive: LockIfInactiveUseCase,
     val fetchWatchlist: FetchWatchlistUseCase,
+    val refreshCustomers: RefreshCustomersUseCase,
 )

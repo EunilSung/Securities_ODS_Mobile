@@ -64,10 +64,12 @@ import cafe.adriel.voyager.navigator.Navigator
 import com.eunilsung.ods.Config
 import com.eunilsung.ods.ui.applock.AppLockPurpose
 import com.eunilsung.ods.ui.applock.AppLockScreen
+import com.eunilsung.ods.ui.consult.ConsultPane
 import com.eunilsung.ods.ui.login.LoginScreen
 import com.eunilsung.ods.ui.main.tab.CurrentAppTab
 import com.eunilsung.ods.ui.main.tab.MoreTab
 import com.eunilsung.ods.ui.main.tab.TabItem
+import com.eunilsung.ods.ui.main.tab.CustomerTab
 import com.eunilsung.ods.ui.main.tab.MarketTab
 import com.eunilsung.ods.ui.main.tab.rememberAppTabState
 import com.eunilsung.ods.ui.theme.AppColors
@@ -163,7 +165,7 @@ fun rememberImeHeight(): Dp {
 }
 
 /**
- * 화면 폭으로 폰 · 태블릿(2칸) 레이아웃을 가른다.
+ * 화면 폭으로 폰 · 태블릿(2칸) · 넓은 태블릿(3칸) 레이아웃을 가른다.
  *
  * 기준은 기기 종류가 아니라 **지금 창의 폭**이다 — 폴더블을 펼치거나 태블릿을 돌리거나 분할 화면으로 줄이면 그 자리에서 바뀐다.
  * 오른쪽 화면 스택([LocalRightNavigator])은 모든 레이아웃이 같이 쓰므로 전환해도 보던 상세 화면이 유지된다.
@@ -177,12 +179,14 @@ fun MainContent() {
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isTablet = maxWidth >= Config.Layout.TABLET_MIN_WIDTH_DP.dp
+        val isWideTablet = maxWidth >= Config.Layout.WIDE_TABLET_MIN_WIDTH_DP.dp
 
         CompositionLocalProvider(
             LocalRightPaneOpen provides rightPaneOpen,
             LocalIsTablet provides isTablet,
         ) {
             when {
+                isWideTablet -> WideTablet(rightNavigator, isKeyboardVisible, imeHeight)
                 isTablet -> Tablet(rightNavigator, isKeyboardVisible, imeHeight)
                 else -> Phone(rightNavigator, isKeyboardVisible, imeHeight)
             }
@@ -222,6 +226,34 @@ fun Tablet(
     )
 }
 
+/**
+ * 넓은 태블릿(가로) — 왼쪽 탭 목록 · 가운데 상세 · 오른쪽 상담 칸.
+ *
+ * 상담 칸은 상담 중인 고객을 따라간다. 가운데에서 시세를 보여 주거나 다른 화면을 열어도 고객과 메모가 남아 있다.
+ */
+@Composable
+fun WideTablet(
+    rightNavigator: Navigator,
+    isKeyboardVisible: Boolean,
+    imeHeight: Dp,
+) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            Box(modifier = Modifier.weight(1f)) { LeftPane() }
+            KeyBoardPane(
+                modifier = Modifier.background(AppColors.Bg),
+                isKeyboardVisible = isKeyboardVisible,
+                imeHeight = imeHeight,
+                fillIdleBottomInset = true,
+            )
+        }
+        LineDivider(modifier = Modifier.fillMaxHeight(), isWidth = true)
+        Box(modifier = Modifier.weight(1.5f).fillMaxHeight().clipToBounds()) { RightPaneContent(rightNavigator) }
+        LineDivider(modifier = Modifier.fillMaxHeight(), isWidth = true)
+        Box(modifier = Modifier.weight(1f).fillMaxHeight()) { ConsultPane() }
+    }
+}
+
 /** 오른쪽 스택의 맨 위 화면. 쌓이면 오른쪽에서, 닫히면 왼쪽에서 밀려 들어온다. */
 @Composable
 private fun RightPaneContent(rightNavigator: Navigator) {
@@ -248,10 +280,10 @@ private fun stackTransition(event: StackEvent): ContentTransform {
 /** 하단 탭과 탭 본문. */
 @Composable
 fun LeftPane() {
-    val tabList = listOf(MarketTab, MoreTab)
+    val tabList = listOf(CustomerTab, MarketTab, MoreTab)
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val tabState = rememberAppTabState(tabList, MarketTab)
+    val tabState = rememberAppTabState(tabList, CustomerTab)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

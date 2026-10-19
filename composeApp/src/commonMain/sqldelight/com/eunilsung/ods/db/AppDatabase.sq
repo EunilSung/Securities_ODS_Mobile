@@ -20,6 +20,70 @@ INSERT OR IGNORE INTO WatchStockEntity VALUES ?;
 updateQuote:
 UPDATE WatchStockEntity SET price = ?, volume = ? WHERE code = ?;
 
+CREATE TABLE CustomerEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    birthDate TEXT NOT NULL,
+    gender TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    address TEXT NOT NULL,
+    grade TEXT NOT NULL,
+    riskProfile TEXT,
+    riskAssessedAt INTEGER,
+    registeredAt INTEGER NOT NULL
+);
+
+selectCustomers:
+SELECT * FROM CustomerEntity ORDER BY name;
+
+selectCustomer:
+SELECT * FROM CustomerEntity WHERE id = ?;
+
+countCustomers:
+SELECT COUNT(*) FROM CustomerEntity;
+
+insertCustomer:
+INSERT INTO CustomerEntity VALUES ?;
+
+updateRiskProfile:
+UPDATE CustomerEntity SET riskProfile = ?, riskAssessedAt = ? WHERE id = ?;
+
+CREATE TABLE ConsultationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    consultedAt INTEGER NOT NULL,
+    channel TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    content TEXT NOT NULL,
+    staffName TEXT NOT NULL
+);
+
+CREATE INDEX ConsultationEntity_customer ON ConsultationEntity(customerId, consultedAt);
+
+selectConsultations:
+SELECT * FROM ConsultationEntity WHERE customerId = ? ORDER BY consultedAt DESC;
+
+insertConsultation:
+INSERT INTO ConsultationEntity VALUES ?;
+
+CREATE TABLE AccountEntity (
+    accountNo TEXT NOT NULL PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    type TEXT NOT NULL,
+    openedAt INTEGER NOT NULL
+);
+
+CREATE INDEX AccountEntity_customer ON AccountEntity(customerId);
+
+selectAccounts:
+SELECT * FROM AccountEntity WHERE customerId = ? ORDER BY openedAt;
+
+insertAccount:
+INSERT INTO AccountEntity VALUES ?;
+
 wipeBusinessData {
     DELETE FROM WatchStockEntity;
+    DELETE FROM CustomerEntity;
+    DELETE FROM ConsultationEntity;
+    DELETE FROM AccountEntity;
 }

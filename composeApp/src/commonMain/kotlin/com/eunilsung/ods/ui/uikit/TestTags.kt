@@ -25,6 +25,21 @@ object TestTags {
     const val SETTING_SECURITY = "setting_security"
     const val SETTING_LOCK_NOW = "setting_lock_now"
 
+    const val CUSTOMER_SEARCH = "customer_search"
+    const val CUSTOMER_ITEM = "customer_item"
+    const val CUSTOMER_NEW = "customer_new"
+    const val NEW_CUSTOMER_NAME = "new_customer_name"
+    const val NEW_CUSTOMER_BIRTH = "new_customer_birth"
+    const val NEW_CUSTOMER_PHONE = "new_customer_phone"
+    const val NEW_CUSTOMER_ADDRESS = "new_customer_address"
+    const val NEW_CUSTOMER_SUBMIT = "new_customer_submit"
+    const val CUSTOMER_DETAIL_NAME = "customer_detail_name"
+    const val CONSULT_ADD = "consult_add"
+    const val CONSULT_CONTENT = "consult_content"
+    const val CONSULT_SAVE = "consult_save"
+    const val CONSULT_ITEM = "consult_item"
+    const val CONSULT_PANE = "consult_pane"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }

@@ -1,6 +1,7 @@
 package com.eunilsung.ods.ui.setting
 
 import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalUserPreferenceRepositoryImpl
 import com.eunilsung.ods.domain.model.BiometricResult
@@ -55,6 +56,7 @@ class SettingViewModelTest {
     }
 
     private val preferences = LocalUserPreferenceRepositoryImpl(MapSettings())
+    private val consultSession = LocalConsultSessionRepositoryImpl()
     private val login = LocalLoginRepositoryImpl(MapSettings(), simulatedRoundTripMillis = 0)
     private val appLock = LocalAppLockRepositoryImpl(MapSettings())
     private val prompt = BiometricPromptText("t", "s", "n")
@@ -67,7 +69,7 @@ class SettingViewModelTest {
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
             getAppInfo = GetAppInfoUseCase(FakeVersion),
             observeStaff = ObserveStaffUseCase(login),
-            logout = LogoutUseCase(login, appLock),
+            logout = LogoutUseCase(login, appLock, consultSession),
             observeAppLock = ObserveAppLockUseCase(appLock),
             setAppBiometricEnabled = SetAppBiometricEnabledUseCase(appLock),
             isBiometricAvailable = IsBiometricAvailableUseCase(biometric),

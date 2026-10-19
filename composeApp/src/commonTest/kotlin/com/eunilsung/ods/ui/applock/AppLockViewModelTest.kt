@@ -1,6 +1,7 @@
 package com.eunilsung.ods.ui.applock
 
 import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.domain.model.BiometricResult
 import com.eunilsung.ods.domain.model.LoginRequest
@@ -44,6 +45,7 @@ class AppLockViewModelTest {
 
     private val settings = MapSettings()
     private val appLock = LocalAppLockRepositoryImpl(settings)
+    private val consultSession = LocalConsultSessionRepositoryImpl()
     private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
     private val prompt = BiometricPromptText("t", "s", "n")
     private val wiper = object : LocalDataWiper {
@@ -55,11 +57,11 @@ class AppLockViewModelTest {
             observeAppLock = ObserveAppLockUseCase(appLock),
             observeStaff = ObserveStaffUseCase(login),
             registerPin = RegisterAppPinUseCase(appLock),
-            unlockWithPin = UnlockWithPinUseCase(appLock, wiper, login),
+            unlockWithPin = UnlockWithPinUseCase(appLock, wiper, LogoutUseCase(login, appLock, consultSession)),
             unlockWithBiometric = UnlockWithBiometricUseCase(appLock, biometric),
             setBiometricEnabled = SetAppBiometricEnabledUseCase(appLock),
             isBiometricAvailable = IsBiometricAvailableUseCase(biometric),
-            logout = LogoutUseCase(login, appLock),
+            logout = LogoutUseCase(login, appLock, consultSession),
         )
     )
 
