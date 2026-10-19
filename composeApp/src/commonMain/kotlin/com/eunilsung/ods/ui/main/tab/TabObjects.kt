@@ -3,6 +3,7 @@ package com.eunilsung.ods.ui.main.tab
 import androidx.compose.runtime.Composable
 import com.eunilsung.ods.ui.customer.list.CustomerListScreen
 import com.eunilsung.ods.ui.more.MoreScreen
+import com.eunilsung.ods.ui.product.list.ProductListScreen
 import com.eunilsung.ods.ui.schedule.ScheduleScreen
 import com.eunilsung.ods.ui.watchlist.WatchlistScreen
 import ods.composeapp.generated.resources.Res
@@ -12,6 +13,8 @@ import ods.composeapp.generated.resources.tab_market
 import ods.composeapp.generated.resources.tab_market_icon
 import ods.composeapp.generated.resources.tab_more
 import ods.composeapp.generated.resources.tab_more_icon
+import ods.composeapp.generated.resources.tab_product
+import ods.composeapp.generated.resources.tab_product_icon
 import ods.composeapp.generated.resources.tab_schedule
 import ods.composeapp.generated.resources.tab_schedule_icon
 import org.jetbrains.compose.resources.painterResource
@@ -48,6 +51,23 @@ internal object CustomerTab : AppTab {
     @Composable
     override fun Content() {
         CustomerListScreen.Content()
+    }
+}
+
+/** 상품 — 판매 상품 설명과 가입 절차. */
+internal object ProductTab : AppTab {
+    override val key: String = "product"
+
+    override val options: AppTabOptions
+        @Composable
+        get() = AppTabOptions(
+            title = stringResource(Res.string.tab_product),
+            icon = painterResource(Res.drawable.tab_product_icon)
+        )
+
+    @Composable
+    override fun Content() {
+        ProductListScreen.Content()
     }
 }
 

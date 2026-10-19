@@ -1,6 +1,20 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
+import com.eunilsung.ods.data.mapper.ProductMapper
+import com.eunilsung.ods.domain.repository.ProductRepository
+import com.eunilsung.ods.domain.usecase.ObserveProductUseCase
+import com.eunilsung.ods.domain.usecase.ObserveProductsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveSubscriptionsUseCase
+import com.eunilsung.ods.domain.usecase.ProductDetailUseCases
+import com.eunilsung.ods.domain.usecase.ProductListUseCases
+import com.eunilsung.ods.domain.usecase.RefreshProductsUseCase
+import com.eunilsung.ods.domain.usecase.SubscribeProductUseCase
+import com.eunilsung.ods.domain.usecase.SubscriptionUseCases
+import com.eunilsung.ods.ui.product.detail.ProductDetailViewModel
+import com.eunilsung.ods.ui.product.list.ProductListViewModel
+import com.eunilsung.ods.ui.product.subscribe.SubscriptionViewModel
 import com.eunilsung.ods.data.local.repository.LocalSignatureRepositoryImpl
 import com.eunilsung.ods.domain.repository.SignatureRepository
 import com.eunilsung.ods.domain.usecase.RiskAssessmentUseCases
@@ -176,6 +190,18 @@ val appModule = module {
     singleOf(::VisitDetailUseCases)
     singleOf(::NewVisitUseCases)
 
+    singleOf(::ProductMapper)
+    /** 서버가 붙으면 `Config.Server.IS_ENABLED` 로 서버 구현과 갈라 끼운다. 지금은 시연용 상품만 쓴다. */
+    single<ProductRepository> { LocalProductRepositoryImpl(get(), get()) }
+    singleOf(::ObserveProductsUseCase)
+    singleOf(::ObserveProductUseCase)
+    singleOf(::RefreshProductsUseCase)
+    singleOf(::ObserveSubscriptionsUseCase)
+    singleOf(::SubscribeProductUseCase)
+    singleOf(::ProductListUseCases)
+    singleOf(::ProductDetailUseCases)
+    singleOf(::SubscriptionUseCases)
+
     /** 서버 모드에서는 서명 그림을 서버로 보내는 구현으로 바꾼다. 기기에는 지문만 남긴다. */
     single<SignatureRepository> { LocalSignatureRepositoryImpl(get()) }
     singleOf(::SaveRiskAssessmentUseCase)
@@ -225,4 +251,7 @@ val appModule = module {
     viewModelOf(::VisitDetailViewModel)
     viewModelOf(::NewVisitViewModel)
     viewModelOf(::RiskAssessmentViewModel)
+    viewModelOf(::ProductListViewModel)
+    viewModelOf(::ProductDetailViewModel)
+    viewModelOf(::SubscriptionViewModel)
 }

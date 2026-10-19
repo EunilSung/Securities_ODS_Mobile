@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -32,12 +33,13 @@ import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.uikit.click.clickable
 
 /**
- * 숫자 입력칸 — 왼쪽 −, 가운데 숫자(세 자리 쉼표), 오른쪽 +. 주문 가격·수량에 쓴다.
+ * 숫자 입력칸 — 왼쪽 −, 가운데 숫자(세 자리 쉼표), 오른쪽 +. 상품 가입금액에 쓴다.
  *
  * [value] 는 숫자만 담는다. 쉼표는 보이기만 하고 값에는 들어가지 않는다.
  *
- * @param disabledText 주면 입력칸 대신 이 글자를 보이고 입력·−/+ 를 막는다(시장가의 가격).
+ * @param disabledText 주면 입력칸 대신 이 글자를 보이고 입력·−/+ 를 막는다.
  * @param label 화면 읽기 프로그램이 읽을 이름.
+ * @param testTag 화면 자동화가 입력칸을 찾을 이름.
  */
 @Composable
 fun NumberField(
@@ -47,6 +49,7 @@ fun NumberField(
     label: String,
     modifier: Modifier = Modifier,
     disabledText: String? = null,
+    testTag: String? = null,
 ) {
     val shape = RoundedCornerShape(8.dp)
     val enabled = disabledText == null
@@ -69,7 +72,7 @@ fun NumberField(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                     visualTransformation = ThousandsSeparatorTransformation,
                     cursorBrush = SolidColor(AppColors.PrimaryMain),
-                    modifier = Modifier.semantics { contentDescription = label },
+                    modifier = Modifier.semantics { contentDescription = label }.then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
                 )
             } else {
                 Text(text = disabledText.orEmpty(), style = AppTypography.Body, color = AppColors.TextSub)

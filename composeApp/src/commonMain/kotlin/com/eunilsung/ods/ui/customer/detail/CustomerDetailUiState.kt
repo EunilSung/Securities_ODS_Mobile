@@ -3,6 +3,7 @@ package com.eunilsung.ods.ui.customer.detail
 import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Subscription
 import com.eunilsung.ods.domain.model.Visit
 import kotlinx.datetime.LocalDate
 
@@ -13,6 +14,8 @@ data class CustomerDetailUiState(
     val accounts: List<Account> = emptyList(),
     /** 상담 이력(최근 것부터). */
     val consultations: List<Consultation> = emptyList(),
+    /** 가입 상품(최근 것부터). */
+    val subscriptions: List<Subscription> = emptyList(),
     /** 다가오는 방문(예정만). */
     val upcomingVisits: List<Visit> = emptyList(),
     val maskPersonalInfo: Boolean = true,
