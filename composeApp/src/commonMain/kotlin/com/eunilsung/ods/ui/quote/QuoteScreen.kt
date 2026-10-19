@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eunilsung.ods.Config
@@ -27,6 +28,8 @@ import com.eunilsung.ods.ui.quote.orderbook.OrderBookView
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
+import com.eunilsung.ods.ui.uikit.TestTags
+import com.eunilsung.ods.ui.uikit.button.OutlineButton
 import com.eunilsung.ods.ui.uikit.line.LineDivider
 import com.eunilsung.ods.ui.uikit.segment.SegmentedControl
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
@@ -35,6 +38,7 @@ import ods.composeapp.generated.resources.chart_period_day
 import ods.composeapp.generated.resources.chart_period_minute
 import ods.composeapp.generated.resources.chart_period_month
 import ods.composeapp.generated.resources.chart_period_week
+import ods.composeapp.generated.resources.present_open
 import ods.composeapp.generated.resources.quote_chart
 import ods.composeapp.generated.resources.quote_order_book
 import ods.composeapp.generated.resources.tab_quote
@@ -56,7 +60,19 @@ fun QuoteContent(
 ) {
     val stock = uiState.stock
     Column(modifier = modifier.fillMaxSize().background(AppColors.Bg)) {
-        TopBar(title = stock?.name ?: stringResource(Res.string.tab_quote), onBack = onBack)
+        TopBar(
+            title = stock?.name ?: stringResource(Res.string.tab_quote),
+            onBack = onBack,
+            actions = {
+                if (stock != null) {
+                    OutlineButton(
+                        text = stringResource(Res.string.present_open),
+                        onClick = { onAction(QuoteActions.OnPresentClick) },
+                        modifier = Modifier.testTag(TestTags.PRESENTATION_OPEN),
+                    )
+                }
+            },
+        )
         LineDivider()
         if (stock == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -85,6 +101,9 @@ fun QuoteContent(
                 }
             }
         }
+    }
+    if (uiState.isPresenting) {
+        PresentationView(uiState = uiState, periodLabel = { it.label() }, onAction = onAction)
     }
 }
 

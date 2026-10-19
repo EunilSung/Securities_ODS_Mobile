@@ -1,5 +1,5 @@
 appId: com.eunilsung.ods
-name: 로그인하고 시장 시세를 연 뒤 로그아웃
+name: 로그인하고 시장 시세를 고객에게 크게 보여 준 뒤 로그아웃
 ---
 - runFlow: ../common/login.yaml
 - tapOn:
@@ -9,17 +9,27 @@ name: 로그인하고 시장 시세를 연 뒤 로그아웃
     index: 0
 - assertVisible: "차트|Chart"
 - tapOn:
-    id: tab_more
-    optional: true
+    id: presentation_open
+- assertVisible:
+    id: presentation
+- assertVisible: "삼성전자"
+- tapOn:
+    id: presentation_next
+- assertVisible: "SK하이닉스"
+- tapOn:
+    id: presentation_close
+- assertNotVisible:
+    id: presentation
 - runFlow:
     when:
-      notVisible:
-        id: more_logout
+      visible:
+        id: top_back
     commands:
       - tapOn:
           id: top_back
-      - tapOn:
-          id: tab_more
+      - waitForAnimationToEnd
+- tapOn:
+    id: tab_more
 - tapOn:
     id: more_logout
 - assertVisible:

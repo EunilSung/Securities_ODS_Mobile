@@ -16,4 +16,6 @@ class QuoteUseCases(
     val observeStock: ObserveStockUseCase,
     val observeOrderBook: ObserveOrderBookUseCase,
     val observeCandles: ObserveCandlesUseCase,
+    val observeWatchlist: ObserveWatchlistUseCase,
+    val getAppInfo: GetAppInfoUseCase,
 )
