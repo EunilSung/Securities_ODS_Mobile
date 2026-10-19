@@ -379,4 +379,9 @@
     <string name="opening_error_signature">The signature is too short. Ask the customer to sign again.</string>
     <string name="opening_error_not_signed_in">Could not open the account. Sign in again.</string>
     <string name="opening_error_not_found">Could not find the customer.</string>
+    <string name="present_open">Show customer</string>
+    <string name="present_close">Close</string>
+    <string name="present_previous">‹ %1$s</string>
+    <string name="present_next">%1$s ›</string>
+    <string name="present_demo_notice">Demo quotes, not real market data.</string>
 </resources>

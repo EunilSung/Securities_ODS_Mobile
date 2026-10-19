@@ -379,4 +379,9 @@
     <string name="opening_error_signature">서명이 너무 짧습니다. 고객에게 다시 서명을 받으세요.</string>
     <string name="opening_error_not_signed_in">계좌를 열지 못했습니다. 다시 로그인하세요.</string>
     <string name="opening_error_not_found">고객을 찾지 못했습니다.</string>
+    <string name="present_open">고객에게 보여 주기</string>
+    <string name="present_close">닫기</string>
+    <string name="present_previous">‹ %1$s</string>
+    <string name="present_next">%1$s ›</string>
+    <string name="present_demo_notice">시연용 시세이며 실제 시세가 아닙니다.</string>
 </resources>

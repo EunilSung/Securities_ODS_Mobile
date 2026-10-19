@@ -104,6 +104,11 @@ object TestTags {
     const val OPENING_DONE = "opening_done"
     const val OPENING_CLOSE = "opening_close"
 
+    const val PRESENTATION_OPEN = "presentation_open"
+    const val PRESENTATION = "presentation"
+    const val PRESENTATION_NEXT = "presentation_next"
+    const val PRESENTATION_CLOSE = "presentation_close"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }
