@@ -1,0 +1,48 @@
+appId: com.eunilsung.ods
+name: 성향 미진단 고객의 투자성향을 진단하고 서명을 받아 저장
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_customer
+- tapOn:
+    id: customer_search
+- inputText: "3302"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: customer_item
+    index: 0
+- scrollUntilVisible:
+    element:
+      id: risk_start
+    direction: DOWN
+- tapOn:
+    id: risk_start
+- repeat:
+    times: 7
+    commands:
+      - tapOn:
+          id: risk_option_2
+      - tapOn:
+          id: risk_next
+- assertVisible:
+    id: risk_result
+    text: "위험중립형|Balanced"
+- scrollUntilVisible:
+    element:
+      id: risk_confirm
+    direction: DOWN
+- tapOn:
+    id: risk_confirm
+- runFlow: ../common/sign.yaml
+- scrollUntilVisible:
+    element:
+      id: risk_save
+    direction: DOWN
+- tapOn:
+    id: risk_save
+- assertVisible:
+    id: customer_detail_name
+- scrollUntilVisible:
+    element:
+      text: ".*투자성향 진단 — 위험중립형.*|.*Risk profile assessed — Balanced.*"
+    direction: DOWN

@@ -122,10 +122,25 @@ INSERT INTO VisitEntity VALUES ?;
 updateVisitStatus:
 UPDATE VisitEntity SET status = ? WHERE id = ?;
 
+CREATE TABLE SignatureEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    signedAt INTEGER NOT NULL,
+    digest TEXT NOT NULL
+);
+
+insertSignature:
+INSERT INTO SignatureEntity VALUES ?;
+
+selectSignatures:
+SELECT * FROM SignatureEntity WHERE customerId = ? ORDER BY signedAt DESC;
+
 wipeBusinessData {
     DELETE FROM WatchStockEntity;
     DELETE FROM CustomerEntity;
     DELETE FROM ConsultationEntity;
     DELETE FROM AccountEntity;
     DELETE FROM VisitEntity;
+    DELETE FROM SignatureEntity;
 }

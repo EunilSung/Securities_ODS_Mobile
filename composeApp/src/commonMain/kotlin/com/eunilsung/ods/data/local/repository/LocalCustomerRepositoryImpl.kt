@@ -12,6 +12,7 @@ import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.CustomerGrade
 import com.eunilsung.ods.domain.model.NewConsultation
 import com.eunilsung.ods.domain.model.NewCustomer
+import com.eunilsung.ods.domain.model.RiskProfile
 import com.eunilsung.ods.domain.repository.CustomerRepository
 import com.eunilsung.ods.util.Log
 import com.eunilsung.ods.util.newId
@@ -86,6 +87,10 @@ class LocalCustomerRepositoryImpl(
         )
         withContext(Dispatchers.Default) { queries.insertCustomer(mapper.toEntity(created)) }
         return created
+    }
+
+    override suspend fun saveRiskProfile(customerId: String, profile: RiskProfile, assessedAtMillis: Long) {
+        withContext(Dispatchers.Default) { queries.updateRiskProfile(profile.name, assessedAtMillis, customerId) }
     }
 
     override suspend fun addConsultation(consultation: NewConsultation, staffName: String, nowMillis: Long): Consultation {
