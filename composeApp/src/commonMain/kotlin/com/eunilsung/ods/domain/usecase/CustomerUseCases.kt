@@ -85,6 +85,7 @@ class CustomerDetailUseCases(
     val observeMaskPersonalInfo: ObserveMaskPersonalInfoUseCase,
     val setMaskPersonalInfo: SetMaskPersonalInfoUseCase,
     val startConsult: StartConsultUseCase,
+    val observeUpcomingVisits: ObserveUpcomingVisitsUseCase,
 )
 
 /** 상담 칸(넓은 태블릿 오른쪽)과 상담 기록 화면이 쓰는 유스케이스 묶음. */

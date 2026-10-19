@@ -3,6 +3,7 @@ package com.eunilsung.ods.ui.main.tab
 import androidx.compose.runtime.Composable
 import com.eunilsung.ods.ui.customer.list.CustomerListScreen
 import com.eunilsung.ods.ui.more.MoreScreen
+import com.eunilsung.ods.ui.schedule.ScheduleScreen
 import com.eunilsung.ods.ui.watchlist.WatchlistScreen
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.tab_customer
@@ -11,8 +12,27 @@ import ods.composeapp.generated.resources.tab_market
 import ods.composeapp.generated.resources.tab_market_icon
 import ods.composeapp.generated.resources.tab_more
 import ods.composeapp.generated.resources.tab_more_icon
+import ods.composeapp.generated.resources.tab_schedule
+import ods.composeapp.generated.resources.tab_schedule_icon
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+
+/** 일정 — 한 주 달력과 고른 날의 방문. 앱을 열면 먼저 보이는 탭이다. */
+internal object ScheduleTab : AppTab {
+    override val key: String = "schedule"
+
+    override val options: AppTabOptions
+        @Composable
+        get() = AppTabOptions(
+            title = stringResource(Res.string.tab_schedule),
+            icon = painterResource(Res.drawable.tab_schedule_icon)
+        )
+
+    @Composable
+    override fun Content() {
+        ScheduleScreen.Content()
+    }
+}
 
 /** 고객 — 담당 고객 찾기, 상세, 상담 이력. */
 internal object CustomerTab : AppTab {

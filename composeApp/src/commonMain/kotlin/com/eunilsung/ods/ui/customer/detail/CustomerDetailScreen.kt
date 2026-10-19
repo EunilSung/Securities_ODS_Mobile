@@ -29,6 +29,7 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Visit
 import com.eunilsung.ods.domain.util.ageOn
 import com.eunilsung.ods.domain.util.hasValidRiskProfile
 import com.eunilsung.ods.ui.customer.color
@@ -41,6 +42,9 @@ import com.eunilsung.ods.ui.customer.displayPhone
 import com.eunilsung.ods.ui.customer.label
 import com.eunilsung.ods.ui.main.LocalRightNavigator
 import com.eunilsung.ods.ui.main.popToEmptyRoot
+import com.eunilsung.ods.ui.schedule.detail.VisitDetailScreen
+import com.eunilsung.ods.ui.schedule.label
+import com.eunilsung.ods.ui.schedule.register.NewVisitScreen
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
@@ -54,6 +58,7 @@ import com.eunilsung.ods.ui.uikit.section.SectionGap
 import com.eunilsung.ods.ui.uikit.section.SectionHeader
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import com.eunilsung.ods.ui.util.formatDate
+import com.eunilsung.ods.ui.util.formatDateTime
 import kotlinx.datetime.LocalDate
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.customer_accounts
@@ -65,6 +70,9 @@ import ods.composeapp.generated.resources.customer_consultations
 import ods.composeapp.generated.resources.customer_consultations_empty
 import ods.composeapp.generated.resources.customer_detail
 import ods.composeapp.generated.resources.customer_hide_info
+import ods.composeapp.generated.resources.customer_no_upcoming_visits
+import ods.composeapp.generated.resources.customer_upcoming_visits
+import ods.composeapp.generated.resources.schedule_add
 import ods.composeapp.generated.resources.customer_phone
 import ods.composeapp.generated.resources.customer_risk_assessed_on
 import ods.composeapp.generated.resources.customer_risk_expired_note
@@ -93,6 +101,8 @@ data class CustomerDetailScreen(val customerId: String) : Screen {
             viewModel.events.collect { event ->
                 when (event) {
                     is CustomerDetailEvent.OpenConsultationEditor -> rightNavigator.push(ConsultationEditorScreen(event.customerId))
+                    is CustomerDetailEvent.OpenNewVisit -> rightNavigator.push(NewVisitScreen(customerId = event.customerId))
+                    is CustomerDetailEvent.OpenVisit -> rightNavigator.push(VisitDetailScreen(event.visitId))
                 }
             }
         }
@@ -142,6 +152,12 @@ fun CustomerDetailContent(
             RiskSection(customer, today)
             SectionGap()
             AccountSection(uiState.accounts, uiState.maskPersonalInfo)
+            SectionGap()
+            VisitSection(
+                visits = uiState.upcomingVisits,
+                onAdd = { onAction(CustomerDetailActions.OnAddVisitClick) },
+                onVisitClick = { onAction(CustomerDetailActions.OnVisitClick(it)) },
+            )
             SectionGap()
             ConsultationSection(uiState.consultations, onAdd = { onAction(CustomerDetailActions.OnAddConsultationClick) })
         }
@@ -218,6 +234,37 @@ private fun AccountSection(accounts: List<Account>, mask: Boolean) {
                 Text(text = displayAccountNo(account.accountNo, mask), style = AppTypography.CaptionNumber, color = AppColors.TextSub)
             }
             Text(text = formatDate(account.openedAtMillis), style = AppTypography.CaptionNumber, color = AppColors.TextSub)
+        }
+    }
+    Box(Modifier.padding(bottom = Dimens.Space8))
+}
+
+@Composable
+private fun VisitSection(visits: List<Visit>, onAdd: () -> Unit, onVisitClick: (String) -> Unit) {
+    SectionHeader(stringResource(Res.string.customer_upcoming_visits)) {
+        OutlineButton(text = stringResource(Res.string.schedule_add), onClick = onAdd, modifier = Modifier.testTag(TestTags.CUSTOMER_ADD_VISIT))
+    }
+    if (visits.isEmpty()) {
+        Text(
+            text = stringResource(Res.string.customer_no_upcoming_visits),
+            style = AppTypography.Body,
+            color = AppColors.TextSub,
+            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.Space16),
+        )
+        return
+    }
+    visits.forEach { visit ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { onVisitClick(visit.id) })
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.Space8),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space8),
+        ) {
+            Text(text = formatDateTime(visit.scheduledAtMillis), style = AppTypography.BodyNumber, color = AppColors.Text)
+            Text(text = visit.place, style = AppTypography.Body, color = AppColors.TextSub, modifier = Modifier.weight(1f), maxLines = 1)
+            Badge(text = visit.purpose.label(), color = AppColors.PrimaryMain)
         }
     }
     Box(Modifier.padding(bottom = Dimens.Space8))

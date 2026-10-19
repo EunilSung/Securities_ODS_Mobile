@@ -4,8 +4,12 @@ import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 
 sealed interface ConsultationActions {
-    /** 이 고객의 상담을 적는다. 고객이 바뀌면 적던 내용을 비운다. */
-    data class OnEnter(val customerId: String) : ConsultationActions
+    /**
+     * 이 고객의 상담을 적는다. 고객이 바뀌면 적던 내용을 비운다.
+     *
+     * @param topic 처음 고를 주제. 방문을 마치고 열 때 방문 목적에서 이어 온다.
+     */
+    data class OnEnter(val customerId: String, val topic: ConsultTopic? = null) : ConsultationActions
 
     data class OnChannelChange(val channel: ConsultChannel) : ConsultationActions
     data class OnTopicChange(val topic: ConsultTopic) : ConsultationActions

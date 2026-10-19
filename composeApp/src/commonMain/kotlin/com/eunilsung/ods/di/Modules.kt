@@ -1,6 +1,23 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
+import com.eunilsung.ods.data.mapper.VisitMapper
+import com.eunilsung.ods.domain.repository.VisitRepository
+import com.eunilsung.ods.domain.usecase.AddVisitUseCase
+import com.eunilsung.ods.domain.usecase.CancelVisitUseCase
+import com.eunilsung.ods.domain.usecase.CompleteVisitUseCase
+import com.eunilsung.ods.domain.usecase.NewVisitUseCases
+import com.eunilsung.ods.domain.usecase.ObserveDayVisitsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveVisitUseCase
+import com.eunilsung.ods.domain.usecase.ObserveWeekVisitCountsUseCase
+import com.eunilsung.ods.domain.usecase.RefreshVisitsUseCase
+import com.eunilsung.ods.domain.usecase.ScheduleUseCases
+import com.eunilsung.ods.domain.usecase.VisitDetailUseCases
+import com.eunilsung.ods.ui.schedule.ScheduleViewModel
+import com.eunilsung.ods.ui.schedule.detail.VisitDetailViewModel
+import com.eunilsung.ods.ui.schedule.register.NewVisitViewModel
 import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
@@ -139,6 +156,21 @@ val appModule = module {
     singleOf(::CustomerDetailUseCases)
     singleOf(::ConsultUseCases)
 
+    singleOf(::VisitMapper)
+    /** 서버가 붙으면 `Config.Server.IS_ENABLED` 로 서버 구현과 갈라 끼운다. 지금은 시연용 일정만 쓴다. */
+    single<VisitRepository> { LocalVisitRepositoryImpl(get(), get()) }
+    singleOf(::ObserveDayVisitsUseCase)
+    singleOf(::ObserveWeekVisitCountsUseCase)
+    singleOf(::ObserveVisitUseCase)
+    singleOf(::ObserveUpcomingVisitsUseCase)
+    singleOf(::RefreshVisitsUseCase)
+    singleOf(::AddVisitUseCase)
+    singleOf(::CompleteVisitUseCase)
+    singleOf(::CancelVisitUseCase)
+    singleOf(::ScheduleUseCases)
+    singleOf(::VisitDetailUseCases)
+    singleOf(::NewVisitUseCases)
+
     /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
     single<AppLockRepository> { LocalAppLockRepositoryImpl(get()) }
     single<LocalDataWiper> { LocalDataWiperImpl(get()) }
@@ -179,4 +211,7 @@ val appModule = module {
     viewModelOf(::ConsultationViewModel)
     viewModelOf(::NewCustomerViewModel)
     viewModelOf(::ConsultPaneViewModel)
+    viewModelOf(::ScheduleViewModel)
+    viewModelOf(::VisitDetailViewModel)
+    viewModelOf(::NewVisitViewModel)
 }

@@ -40,6 +40,27 @@ object TestTags {
     const val CONSULT_ITEM = "consult_item"
     const val CONSULT_PANE = "consult_pane"
 
+    /** 주간 달력은 화면마다 접두어가 붙는다(`schedule_week_next`·`new_visit_week_next`). 날짜 칸은 `<접두어>day_cell_<일>`. */
+    const val SCHEDULE_PREFIX = "schedule_"
+    const val NEW_VISIT_PREFIX = "new_visit_"
+    const val WEEK_PREVIOUS = "week_previous"
+    const val WEEK_NEXT = "week_next"
+    const val DAY_CELL_PREFIX = "day_cell_"
+    const val SCHEDULE_ADD = "schedule_add"
+    const val VISIT_ITEM = "visit_item"
+    const val VISIT_COMPLETE = "visit_complete"
+    const val VISIT_CANCEL = "visit_cancel"
+    const val VISIT_CONFIRM_CANCEL = "visit_confirm_cancel"
+    const val VISIT_OPEN_CUSTOMER = "visit_open_customer"
+    const val NEW_VISIT_CUSTOMER_SEARCH = "new_visit_customer_search"
+    const val NEW_VISIT_CUSTOMER = "new_visit_customer"
+    /** 시각 칸은 `time_slot_<시><분>` 이다(예: time_slot_1430). */
+    const val TIME_SLOT_PREFIX = "time_slot_"
+    const val NEW_VISIT_PLACE = "new_visit_place"
+    const val NEW_VISIT_MEMO = "new_visit_memo"
+    const val NEW_VISIT_SUBMIT = "new_visit_submit"
+    const val CUSTOMER_ADD_VISIT = "customer_add_visit"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }
