@@ -59,6 +59,7 @@ class CustomerDetailViewModel(
                 useCases.startConsult(action.customerId)
             }
             CustomerDetailActions.OnToggleMask -> useCases.setMaskPersonalInfo(!useCases.observeMaskPersonalInfo().value)
+            CustomerDetailActions.OnOpenAccountClick -> send { CustomerDetailEvent.OpenAccountOpening(it) }
             CustomerDetailActions.OnRiskAssessClick -> send { CustomerDetailEvent.OpenRiskAssessment(it) }
             CustomerDetailActions.OnAddConsultationClick -> send { CustomerDetailEvent.OpenConsultationEditor(it) }
             CustomerDetailActions.OnAddVisitClick -> send { CustomerDetailEvent.OpenNewVisit(it) }

@@ -8,9 +8,15 @@
 		<string>en</string>
 		<string>ko</string>
 	</array>
-	<!-- 주문 인증 Face ID 사용 설명. 없으면 Face ID 를 쓰는 순간 앱이 종료된다. -->
+	<!-- 앱 잠금 해제 Face ID 사용 설명. 없으면 Face ID 를 쓰는 순간 앱이 종료된다. -->
 	<key>NSFaceIDUsageDescription</key>
-	<string>주문·정정·취소를 확인할 때 Face ID를 사용합니다.</string>
+	<string>앱 잠금을 풀 때 Face ID를 사용합니다.</string>
+	<!-- 계좌 개설 때 신분증을 찍는다. 없으면 카메라를 여는 순간 앱이 종료된다. -->
+	<key>NSCameraUsageDescription</key>
+	<string>계좌를 개설할 때 고객 신분증을 촬영합니다.</string>
+	<!-- 카메라가 없는 기기(시뮬레이터)에서는 사진첩의 신분증 사진을 고른다. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>카메라를 쓸 수 없을 때 사진첩에서 신분증 사진을 고릅니다.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 </dict>

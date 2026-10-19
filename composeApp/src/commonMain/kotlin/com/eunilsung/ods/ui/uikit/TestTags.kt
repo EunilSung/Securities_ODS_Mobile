@@ -86,6 +86,24 @@ object TestTags {
     const val SUBSCRIPTION_DONE = "subscription_done"
     const val SUBSCRIPTION_CLOSE = "subscription_close"
 
+    const val ACCOUNT_OPEN = "account_open"
+    const val OPENING_CAPTURE = "opening_capture"
+    const val OPENING_DEMO_ID = "opening_demo_id"
+    const val OPENING_ID_NAME = "opening_id_name"
+    const val OPENING_RRN_FRONT = "opening_rrn_front"
+    const val OPENING_RRN_BACK = "opening_rrn_back"
+    const val OPENING_VERIFY = "opening_verify"
+    const val OPENING_ID_VERIFIED = "opening_id_verified"
+    /** 계좌 종류 칸은 `opening_type_<종류>`(brokerage·cma·isa·pension), 약관은 `opening_terms_<약관>` 이다. */
+    const val OPENING_TYPE_PREFIX = "opening_type_"
+    const val OPENING_TERMS_PREFIX = "opening_terms_"
+    const val OPENING_TERMS_ALL = "opening_terms_all"
+    const val OPENING_PIN_DONE = "opening_pin_done"
+    const val OPENING_NEXT = "opening_next"
+    const val OPENING_SUBMIT = "opening_submit"
+    const val OPENING_DONE = "opening_done"
+    const val OPENING_CLOSE = "opening_close"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }

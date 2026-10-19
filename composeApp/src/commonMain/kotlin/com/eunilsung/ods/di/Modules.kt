@@ -1,6 +1,12 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.repository.LocalIdVerificationRepositoryImpl
+import com.eunilsung.ods.domain.repository.IdVerificationRepository
+import com.eunilsung.ods.domain.usecase.AccountOpeningUseCases
+import com.eunilsung.ods.domain.usecase.OpenAccountUseCase
+import com.eunilsung.ods.domain.usecase.VerifyIdCardUseCase
+import com.eunilsung.ods.ui.account.AccountOpeningViewModel
 import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
 import com.eunilsung.ods.data.mapper.ProductMapper
 import com.eunilsung.ods.domain.repository.ProductRepository
@@ -202,6 +208,12 @@ val appModule = module {
     singleOf(::ProductDetailUseCases)
     singleOf(::SubscriptionUseCases)
 
+    /** 서버 모드에서는 서버가 발급기관에 진위를 묻는 구현으로 바꾼다. */
+    single<IdVerificationRepository> { LocalIdVerificationRepositoryImpl() }
+    singleOf(::VerifyIdCardUseCase)
+    singleOf(::OpenAccountUseCase)
+    singleOf(::AccountOpeningUseCases)
+
     /** 서버 모드에서는 서명 그림을 서버로 보내는 구현으로 바꾼다. 기기에는 지문만 남긴다. */
     single<SignatureRepository> { LocalSignatureRepositoryImpl(get()) }
     singleOf(::SaveRiskAssessmentUseCase)
@@ -254,4 +266,5 @@ val appModule = module {
     viewModelOf(::ProductListViewModel)
     viewModelOf(::ProductDetailViewModel)
     viewModelOf(::SubscriptionViewModel)
+    viewModelOf(::AccountOpeningViewModel)
 }

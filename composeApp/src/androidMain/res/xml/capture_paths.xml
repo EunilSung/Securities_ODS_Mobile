@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 카메라 앱이 신분증 사진을 쓰는 임시 자리. 앱이 읽자마자 지운다. -->
+<paths>
+    <cache-path name="capture" path="capture/" />
+</paths>

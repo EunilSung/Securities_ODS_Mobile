@@ -1,6 +1,7 @@
 package com.eunilsung.ods.domain.repository
 
 import com.eunilsung.ods.domain.model.Account
+import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.NewConsultation
@@ -29,6 +30,9 @@ interface CustomerRepository {
 
     /** 새 고객을 등록한다. */
     suspend fun register(customer: NewCustomer, nowMillis: Long): Customer
+
+    /** 새 계좌를 연다. 계좌번호는 저장소가 정한다. */
+    suspend fun openAccount(customerId: String, type: AccountType, nowMillis: Long): Account
 
     /** 투자성향을 바꾼다. 진단한 시각을 함께 남겨 유효기간을 따진다. */
     suspend fun saveRiskProfile(customerId: String, profile: RiskProfile, assessedAtMillis: Long)
