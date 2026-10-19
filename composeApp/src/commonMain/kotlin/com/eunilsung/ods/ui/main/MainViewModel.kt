@@ -86,13 +86,14 @@ class MainViewModel(
         }
     }
 
-    /** 탭 화면이 열리기 전에 담당 고객·방문 일정과 첫 시세를 받아 둔다. */
+    /** 탭 화면이 열리기 전에 담당 고객·방문 일정·판매 상품과 첫 시세를 받아 둔다. */
     private fun prefetch() {
         viewModelScope.launch { runCatching { useCases.fetchWatchlist() } }
         viewModelScope.launch {
             useCases.refreshCustomers()
             useCases.refreshVisits()
         }
+        viewModelScope.launch { useCases.refreshProducts() }
     }
 
     private fun mainState(staff: Staff?, lock: AppLockState, density: ListDensity) = MainUiState(

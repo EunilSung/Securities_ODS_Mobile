@@ -1,0 +1,43 @@
+appId: com.eunilsung.ods
+name: 국고채를 적합한 고객에게 설명하고 서명을 받아 가입
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_product
+- tapOn:
+    id: product_item
+    index: 1
+- tapOn:
+    id: product_subscribe
+- tapOn:
+    id: subscription_customer_search
+- inputText: "4587"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: subscription_customer
+    index: 0
+- assertVisible:
+    id: suitability_card
+- assertVisible: ".*투자성향에 맞는 상품.*|.*Suitable for the customer.*"
+- tapOn:
+    id: subscription_next
+- tapOn:
+    id: key_point_0
+- tapOn:
+    id: key_point_1
+- tapOn:
+    id: subscription_next
+- assertVisible:
+    id: subscription_account
+    index: 0
+- tapOn:
+    id: subscription_next
+- runFlow: ../common/sign.yaml
+- tapOn:
+    id: subscription_submit
+- assertVisible:
+    id: subscription_done
+- tapOn:
+    id: subscription_close
+- assertVisible:
+    id: product_subscribe

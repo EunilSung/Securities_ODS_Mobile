@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * 고객 상세 — 기본 정보, 투자성향, 계좌, 방문 예정, 상담 이력을 한 고객에 묶어 내놓는다.
+ * 고객 상세 — 기본 정보, 투자성향, 계좌, 가입 상품, 방문 예정, 상담 이력을 한 고객에 묶어 내놓는다.
  *
  * 상세를 열면 그 고객과 상담을 시작한 것으로 본다(넓은 태블릿의 상담 칸이 따라온다).
  */
@@ -35,13 +35,14 @@ class CustomerDetailViewModel(
             useCases.observeAccounts(id),
             useCases.observeConsultations(id),
             useCases.observeMaskPersonalInfo(),
-            useCases.observeUpcomingVisits(id),
-        ) { customer, accounts, consultations, mask, visits ->
+            combine(useCases.observeUpcomingVisits(id), useCases.observeSubscriptions(id)) { visits, subscriptions -> visits to subscriptions },
+        ) { customer, accounts, consultations, mask, (visits, subscriptions) ->
             CustomerDetailUiState(
                 customer = customer,
                 accounts = accounts,
                 consultations = consultations,
                 upcomingVisits = visits,
+                subscriptions = subscriptions,
                 maskPersonalInfo = mask,
                 today = todayInSeoul(),
             )

@@ -139,4 +139,5 @@ class MainUseCases(
     val fetchWatchlist: FetchWatchlistUseCase,
     val refreshCustomers: RefreshCustomersUseCase,
     val refreshVisits: RefreshVisitsUseCase,
+    val refreshProducts: RefreshProductsUseCase,
 )

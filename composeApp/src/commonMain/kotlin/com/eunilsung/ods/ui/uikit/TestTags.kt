@@ -70,6 +70,22 @@ object TestTags {
     const val RISK_CONFIRM = "risk_confirm"
     const val RISK_SAVE = "risk_save"
 
+    const val PRODUCT_ITEM = "product_item"
+    const val PRODUCT_SUBSCRIBE = "product_subscribe"
+    const val SUITABILITY_CARD = "suitability_card"
+    const val SUBSCRIPTION_CUSTOMER_SEARCH = "subscription_customer_search"
+    const val SUBSCRIPTION_CUSTOMER = "subscription_customer"
+    const val SUBSCRIPTION_ASSESS = "subscription_assess"
+    const val SUBSCRIPTION_UNSUITABLE_CONFIRM = "subscription_unsuitable_confirm"
+    /** 핵심 설명 항목은 `key_point_<번호>` 이다(0부터). */
+    const val KEY_POINT_PREFIX = "key_point_"
+    const val SUBSCRIPTION_ACCOUNT = "subscription_account"
+    const val SUBSCRIPTION_AMOUNT = "subscription_amount"
+    const val SUBSCRIPTION_NEXT = "subscription_next"
+    const val SUBSCRIPTION_SUBMIT = "subscription_submit"
+    const val SUBSCRIPTION_DONE = "subscription_done"
+    const val SUBSCRIPTION_CLOSE = "subscription_close"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }

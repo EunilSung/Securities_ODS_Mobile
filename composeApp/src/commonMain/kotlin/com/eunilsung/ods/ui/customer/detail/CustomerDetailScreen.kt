@@ -29,6 +29,7 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Subscription
 import com.eunilsung.ods.domain.model.Visit
 import com.eunilsung.ods.domain.util.ageOn
 import com.eunilsung.ods.domain.util.hasValidRiskProfile
@@ -60,6 +61,7 @@ import com.eunilsung.ods.ui.uikit.section.SectionHeader
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import com.eunilsung.ods.ui.util.formatDate
 import com.eunilsung.ods.ui.util.formatDateTime
+import com.eunilsung.ods.util.withComma
 import kotlinx.datetime.LocalDate
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.customer_accounts
@@ -80,6 +82,9 @@ import ods.composeapp.generated.resources.customer_risk_assessed_on
 import ods.composeapp.generated.resources.customer_risk_expired_note
 import ods.composeapp.generated.resources.customer_risk_none_note
 import ods.composeapp.generated.resources.customer_risk_profile
+import ods.composeapp.generated.resources.customer_subscriptions
+import ods.composeapp.generated.resources.customer_subscriptions_empty
+import ods.composeapp.generated.resources.won
 import ods.composeapp.generated.resources.customer_show_info
 import ods.composeapp.generated.resources.consult_add
 import ods.composeapp.generated.resources.visibility_icon
@@ -155,6 +160,8 @@ fun CustomerDetailContent(
             RiskSection(customer, today, onAssess = { onAction(CustomerDetailActions.OnRiskAssessClick) })
             SectionGap()
             AccountSection(uiState.accounts, uiState.maskPersonalInfo)
+            SectionGap()
+            SubscriptionSection(uiState.subscriptions, uiState.maskPersonalInfo)
             SectionGap()
             VisitSection(
                 visits = uiState.upcomingVisits,
@@ -239,6 +246,37 @@ private fun AccountSection(accounts: List<Account>, mask: Boolean) {
                 Text(text = displayAccountNo(account.accountNo, mask), style = AppTypography.CaptionNumber, color = AppColors.TextSub)
             }
             Text(text = formatDate(account.openedAtMillis), style = AppTypography.CaptionNumber, color = AppColors.TextSub)
+        }
+    }
+    Box(Modifier.padding(bottom = Dimens.Space8))
+}
+
+@Composable
+private fun SubscriptionSection(subscriptions: List<Subscription>, mask: Boolean) {
+    SectionHeader(stringResource(Res.string.customer_subscriptions))
+    if (subscriptions.isEmpty()) {
+        Text(
+            text = stringResource(Res.string.customer_subscriptions_empty),
+            style = AppTypography.Body,
+            color = AppColors.TextSub,
+            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.Space16),
+        )
+        return
+    }
+    subscriptions.forEach { subscription ->
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.Space8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = subscription.productName, style = AppTypography.ListName, color = AppColors.Text, maxLines = 1)
+                Text(
+                    text = "${formatDate(subscription.subscribedAtMillis)} · ${displayAccountNo(subscription.accountNo, mask)}",
+                    style = AppTypography.CaptionNumber,
+                    color = AppColors.TextSub,
+                )
+            }
+            Text(text = stringResource(Res.string.won, subscription.amount.withComma()), style = AppTypography.BodyNumber, color = AppColors.Text)
         }
     }
     Box(Modifier.padding(bottom = Dimens.Space8))

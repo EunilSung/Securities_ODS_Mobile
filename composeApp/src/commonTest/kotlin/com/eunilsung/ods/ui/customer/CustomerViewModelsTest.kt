@@ -5,7 +5,10 @@ import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalUserPreferenceRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
+import com.eunilsung.ods.data.mapper.ProductMapper
+import com.eunilsung.ods.domain.usecase.ObserveSubscriptionsUseCase
 import com.eunilsung.ods.data.mapper.VisitMapper
 import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
 import com.eunilsung.ods.domain.model.ConsultChannel
@@ -86,6 +89,7 @@ class CustomerViewModelsTest {
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
             startConsult = StartConsultUseCase(session),
             observeUpcomingVisits = ObserveUpcomingVisitsUseCase(LocalVisitRepositoryImpl(database, VisitMapper())),
+            observeSubscriptions = ObserveSubscriptionsUseCase(LocalProductRepositoryImpl(database, ProductMapper())),
         )
     )
 

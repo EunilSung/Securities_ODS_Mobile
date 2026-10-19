@@ -71,6 +71,7 @@ import com.eunilsung.ods.ui.main.tab.MoreTab
 import com.eunilsung.ods.ui.main.tab.TabItem
 import com.eunilsung.ods.ui.main.tab.CustomerTab
 import com.eunilsung.ods.ui.main.tab.MarketTab
+import com.eunilsung.ods.ui.main.tab.ProductTab
 import com.eunilsung.ods.ui.main.tab.ScheduleTab
 import com.eunilsung.ods.ui.main.tab.rememberAppTabState
 import com.eunilsung.ods.ui.theme.AppColors
@@ -281,7 +282,7 @@ private fun stackTransition(event: StackEvent): ContentTransform {
 /** 하단 탭과 탭 본문. */
 @Composable
 fun LeftPane() {
-    val tabList = listOf(ScheduleTab, CustomerTab, MarketTab, MoreTab)
+    val tabList = listOf(ScheduleTab, CustomerTab, ProductTab, MarketTab, MoreTab)
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val tabState = rememberAppTabState(tabList, ScheduleTab)

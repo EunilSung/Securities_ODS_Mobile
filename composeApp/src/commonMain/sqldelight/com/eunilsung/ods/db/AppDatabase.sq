@@ -136,6 +136,55 @@ INSERT INTO SignatureEntity VALUES ?;
 selectSignatures:
 SELECT * FROM SignatureEntity WHERE customerId = ? ORDER BY signedAt DESC;
 
+CREATE TABLE ProductEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    riskGrade TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    expectedReturn TEXT NOT NULL,
+    feeInfo TEXT NOT NULL,
+    minAmount INTEGER NOT NULL,
+    keyPoints TEXT NOT NULL,
+    isComplex INTEGER NOT NULL,
+    sortOrder INTEGER NOT NULL
+);
+
+selectProducts:
+SELECT * FROM ProductEntity ORDER BY sortOrder;
+
+selectProduct:
+SELECT * FROM ProductEntity WHERE id = ?;
+
+countProducts:
+SELECT COUNT(*) FROM ProductEntity;
+
+insertProduct:
+INSERT INTO ProductEntity VALUES ?;
+
+CREATE TABLE SubscriptionEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    productId TEXT NOT NULL,
+    accountNo TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    subscribedAt INTEGER NOT NULL,
+    unsuitableConfirmed INTEGER NOT NULL,
+    coolingOffUntil INTEGER
+);
+
+CREATE INDEX SubscriptionEntity_customer ON SubscriptionEntity(customerId);
+
+insertSubscription:
+INSERT INTO SubscriptionEntity VALUES ?;
+
+selectSubscriptions:
+SELECT s.id, s.customerId, s.productId, COALESCE(p.name, s.productId) AS productName, s.accountNo, s.amount, s.subscribedAt, s.unsuitableConfirmed, s.coolingOffUntil
+FROM SubscriptionEntity s
+LEFT JOIN ProductEntity p ON p.id = s.productId
+WHERE s.customerId = ?
+ORDER BY s.subscribedAt DESC;
+
 wipeBusinessData {
     DELETE FROM WatchStockEntity;
     DELETE FROM CustomerEntity;
@@ -143,4 +192,5 @@ wipeBusinessData {
     DELETE FROM AccountEntity;
     DELETE FROM VisitEntity;
     DELETE FROM SignatureEntity;
+    DELETE FROM SubscriptionEntity;
 }
