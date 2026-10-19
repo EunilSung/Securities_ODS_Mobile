@@ -1,7 +1,7 @@
 package com.eunilsung.ods.data.local.repository
 
 import com.eunilsung.ods.data.local.seed.DemoAccounts
-import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Staff
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import com.eunilsung.ods.domain.repository.LoginRepository
@@ -24,8 +24,8 @@ class LocalLoginRepositoryImpl(
     private val simulatedRoundTripMillis: Long = SIMULATED_ROUND_TRIP_MILLIS,
 ) : LoginRepository {
 
-    private val _currentCustomer = MutableStateFlow<Customer?>(null)
-    override val currentCustomer: StateFlow<Customer?> = _currentCustomer.asStateFlow()
+    private val _currentStaff = MutableStateFlow<Staff?>(null)
+    override val currentStaff: StateFlow<Staff?> = _currentStaff.asStateFlow()
 
     override suspend fun login(request: LoginRequest, nowEpochSeconds: Long): LoginResult {
         delay(simulatedRoundTripMillis)
@@ -37,8 +37,8 @@ class LocalLoginRepositoryImpl(
             settings.remove(failureKey(id))
         }
 
-        val customer = DemoAccounts.find(id)
-        if (customer == null || request.password != DemoAccounts.PASSWORD) {
+        val staff = DemoAccounts.find(id)
+        if (staff == null || request.password != DemoAccounts.PASSWORD) {
             val failures = settings.getInt(failureKey(id), 0) + 1
             return if (failures >= LoginPolicy.MAX_ATTEMPTS) {
                 val until = nowEpochSeconds + LoginPolicy.LOCK_SECONDS
@@ -52,15 +52,15 @@ class LocalLoginRepositoryImpl(
         }
 
         settings.remove(failureKey(id))
-        if (isSaveId()) settings.putString(KEY_SAVED_ID, customer.id) else settings.remove(KEY_SAVED_ID)
-        _currentCustomer.value = customer
-        Log.message("[Login/Local] success ${customer.id}")
-        return LoginResult.Success(customer)
+        if (isSaveId()) settings.putString(KEY_SAVED_ID, staff.id) else settings.remove(KEY_SAVED_ID)
+        _currentStaff.value = staff
+        Log.message("[Login/Local] success ${staff.id}")
+        return LoginResult.Success(staff)
     }
 
     override fun logout() {
-        Log.message("[Login/Local] logout ${_currentCustomer.value?.id}")
-        _currentCustomer.value = null
+        Log.message("[Login/Local] logout ${_currentStaff.value?.id}")
+        _currentStaff.value = null
     }
 
     override fun savedId(): String? = if (isSaveId()) settings.getStringOrNull(KEY_SAVED_ID) else null

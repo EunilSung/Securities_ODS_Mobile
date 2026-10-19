@@ -1,6 +1,6 @@
 package com.eunilsung.ods.domain.repository
 
-import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Staff
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface LoginRepository {
     /** 로그인한 고객. 로그인 전·로그아웃 뒤에는 null. */
-    val currentCustomer: StateFlow<Customer?>
+    val currentStaff: StateFlow<Staff?>
 
     /** [nowEpochSeconds] 는 잠금 계산에 쓴다. */
     suspend fun login(request: LoginRequest, nowEpochSeconds: Long): LoginResult

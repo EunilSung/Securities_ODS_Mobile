@@ -38,7 +38,7 @@ import ods.composeapp.generated.resources.density_comfortable
 import ods.composeapp.generated.resources.density_compact
 import ods.composeapp.generated.resources.refresh
 import ods.composeapp.generated.resources.refresh_icon
-import ods.composeapp.generated.resources.tab_watchlist
+import ods.composeapp.generated.resources.tab_market
 import ods.composeapp.generated.resources.watchlist_count
 import ods.composeapp.generated.resources.watchlist_empty
 import org.jetbrains.compose.resources.painterResource
@@ -89,7 +89,7 @@ fun WatchlistContent(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopBar(
-            title = stringResource(Res.string.tab_watchlist),
+            title = stringResource(Res.string.tab_market),
             actions = {
                 Box(
                     modifier = Modifier.size(40.dp).clickable(cornerRadius = 20.dp, onClick = { onAction(WatchlistActions.OnRefresh) }),

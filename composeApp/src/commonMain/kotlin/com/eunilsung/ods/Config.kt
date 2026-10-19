@@ -19,7 +19,7 @@ object Config {
 
     /** 로컬 데이터베이스(SQLDelight). [NAME] 을 바꾸면 새 DB 로 시작한다. */
     object Database {
-        const val NAME: String = "OdsDatabase_v3.db"
+        const val NAME: String = "OdsDatabase_v1.db"
     }
 
     /** 화면 구성. 이 폭 이상이면 좌우 2-pane(태블릿·폴더블)으로 그린다. */
@@ -28,15 +28,9 @@ object Config {
 
         /** 현재가 화면이 이 폭 이상이면 차트와 호가를 좌우로 나란히 놓는다(태블릿 오른쪽 칸 가로). */
         const val QUOTE_SIDE_BY_SIDE_MIN_WIDTH_DP: Int = 640
-
-        /** 이 폭 이상이면 목록 · 차트+호가 · 주문 3칸으로 그린다(태블릿 가로). */
-        const val WIDE_TABLET_MIN_WIDTH_DP: Int = 840
-
-        /** 주문 화면이 이 폭 이상이면 호가와 주문 패널을 좌우로, 아니면 위아래로 놓는다. */
-        const val ORDER_SPLIT_MIN_WIDTH_DP: Int = 360
     }
 
-    /** 앱 전환기(최근 앱) 화면 가리기 — 시세·잔고·주문이 앱 전환기 썸네일에 그림으로 남지 않게 한다. */
+    /** 앱 전환기(최근 앱) 화면 가리기 — 고객 정보가 앱 전환기 썸네일에 그림으로 남지 않게 한다. */
     object AppSwitcherSnapshot {
         /**
          * 스냅샷 가리기 on/off.

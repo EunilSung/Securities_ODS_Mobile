@@ -1,4 +1,4 @@
-package com.eunilsung.ods.ui.orderauth.component
+package com.eunilsung.ods.ui.uikit.pin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -16,13 +16,9 @@ class GetAppInfoUseCase(private val provider: AppVersionProvider) {
 class SettingUseCases(
     val observeListDensity: ObserveListDensityUseCase,
     val setListDensity: SetListDensityUseCase,
-    val observeHideAmounts: ObserveHideAmountsUseCase,
-    val setHideAmounts: SetHideAmountsUseCase,
-    val observeOrderAuthConfig: ObserveOrderAuthConfigUseCase,
-    val getOrderAuthLock: GetOrderAuthLockUseCase,
-    val setOrderBiometricEnabled: SetOrderBiometricEnabledUseCase,
-    val isBiometricAvailable: IsBiometricAvailableUseCase,
+    val observeMaskPersonalInfo: ObserveMaskPersonalInfoUseCase,
+    val setMaskPersonalInfo: SetMaskPersonalInfoUseCase,
     val getAppInfo: GetAppInfoUseCase,
-    val observeCustomer: ObserveCustomerUseCase,
+    val observeStaff: ObserveStaffUseCase,
     val logout: LogoutUseCase,
 )

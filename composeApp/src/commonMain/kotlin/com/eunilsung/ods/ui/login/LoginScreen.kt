@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +46,7 @@ import com.eunilsung.ods.domain.util.LoginPolicy
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
+import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.click.clickable
 import com.eunilsung.ods.ui.util.formatOrderTime
 import ods.composeapp.generated.resources.Res
@@ -108,6 +110,7 @@ fun LoginContent(uiState: LoginUiState, onAction: (LoginActions) -> Unit) {
                 label = stringResource(Res.string.login_id),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                testTag = TestTags.LOGIN_ID,
             )
             LoginField(
                 value = uiState.password,
@@ -118,6 +121,7 @@ fun LoginContent(uiState: LoginUiState, onAction: (LoginActions) -> Unit) {
                     focusManager.clearFocus()
                     onAction(LoginActions.OnLoginClick)
                 }),
+                testTag = TestTags.LOGIN_PW,
                 visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     Icon(
@@ -197,6 +201,7 @@ private fun LoginField(
     label: String,
     keyboardOptions: KeyboardOptions,
     keyboardActions: KeyboardActions,
+    testTag: String,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
@@ -219,7 +224,7 @@ private fun LoginField(
             unfocusedTextColor = AppColors.Text,
             unfocusedLabelColor = AppColors.TextSub,
         ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(testTag),
     )
 }
 
@@ -230,6 +235,7 @@ private fun LoginButton(enabled: Boolean, loading: Boolean, onClick: () -> Unit)
             .padding(top = Dimens.Space4)
             .fillMaxWidth()
             .height(52.dp)
+            .testTag(TestTags.LOGIN_SUBMIT)
             .clip(RoundedCornerShape(10.dp))
             .background(if (enabled || loading) AppColors.PrimaryMain else AppColors.Gray100Bg)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),

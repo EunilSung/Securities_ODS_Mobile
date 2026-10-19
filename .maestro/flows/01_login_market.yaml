@@ -1,0 +1,26 @@
+appId: com.eunilsung.ods
+name: 로그인하고 시장 시세를 연 뒤 로그아웃
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_market
+- tapOn:
+    id: stock_item
+    index: 0
+- assertVisible: "차트|Chart"
+- tapOn:
+    id: tab_more
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: more_logout
+    commands:
+      - tapOn:
+          id: top_back
+      - tapOn:
+          id: tab_more
+- tapOn:
+    id: more_logout
+- assertVisible:
+    id: login_submit

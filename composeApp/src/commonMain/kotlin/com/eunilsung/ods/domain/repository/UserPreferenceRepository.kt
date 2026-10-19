@@ -9,13 +9,11 @@ interface UserPreferenceRepository {
 
     fun setListDensity(density: ListDensity)
 
-    /** 현재가 탭이 열 종목 — 마지막으로 본 종목. 아직 없으면 null. */
-    fun lastQuoteCode(): String?
+    /**
+     * 고객 개인정보(전화번호·생년월일·계좌번호) 가리기. 고객 앞이나 공공장소에서 태블릿을 펼칠 때를 위해 기본으로 켜 두고,
+     * 다음 실행에도 그대로 둔다.
+     */
+    val maskPersonalInfo: StateFlow<Boolean>
 
-    fun setLastQuoteCode(code: String)
-
-    /** 잔고 금액 가리기. 공공장소에서 앱을 열 때를 위해 다음 실행에도 그대로 둔다. */
-    val hideAmounts: StateFlow<Boolean>
-
-    fun setHideAmounts(hide: Boolean)
+    fun setMaskPersonalInfo(mask: Boolean)
 }

@@ -19,14 +19,14 @@ class LocalLoginRepositoryTest {
         LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
 
     @Test
-    fun successSetsCustomerAndRemembersIdOnly() = runTest {
+    fun successSetsStaffAndRemembersIdOnly() = runTest {
         val settings = MapSettings()
         val repository = repository(settings)
 
         val result = repository.login(LoginRequest(" TEST1 ", DemoAccounts.PASSWORD), now)
 
         assertTrue(result is LoginResult.Success)
-        assertEquals("test1", repository.currentCustomer.value?.id)
+        assertEquals("test1", repository.currentStaff.value?.id)
         assertEquals("test1", repository.savedId())
         assertFalse(settings.keys.any { settings.getStringOrNull(it) == DemoAccounts.PASSWORD })
     }
@@ -37,7 +37,7 @@ class LocalLoginRepositoryTest {
         val expected = LoginResult.Wrong(LoginPolicy.MAX_ATTEMPTS - 1)
         assertEquals(expected, repository.login(LoginRequest("test1", "0000"), now))
         assertEquals(expected, repository.login(LoginRequest("nobody", DemoAccounts.PASSWORD), now))
-        assertNull(repository.currentCustomer.value)
+        assertNull(repository.currentStaff.value)
     }
 
     @Test
@@ -84,11 +84,11 @@ class LocalLoginRepositoryTest {
     }
 
     @Test
-    fun logoutClearsCustomerButKeepsSavedId() = runTest {
+    fun logoutClearsStaffButKeepsSavedId() = runTest {
         val repository = repository()
         repository.login(LoginRequest("test3", DemoAccounts.PASSWORD), now)
         repository.logout()
-        assertNull(repository.currentCustomer.value)
+        assertNull(repository.currentStaff.value)
         assertEquals("test3", repository.savedId())
     }
 }

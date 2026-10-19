@@ -1,6 +1,6 @@
 package com.eunilsung.ods.domain.usecase
 
-import com.eunilsung.ods.domain.model.Customer
+import com.eunilsung.ods.domain.model.Staff
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import com.eunilsung.ods.domain.repository.LoginRepository
@@ -17,8 +17,8 @@ class LogoutUseCase(private val repository: LoginRepository) {
 }
 
 /** 로그인한 고객. 로그인 전이면 null. */
-class ObserveCustomerUseCase(private val repository: LoginRepository) {
-    operator fun invoke(): StateFlow<Customer?> = repository.currentCustomer
+class ObserveStaffUseCase(private val repository: LoginRepository) {
+    operator fun invoke(): StateFlow<Staff?> = repository.currentStaff
 }
 
 class GetSavedIdUseCase(private val repository: LoginRepository) {
@@ -36,7 +36,7 @@ class SetSaveIdUseCase(private val repository: LoginRepository) {
 /** 로그인 화면이 쓰는 유스케이스 묶음. */
 class LoginUseCases(
     val login: LoginUseCase,
-    val observeCustomer: ObserveCustomerUseCase,
+    val observeStaff: ObserveStaffUseCase,
     val getSavedId: GetSavedIdUseCase,
     val isSaveId: IsSaveIdUseCase,
     val setSaveId: SetSaveIdUseCase,
