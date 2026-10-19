@@ -21,24 +21,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.eunilsung.ods.domain.util.OrderPinPolicy
 import com.eunilsung.ods.ui.theme.AppColors
+import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.click.clickable
 
 /**
  * 보안 키패드 — 입력 표시(●●●●)와 숫자 키. 국내 금융 앱처럼 **숫자 배열을 열 때마다 섞어** 누른 위치로 비밀번호를 짐작하지 못하게 한다.
  *
- * 4자리를 다 넣으면 [onEntered] 를 부르고 입력을 비운다. [resetKey] 가 바뀌면(틀렸을 때) 입력을 비우고 배열도 다시 섞는다.
+ * [length] 자리를 다 넣으면 [onEntered] 를 부르고 입력을 비운다. [resetKey] 가 바뀌면(틀렸을 때) 입력을 비우고 배열도 다시 섞는다.
+ * 앱 잠금 비밀번호와 고객이 직접 넣는 계좌 비밀번호가 함께 쓴다.
  *
  * @param deleteLabel 지우기 키를 화면 읽기 프로그램이 읽을 이름.
  */
 @Composable
 fun SecurePinPad(
+    length: Int,
     onEntered: (String) -> Unit,
     resetKey: Int,
     deleteLabel: String,
@@ -49,9 +52,9 @@ fun SecurePinPad(
     LaunchedEffect(resetKey) { input = "" }
 
     fun press(digit: String) {
-        if (input.length >= OrderPinPolicy.LENGTH) return
+        if (input.length >= length) return
         input += digit
-        if (input.length == OrderPinPolicy.LENGTH) {
+        if (input.length == length) {
             val entered = input
             input = ""
             onEntered(entered)
@@ -60,7 +63,7 @@ fun SecurePinPad(
 
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            repeat(OrderPinPolicy.LENGTH) { index ->
+            repeat(length) { index ->
                 Box(
                     modifier = Modifier
                         .size(14.dp)
@@ -107,7 +110,7 @@ private val KEY_SIZE = 68.dp
 @Composable
 private fun Key(text: String, onClick: () -> Unit) {
     Box(
-        modifier = Modifier.size(KEY_SIZE).clip(CircleShape).clickable(onClick = onClick),
+        modifier = Modifier.size(KEY_SIZE).testTag("${TestTags.PIN_KEY_PREFIX}$text").clip(CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = text, color = AppColors.Text, fontSize = 26.sp, fontWeight = FontWeight.Medium)

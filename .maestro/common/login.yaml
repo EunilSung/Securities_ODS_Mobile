@@ -1,5 +1,5 @@
 appId: com.eunilsung.ods
-name: test1 로 로그인
+name: test1 로 로그인하고 앱 잠금 비밀번호(135790)를 정한다
 ---
 - runFlow: launch.yaml
 - tapOn:
@@ -19,3 +19,10 @@ name: test1 로 로그인
     notVisible:
       id: login_submit
     timeout: 15000
+- assertVisible: "앱 잠금 비밀번호 등록|Set an app passcode"
+- runFlow: pin.yaml
+- runFlow: pin.yaml
+- extendedWaitUntil:
+    notVisible:
+      id: app_lock_screen
+    timeout: 5000

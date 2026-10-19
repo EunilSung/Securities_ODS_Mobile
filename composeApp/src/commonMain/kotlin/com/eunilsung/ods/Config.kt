@@ -47,4 +47,15 @@ object Config {
          */
         const val IS_SECURE_WHILE_PAUSED_ENABLED: Boolean = true
     }
+
+    /** 단말 보안. 앱 잠금 시간·횟수는 `AppLockPolicy` 에 있다. */
+    object Security {
+        /**
+         * 화면 캡처·녹화 막기(Android `FLAG_SECURE`). 고객 개인정보가 스크린샷으로 새지 않게 한다.
+         *
+         * 디버그 빌드에서는 켜지 않는다 — 에뮬레이터 스크린샷과 화면 자동화(Maestro)로 동작을 확인해야 하기 때문이다.
+         * iOS 는 캡처를 막는 공개 API 가 없어 앱 전환기 가림막([AppSwitcherSnapshot])만 쓴다.
+         */
+        const val BLOCK_SCREEN_CAPTURE_IN_RELEASE: Boolean = true
+    }
 }

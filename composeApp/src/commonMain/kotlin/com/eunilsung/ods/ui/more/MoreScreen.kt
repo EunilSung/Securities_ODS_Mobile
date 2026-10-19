@@ -35,6 +35,7 @@ import com.eunilsung.ods.ui.setting.component.SettingNavigateRow
 import com.eunilsung.ods.ui.setting.component.SettingSectionHeader
 import com.eunilsung.ods.ui.setting.detail.AppInfoScreen
 import com.eunilsung.ods.ui.setting.detail.DisplaySettingScreen
+import com.eunilsung.ods.ui.setting.detail.SecuritySettingScreen
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
@@ -52,12 +53,15 @@ import ods.composeapp.generated.resources.more_staff_branch
 import ods.composeapp.generated.resources.more_staff_name
 import ods.composeapp.generated.resources.setting_app_info
 import ods.composeapp.generated.resources.setting_display
+import ods.composeapp.generated.resources.setting_security
+import ods.composeapp.generated.resources.setting_security_summary_biometric
+import ods.composeapp.generated.resources.setting_security_summary_pin
 import ods.composeapp.generated.resources.tab_more
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * 더보기 탭 — 맨 위에 로그인한 직원과 로그아웃, 그 아래 설정(화면)과 정보(앱 정보) 목록. 줄을 누르면 상세를 오른쪽 스택에 연다.
+ * 더보기 탭 — 맨 위에 로그인한 직원과 로그아웃, 그 아래 설정(보안·화면)과 정보(앱 정보) 목록. 줄을 누르면 상세를 오른쪽 스택에 연다.
  *
  * 줄 오른쪽에 지금 값을 보여 상세에 들어가지 않고도 상태를 알 수 있게 한다.
  */
@@ -72,6 +76,7 @@ object MoreScreen : Screen {
         MoreContent(
             uiState = uiState,
             openedItem = when (opened) {
+                is SecuritySettingScreen -> MoreItem.SECURITY
                 is DisplaySettingScreen -> MoreItem.DISPLAY
                 is AppInfoScreen -> MoreItem.APP_INFO
                 else -> null
@@ -82,10 +87,11 @@ object MoreScreen : Screen {
     }
 }
 
-enum class MoreItem { DISPLAY, APP_INFO }
+enum class MoreItem { SECURITY, DISPLAY, APP_INFO }
 
 private fun openDetail(rightNavigator: Navigator, item: MoreItem) {
     val screen: Screen = when (item) {
+        MoreItem.SECURITY -> SecuritySettingScreen()
         MoreItem.DISPLAY -> DisplaySettingScreen()
         MoreItem.APP_INFO -> AppInfoScreen()
     }
@@ -114,6 +120,14 @@ fun MoreContent(
                 LineDivider(thickness = Dimens.SectionGap, color = AppColors.Gray100Bg)
             }
             SettingSectionHeader(stringResource(Res.string.more_setting_section))
+            SettingNavigateRow(
+                title = stringResource(Res.string.setting_security),
+                value = stringResource(if (uiState.biometricEnabled && uiState.biometricAvailable) Res.string.setting_security_summary_biometric else Res.string.setting_security_summary_pin),
+                isSelected = openedItem == MoreItem.SECURITY,
+                modifier = Modifier.testTag(TestTags.SETTING_SECURITY),
+                onClick = { onItemClick(MoreItem.SECURITY) },
+            )
+            LineDivider()
             SettingNavigateRow(
                 title = stringResource(Res.string.setting_display),
                 value = stringResource(if (uiState.listDensity == ListDensity.COMPACT) Res.string.density_compact else Res.string.density_comfortable),

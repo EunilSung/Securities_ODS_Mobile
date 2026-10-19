@@ -1,0 +1,31 @@
+appId: com.eunilsung.ods
+name: 지금 잠그고 비밀번호로 풀기, 다섯 번 틀리면 데이터를 지우고 로그아웃
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_more
+- tapOn:
+    id: setting_security
+- tapOn:
+    id: setting_lock_now
+- assertVisible:
+    id: app_lock_screen
+- runFlow: ../common/pin.yaml
+- extendedWaitUntil:
+    notVisible:
+      id: app_lock_screen
+    timeout: 5000
+- assertVisible:
+    id: setting_lock_now
+- tapOn:
+    id: setting_lock_now
+- repeat:
+    times: 5
+    commands:
+      - runFlow:
+          file: ../common/pin.yaml
+          env:
+            PIN_6: "1"
+- assertVisible:
+    id: login_submit
+- assertVisible: ".*고객 데이터를 지웠습니다.*|.*customer data on this device was erased.*"
