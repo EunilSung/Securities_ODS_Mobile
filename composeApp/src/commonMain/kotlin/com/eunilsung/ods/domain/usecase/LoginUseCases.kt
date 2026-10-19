@@ -3,7 +3,9 @@ package com.eunilsung.ods.domain.usecase
 import com.eunilsung.ods.domain.model.Staff
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
+import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.repository.AppLockRepository
+import com.eunilsung.ods.domain.repository.ConsultSessionRepository
 import com.eunilsung.ods.domain.repository.LoginRepository
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Clock
@@ -20,13 +22,16 @@ class LoginUseCase(
     }
 }
 
+/** 로그아웃한다. 앱 잠금 세션과 상담 중인 고객도 비운다. */
 class LogoutUseCase(
     private val repository: LoginRepository,
     private val appLock: AppLockRepository,
+    private val consultSession: ConsultSessionRepository,
 ) {
-    operator fun invoke() {
+    operator fun invoke(reason: LogoutReason = LogoutReason.USER) {
         appLock.endSession()
-        repository.logout()
+        consultSession.end()
+        repository.logout(reason)
     }
 }
 

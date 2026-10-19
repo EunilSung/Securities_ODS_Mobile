@@ -28,6 +28,9 @@ object Config {
 
         /** 현재가 화면이 이 폭 이상이면 차트와 호가를 좌우로 나란히 놓는다(태블릿 오른쪽 칸 가로). */
         const val QUOTE_SIDE_BY_SIDE_MIN_WIDTH_DP: Int = 640
+
+        /** 이 폭 이상이면 목록 · 상세 · 상담 3칸으로 그린다(태블릿 가로). */
+        const val WIDE_TABLET_MIN_WIDTH_DP: Int = 1000
     }
 
     /** 앱 전환기(최근 앱) 화면 가리기 — 고객 정보가 앱 전환기 썸네일에 그림으로 남지 않게 한다. */

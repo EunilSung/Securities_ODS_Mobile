@@ -11,5 +11,5 @@ val LocalRightNavigator = compositionLocalOf<Navigator> {
 /** 오른쪽에 상세 화면이 떠 있는지. 태블릿에서 목록의 선택 표시를 가를 때 쓴다. */
 val LocalRightPaneOpen = compositionLocalOf { false }
 
-/** 지금 그리는 레이아웃이 태블릿(좌우 2-pane)인지. */
+/** 지금 그리는 레이아웃이 태블릿(2칸 이상)인지. */
 val LocalIsTablet = compositionLocalOf { false }

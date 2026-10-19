@@ -1,6 +1,30 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
+import com.eunilsung.ods.data.mapper.CustomerMapper
+import com.eunilsung.ods.domain.repository.ConsultSessionRepository
+import com.eunilsung.ods.domain.repository.CustomerRepository
+import com.eunilsung.ods.domain.usecase.AddConsultationUseCase
+import com.eunilsung.ods.domain.usecase.ConsultUseCases
+import com.eunilsung.ods.domain.usecase.CustomerDetailUseCases
+import com.eunilsung.ods.domain.usecase.CustomerListUseCases
+import com.eunilsung.ods.domain.usecase.EndConsultUseCase
+import com.eunilsung.ods.domain.usecase.ObserveAccountsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveActiveCustomerIdUseCase
+import com.eunilsung.ods.domain.usecase.ObserveConsultationsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
+import com.eunilsung.ods.domain.usecase.ObserveCustomersRefreshingUseCase
+import com.eunilsung.ods.domain.usecase.ObserveCustomersUseCase
+import com.eunilsung.ods.domain.usecase.RefreshCustomersUseCase
+import com.eunilsung.ods.domain.usecase.RegisterCustomerUseCase
+import com.eunilsung.ods.domain.usecase.StartConsultUseCase
+import com.eunilsung.ods.ui.consult.ConsultPaneViewModel
+import com.eunilsung.ods.ui.customer.consultation.ConsultationViewModel
+import com.eunilsung.ods.ui.customer.detail.CustomerDetailViewModel
+import com.eunilsung.ods.ui.customer.list.CustomerListViewModel
+import com.eunilsung.ods.ui.customer.register.NewCustomerViewModel
 import com.eunilsung.ods.data.local.LocalDataWiperImpl
 import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
 import com.eunilsung.ods.domain.repository.AppLockRepository
@@ -96,6 +120,25 @@ val appModule = module {
     singleOf(::GetAppInfoUseCase)
     singleOf(::SettingUseCases)
 
+    singleOf(::CustomerMapper)
+    /** 서버가 붙으면 `Config.Server.IS_ENABLED` 로 서버 구현과 갈라 끼운다. 지금은 시연용 고객만 쓴다. */
+    single<CustomerRepository> { LocalCustomerRepositoryImpl(get(), get()) }
+    single<ConsultSessionRepository> { LocalConsultSessionRepositoryImpl() }
+    singleOf(::ObserveCustomersUseCase)
+    singleOf(::RefreshCustomersUseCase)
+    singleOf(::ObserveCustomersRefreshingUseCase)
+    singleOf(::ObserveCustomerUseCase)
+    singleOf(::ObserveConsultationsUseCase)
+    singleOf(::ObserveAccountsUseCase)
+    singleOf(::RegisterCustomerUseCase)
+    singleOf(::AddConsultationUseCase)
+    singleOf(::ObserveActiveCustomerIdUseCase)
+    singleOf(::StartConsultUseCase)
+    singleOf(::EndConsultUseCase)
+    singleOf(::CustomerListUseCases)
+    singleOf(::CustomerDetailUseCases)
+    singleOf(::ConsultUseCases)
+
     /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
     single<AppLockRepository> { LocalAppLockRepositoryImpl(get()) }
     single<LocalDataWiper> { LocalDataWiperImpl(get()) }
@@ -131,4 +174,9 @@ val appModule = module {
     viewModelOf(::SettingViewModel)
     viewModelOf(::LoginViewModel)
     viewModelOf(::AppLockViewModel)
+    viewModelOf(::CustomerListViewModel)
+    viewModelOf(::CustomerDetailViewModel)
+    viewModelOf(::ConsultationViewModel)
+    viewModelOf(::NewCustomerViewModel)
+    viewModelOf(::ConsultPaneViewModel)
 }

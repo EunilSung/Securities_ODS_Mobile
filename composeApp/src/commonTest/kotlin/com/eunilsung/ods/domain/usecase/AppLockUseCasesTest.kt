@@ -1,6 +1,7 @@
 package com.eunilsung.ods.domain.usecase
 
 import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LogoutReason
@@ -25,13 +26,15 @@ class AppLockUseCasesTest {
 
     private val settings = MapSettings()
     private val appLock = LocalAppLockRepositoryImpl(settings)
+    private val consultSession = LocalConsultSessionRepositoryImpl()
     private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
     private val wiper = CountingWiper()
-    private val unlock = UnlockWithPinUseCase(appLock, wiper, login)
+    private val unlock = UnlockWithPinUseCase(appLock, wiper, LogoutUseCase(login, appLock, consultSession))
     private val lockIfInactive = LockIfInactiveUseCase(appLock)
 
     private suspend fun signedInWithPin(now: Long = 0) {
         login.login(LoginRequest("test1", "1234"), nowEpochSeconds = 0)
+        consultSession.start("C001")
         appLock.startSession("test1", now)
         appLock.setPin("135790")
     }
@@ -56,6 +59,7 @@ class AppLockUseCasesTest {
         assertEquals(UnlockResult.Wiped, unlock("000000"))
         assertEquals(1, wiper.wipes)
         assertNull(login.currentStaff.value)
+        assertNull(consultSession.activeCustomerId.value)
         assertEquals(LogoutReason.WIPED, login.lastLogoutReason.value)
 
         appLock.startSession("test1", 0)
