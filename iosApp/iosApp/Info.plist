@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Compose 리소스(values, values-ko)와 같은 언어를 선언한다. 없으면 기기 언어가 한국어여도 시스템 문자열이 영어로 온다. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ko</string>
+	</array>
+	<!-- 주문 인증 Face ID 사용 설명. 없으면 Face ID 를 쓰는 순간 앱이 종료된다. -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>주문·정정·취소를 확인할 때 Face ID를 사용합니다.</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+</dict>
+</plist>
