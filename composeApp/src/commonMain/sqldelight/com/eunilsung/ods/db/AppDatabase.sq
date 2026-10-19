@@ -81,6 +81,9 @@ SELECT * FROM AccountEntity WHERE customerId = ? ORDER BY openedAt;
 insertAccount:
 INSERT INTO AccountEntity VALUES ?;
 
+countAccountsWithPrefix:
+SELECT COUNT(*) FROM AccountEntity WHERE accountNo LIKE ? || '%';
+
 CREATE TABLE VisitEntity (
     id TEXT NOT NULL PRIMARY KEY,
     customerId TEXT NOT NULL,

@@ -7,6 +7,9 @@ sealed interface CustomerDetailActions {
     /** 눈 버튼 — 개인정보 가리기를 켜고 끈다. 앱 전체 설정이 함께 바뀐다. */
     data object OnToggleMask : CustomerDetailActions
 
+    /** 계좌 개설을 눌렀다. */
+    data object OnOpenAccountClick : CustomerDetailActions
+
     /** 투자성향 진단을 눌렀다. */
     data object OnRiskAssessClick : CustomerDetailActions
 
@@ -24,6 +27,7 @@ sealed interface CustomerDetailActions {
 sealed interface CustomerDetailEvent {
     data class OpenConsultationEditor(val customerId: String) : CustomerDetailEvent
     data class OpenRiskAssessment(val customerId: String) : CustomerDetailEvent
+    data class OpenAccountOpening(val customerId: String) : CustomerDetailEvent
     data class OpenNewVisit(val customerId: String) : CustomerDetailEvent
     data class OpenVisit(val visitId: String) : CustomerDetailEvent
 }

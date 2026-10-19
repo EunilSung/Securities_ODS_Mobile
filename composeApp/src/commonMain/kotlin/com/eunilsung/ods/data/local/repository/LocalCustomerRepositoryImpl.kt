@@ -7,6 +7,7 @@ import com.eunilsung.ods.data.local.seed.CustomerSeed
 import com.eunilsung.ods.data.mapper.CustomerMapper
 import com.eunilsung.ods.db.AppDatabase
 import com.eunilsung.ods.domain.model.Account
+import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.CustomerGrade
@@ -89,6 +90,25 @@ class LocalCustomerRepositoryImpl(
         return created
     }
 
+    /**
+     * 계좌번호는 `7001-<휴대폰 가운데 4자리>-<순번 2자리>` 로 만든다. 시연용 계좌와 같은 모양이다.
+     * 서버 모드에서는 서버가 발급한 번호를 받아 그대로 남긴다.
+     */
+    override suspend fun openAccount(customerId: String, type: AccountType, nowMillis: Long): Account = withContext(Dispatchers.Default) {
+        val customer = queries.selectCustomer(customerId).executeAsOne()
+        val middle = customer.phone.split("-").getOrNull(1)?.takeLast(4)?.padStart(4, '0') ?: "0000"
+        val prefix = "$BRANCH_CODE-$middle-"
+        val sequence = queries.countAccountsWithPrefix(prefix).executeAsOne() + 1
+        val account = Account(
+            accountNo = prefix + sequence.toString().padStart(2, '0'),
+            customerId = customerId,
+            type = type,
+            openedAtMillis = nowMillis,
+        )
+        queries.insertAccount(mapper.toEntity(account))
+        account
+    }
+
     override suspend fun saveRiskProfile(customerId: String, profile: RiskProfile, assessedAtMillis: Long) {
         withContext(Dispatchers.Default) { queries.updateRiskProfile(profile.name, assessedAtMillis, customerId) }
     }
@@ -105,5 +125,10 @@ class LocalCustomerRepositoryImpl(
         )
         withContext(Dispatchers.Default) { queries.insertConsultation(mapper.toEntity(created)) }
         return created
+    }
+
+    private companion object {
+        /** 시연용 지점 코드 — 계좌번호 앞 4자리. */
+        const val BRANCH_CODE = "7001"
     }
 }

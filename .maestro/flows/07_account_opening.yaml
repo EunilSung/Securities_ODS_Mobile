@@ -1,0 +1,66 @@
+appId: com.eunilsung.ods
+name: 계좌가 없는 고객에게 신분증 확인·약관·비밀번호·서명으로 종합매매 계좌를 개설
+---
+- runFlow: ../common/login.yaml
+- tapOn:
+    id: tab_customer
+- tapOn:
+    id: customer_search
+- inputText: "3302"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: customer_item
+    index: 0
+- scrollUntilVisible:
+    element:
+      id: account_open
+    direction: DOWN
+- tapOn:
+    id: account_open
+- tapOn:
+    id: opening_demo_id
+- tapOn:
+    id: opening_next
+- tapOn:
+    id: opening_verify
+- extendedWaitUntil:
+    visible:
+      id: opening_id_verified
+    timeout: 5000
+- tapOn:
+    id: opening_next
+- tapOn:
+    id: opening_type_brokerage
+- tapOn:
+    id: opening_next
+- tapOn:
+    id: opening_terms_all
+- tapOn:
+    id: opening_next
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: pin_key_2
+      - tapOn:
+          id: pin_key_5
+      - tapOn:
+          id: pin_key_8
+      - tapOn:
+          id: pin_key_0
+- assertVisible:
+    id: opening_pin_done
+- tapOn:
+    id: opening_next
+- runFlow: ../common/sign.yaml
+- tapOn:
+    id: opening_submit
+- assertVisible:
+    id: opening_done
+- assertVisible: ".*7001-.*"
+- tapOn:
+    id: opening_close
+- scrollUntilVisible:
+    element:
+      text: "종합매매|Brokerage"
+    direction: DOWN

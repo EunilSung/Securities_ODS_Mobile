@@ -33,6 +33,7 @@ import com.eunilsung.ods.domain.model.Subscription
 import com.eunilsung.ods.domain.model.Visit
 import com.eunilsung.ods.domain.util.ageOn
 import com.eunilsung.ods.domain.util.hasValidRiskProfile
+import com.eunilsung.ods.ui.account.AccountOpeningScreen
 import com.eunilsung.ods.ui.customer.color
 import com.eunilsung.ods.ui.customer.consultation.ConsultationEditorScreen
 import com.eunilsung.ods.ui.customer.consultation.ConsultationItem
@@ -75,6 +76,7 @@ import ods.composeapp.generated.resources.customer_detail
 import ods.composeapp.generated.resources.customer_hide_info
 import ods.composeapp.generated.resources.customer_no_upcoming_visits
 import ods.composeapp.generated.resources.customer_upcoming_visits
+import ods.composeapp.generated.resources.opening_title
 import ods.composeapp.generated.resources.risk_assess
 import ods.composeapp.generated.resources.schedule_add
 import ods.composeapp.generated.resources.customer_phone
@@ -109,6 +111,7 @@ data class CustomerDetailScreen(val customerId: String) : Screen {
                 when (event) {
                     is CustomerDetailEvent.OpenConsultationEditor -> rightNavigator.push(ConsultationEditorScreen(event.customerId))
                     is CustomerDetailEvent.OpenRiskAssessment -> rightNavigator.push(RiskAssessmentScreen(event.customerId))
+                    is CustomerDetailEvent.OpenAccountOpening -> rightNavigator.push(AccountOpeningScreen(event.customerId))
                     is CustomerDetailEvent.OpenNewVisit -> rightNavigator.push(NewVisitScreen(customerId = event.customerId))
                     is CustomerDetailEvent.OpenVisit -> rightNavigator.push(VisitDetailScreen(event.visitId))
                 }
@@ -159,7 +162,7 @@ fun CustomerDetailContent(
             SectionGap()
             RiskSection(customer, today, onAssess = { onAction(CustomerDetailActions.OnRiskAssessClick) })
             SectionGap()
-            AccountSection(uiState.accounts, uiState.maskPersonalInfo)
+            AccountSection(uiState.accounts, uiState.maskPersonalInfo, onOpen = { onAction(CustomerDetailActions.OnOpenAccountClick) })
             SectionGap()
             SubscriptionSection(uiState.subscriptions, uiState.maskPersonalInfo)
             SectionGap()
@@ -225,8 +228,10 @@ private fun RiskSection(customer: Customer, today: LocalDate, onAssess: () -> Un
 }
 
 @Composable
-private fun AccountSection(accounts: List<Account>, mask: Boolean) {
-    SectionHeader(stringResource(Res.string.customer_accounts))
+private fun AccountSection(accounts: List<Account>, mask: Boolean, onOpen: () -> Unit) {
+    SectionHeader(stringResource(Res.string.customer_accounts)) {
+        OutlineButton(text = stringResource(Res.string.opening_title), onClick = onOpen, modifier = Modifier.testTag(TestTags.ACCOUNT_OPEN))
+    }
     if (accounts.isEmpty()) {
         Text(
             text = stringResource(Res.string.customer_accounts_empty),
