@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.eunilsung.ods.domain.util.AppLockPolicy
 import com.eunilsung.ods.domain.util.LoginPolicy
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
@@ -52,6 +53,7 @@ import com.eunilsung.ods.ui.util.formatOrderTime
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.app_name
 import ods.composeapp.generated.resources.login_button
+import ods.composeapp.generated.resources.login_data_wiped
 import ods.composeapp.generated.resources.login_demo_hint
 import ods.composeapp.generated.resources.login_error_locked
 import ods.composeapp.generated.resources.login_error_unreachable
@@ -103,6 +105,19 @@ fun LoginContent(uiState: LoginUiState, onAction: (LoginActions) -> Unit) {
         ) {
             Brand()
             Spacer(Modifier.height(Dimens.Space16))
+
+            if (uiState.dataWiped) {
+                Text(
+                    text = stringResource(Res.string.login_data_wiped, AppLockPolicy.MAX_ATTEMPTS.toString()),
+                    style = AppTypography.Body,
+                    color = AppColors.Caution,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AppColors.Gray50Bg)
+                        .padding(Dimens.Space12),
+                )
+            }
 
             LoginField(
                 value = uiState.id,

@@ -45,9 +45,15 @@ fun SettingSectionHeader(title: String) {
  * @param isSelected 태블릿에서 오른쪽에 열린 상세면 배경을 칠한다.
  */
 @Composable
-fun SettingNavigateRow(title: String, value: String? = null, isSelected: Boolean = false, onClick: () -> Unit) {
+fun SettingNavigateRow(
+    title: String,
+    value: String? = null,
+    isSelected: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(if (isSelected) AppColors.PrimaryBg else AppColors.Transparent)
             .clickable(onClick = onClick)

@@ -27,4 +27,12 @@ class AppSwitcherSnapshotGuardTest {
             AppSwitcherSnapshotGuard.planFor(sdkInt = 35, enabled = false, secureWhilePausedEnabled = true),
         )
     }
+
+    @Test
+    fun releaseBuildAlwaysBlocksCaptureInsteadOfOnlyWhilePaused() {
+        assertEquals(
+            AppSwitcherSnapshotGuard.Plan(disableRecentsScreenshot = true, secureWhilePaused = false, alwaysSecure = true),
+            AppSwitcherSnapshotGuard.planFor(sdkInt = 35, enabled = true, secureWhilePausedEnabled = true, blockCapture = true),
+        )
+    }
 }

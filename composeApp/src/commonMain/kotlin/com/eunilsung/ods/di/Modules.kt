@@ -1,6 +1,26 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.LocalDataWiperImpl
+import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
+import com.eunilsung.ods.domain.repository.AppLockRepository
+import com.eunilsung.ods.domain.repository.LocalDataWiper
+import com.eunilsung.ods.domain.usecase.AppLockUseCases
+import com.eunilsung.ods.domain.usecase.AuthenticateBiometricUseCase
+import com.eunilsung.ods.domain.usecase.ClearLogoutReasonUseCase
+import com.eunilsung.ods.domain.usecase.GetLogoutReasonUseCase
+import com.eunilsung.ods.domain.usecase.IsBiometricAvailableUseCase
+import com.eunilsung.ods.domain.usecase.LockAppUseCase
+import com.eunilsung.ods.domain.usecase.LockIfInactiveUseCase
+import com.eunilsung.ods.domain.usecase.MainUseCases
+import com.eunilsung.ods.domain.usecase.ObserveAppLockUseCase
+import com.eunilsung.ods.domain.usecase.RecordActivityUseCase
+import com.eunilsung.ods.domain.usecase.RecordBackgroundUseCase
+import com.eunilsung.ods.domain.usecase.RegisterAppPinUseCase
+import com.eunilsung.ods.domain.usecase.SetAppBiometricEnabledUseCase
+import com.eunilsung.ods.domain.usecase.UnlockWithBiometricUseCase
+import com.eunilsung.ods.domain.usecase.UnlockWithPinUseCase
+import com.eunilsung.ods.ui.applock.AppLockViewModel
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalQuoteRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalStockRepositoryImpl
@@ -76,6 +96,25 @@ val appModule = module {
     singleOf(::GetAppInfoUseCase)
     singleOf(::SettingUseCases)
 
+    /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
+    single<AppLockRepository> { LocalAppLockRepositoryImpl(get()) }
+    single<LocalDataWiper> { LocalDataWiperImpl(get()) }
+    singleOf(::ObserveAppLockUseCase)
+    singleOf(::RegisterAppPinUseCase)
+    singleOf(::UnlockWithPinUseCase)
+    singleOf(::UnlockWithBiometricUseCase)
+    singleOf(::SetAppBiometricEnabledUseCase)
+    singleOf(::IsBiometricAvailableUseCase)
+    singleOf(::AuthenticateBiometricUseCase)
+    singleOf(::LockAppUseCase)
+    singleOf(::RecordActivityUseCase)
+    singleOf(::RecordBackgroundUseCase)
+    singleOf(::LockIfInactiveUseCase)
+    singleOf(::GetLogoutReasonUseCase)
+    singleOf(::ClearLogoutReasonUseCase)
+    singleOf(::AppLockUseCases)
+    singleOf(::MainUseCases)
+
     /** 서버가 붙으면 `Config.Server.IS_ENABLED` 로 서버 로그인과 갈라 끼운다. */
     single<LoginRepository> { LocalLoginRepositoryImpl(get()) }
     singleOf(::LoginUseCase)
@@ -91,4 +130,5 @@ val appModule = module {
     viewModelOf(::QuoteViewModel)
     viewModelOf(::SettingViewModel)
     viewModelOf(::LoginViewModel)
+    viewModelOf(::AppLockViewModel)
 }

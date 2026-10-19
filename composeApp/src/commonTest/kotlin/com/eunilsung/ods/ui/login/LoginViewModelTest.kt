@@ -1,12 +1,16 @@
 package com.eunilsung.ods.ui.login
 
+import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.seed.DemoAccounts
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.LoginRepository
+import com.eunilsung.ods.domain.model.LogoutReason
+import com.eunilsung.ods.domain.usecase.ClearLogoutReasonUseCase
 import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
+import com.eunilsung.ods.domain.usecase.GetLogoutReasonUseCase
 import com.eunilsung.ods.domain.usecase.GetSavedIdUseCase
 import com.eunilsung.ods.domain.usecase.IsSaveIdUseCase
 import com.eunilsung.ods.domain.usecase.LoginUseCase
@@ -46,14 +50,18 @@ class LoginViewModelTest {
     private val settings = MapSettings()
     private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
 
+    private val appLock = LocalAppLockRepositoryImpl(settings)
+
     private fun viewModel(repository: LoginRepository = login) = LoginViewModel(
         LoginUseCases(
-            login = LoginUseCase(repository),
+            login = LoginUseCase(repository, appLock),
             observeStaff = ObserveStaffUseCase(repository),
             getSavedId = GetSavedIdUseCase(repository),
             isSaveId = IsSaveIdUseCase(repository),
             setSaveId = SetSaveIdUseCase(repository),
             getAppInfo = GetAppInfoUseCase(FakeVersion),
+            getLogoutReason = GetLogoutReasonUseCase(repository),
+            clearLogoutReason = ClearLogoutReasonUseCase(repository),
         ),
     )
 
@@ -147,5 +155,34 @@ class LoginViewModelTest {
 
         assertEquals(LoginError.Unreachable, viewModel.uiState.value.error)
         assertEquals(DemoAccounts.PASSWORD, viewModel.uiState.value.password)
+    }
+
+    @Test
+    fun successStartsAppLockSessionForThatStaff() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.enter("test1", DemoAccounts.PASSWORD)
+        viewModel.onAction(LoginActions.OnLoginClick)
+        advanceUntilIdle()
+        assertFalse(appLock.state.value.isPinSet)
+        assertFalse(appLock.state.value.isLocked)
+    }
+
+    @Test
+    fun wipedLogoutIsExplainedUntilNextLogin() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.enter("test1", DemoAccounts.PASSWORD)
+        viewModel.onAction(LoginActions.OnLoginClick)
+        advanceUntilIdle()
+
+        login.logout(LogoutReason.WIPED)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.dataWiped)
+
+        viewModel.enter("test1", DemoAccounts.PASSWORD)
+        viewModel.onAction(LoginActions.OnLoginClick)
+        advanceUntilIdle()
+        login.logout()
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.dataWiped)
     }
 }

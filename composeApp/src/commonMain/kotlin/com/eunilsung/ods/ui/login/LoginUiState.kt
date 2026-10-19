@@ -11,6 +11,8 @@ data class LoginUiState(
     val error: LoginError? = null,
     /** 시연용 데이터로 도는지 — 그렇다면 시연용 계정을 안내한다. */
     val usesDemoData: Boolean = true,
+    /** 앱 잠금 비밀번호를 너무 많이 틀려 업무 데이터를 지우고 로그아웃됐다. 다음 로그인까지 안내한다. */
+    val dataWiped: Boolean = false,
 ) {
     val canSubmit: Boolean get() = id.isNotBlank() && password.isNotBlank() && !isLoading
 }

@@ -52,6 +52,7 @@ import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import com.eunilsung.ods.Config
+import com.eunilsung.ods.ui.applock.AppLockPurpose
+import com.eunilsung.ods.ui.applock.AppLockScreen
 import com.eunilsung.ods.ui.login.LoginScreen
 import com.eunilsung.ods.ui.main.tab.CurrentAppTab
 import com.eunilsung.ods.ui.main.tab.MoreTab
@@ -95,6 +98,9 @@ object MainScreen : Screen {
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             viewModel.onAction(MainActions.OnForeground)
         }
+        LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+            viewModel.onAction(MainActions.OnBackground)
+        }
 
         AppTheme {
             Navigator(EmptyScreen) { rightNavigator ->
@@ -108,13 +114,43 @@ object MainScreen : Screen {
                 CompositionLocalProvider(LocalListDensity provides uiState.listDensity) {
                     AppHosts(rightNavigator = rightNavigator) {
                         if (uiState.isLoggedIn) {
-                            MainContent()
+                            LockableMainContent(
+                                lockOverlay = uiState.lockOverlay,
+                                onUserInteraction = { viewModel.onAction(MainActions.OnUserInteraction) },
+                            )
                         } else {
                             LoginScreen()
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * 업무 화면과 그 위를 덮는 잠금 화면.
+ *
+ * 잠겨도 업무 화면을 버리지 않는다 — 풀면 보던 고객·탭 그대로 이어 간다. 대신 잠긴 동안은 화면 읽기 프로그램에도
+ * 드러나지 않게 의미 정보를 걷어 내고, 잠금 화면이 터치를 모두 받는다. 화면을 만질 때마다 자동 잠금 시계를 다시 맞춘다.
+ */
+@Composable
+private fun LockableMainContent(lockOverlay: AppLockPurpose?, onUserInteraction: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    onUserInteraction()
+                }
+            }
+    ) {
+        Box(modifier = if (lockOverlay != null) Modifier.fillMaxSize().clearAndSetSemantics {} else Modifier.fillMaxSize()) {
+            MainContent()
+        }
+        if (lockOverlay != null) {
+            AppLockScreen(purpose = lockOverlay)
         }
     }
 }

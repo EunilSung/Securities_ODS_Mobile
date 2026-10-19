@@ -2,6 +2,7 @@ package com.eunilsung.ods
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.view.WindowManager
@@ -9,7 +10,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.eunilsung.ods.ui.theme.AppColors
 
 /**
- * Android 최근 앱 화면에 시세·잔고·주문이 그림으로 남지 않게 한다([Config.AppSwitcherSnapshot]).
+ * Android 최근 앱 화면에 고객 정보가 그림으로 남지 않게 하고, 배포용 빌드는 화면 캡처를 늘 막는다([Config.AppSwitcherSnapshot]·[Config.Security]).
  *
  * 두 가지를 함께 쓴다.
  *  - **Android 13 이상 — 스냅샷 끄기**(`setRecentsScreenshotEnabled(false)`). 뒤로 가면 화면 대신 앱 배경색이 저장된다.
@@ -24,25 +25,37 @@ import com.eunilsung.ods.ui.theme.AppColors
  */
 internal object AppSwitcherSnapshotGuard {
 
-    /** 무엇을 켤지. 순수 판정이라 기기 없이 확인할 수 있다. */
-    data class Plan(val disableRecentsScreenshot: Boolean, val secureWhilePaused: Boolean)
+    /**
+     * 무엇을 켤지. 순수 판정이라 기기 없이 확인할 수 있다.
+     *
+     * @param alwaysSecure 화면 캡처를 늘 막는다([Config.Security.BLOCK_SCREEN_CAPTURE_IN_RELEASE], 배포용 빌드).
+     *   늘 막으면 일시정지 동안만 막는 것은 필요 없다.
+     */
+    data class Plan(val disableRecentsScreenshot: Boolean, val secureWhilePaused: Boolean, val alwaysSecure: Boolean = false)
 
-    fun planFor(sdkInt: Int, enabled: Boolean, secureWhilePausedEnabled: Boolean): Plan =
-        if (!enabled) Plan(disableRecentsScreenshot = false, secureWhilePaused = false)
+    fun planFor(sdkInt: Int, enabled: Boolean, secureWhilePausedEnabled: Boolean, blockCapture: Boolean = false): Plan =
+        if (!enabled) Plan(disableRecentsScreenshot = false, secureWhilePaused = false, alwaysSecure = blockCapture)
         else Plan(
             disableRecentsScreenshot = sdkInt >= Build.VERSION_CODES.TIRAMISU,
-            secureWhilePaused = secureWhilePausedEnabled,
+            secureWhilePaused = secureWhilePausedEnabled && !blockCapture,
+            alwaysSecure = blockCapture,
         )
+
+    /** 디버그 빌드인지 — 디버그에서는 캡처를 막지 않는다. */
+    private var isDebuggable = false
 
     private val plan: Plan
         get() = planFor(
             sdkInt = Build.VERSION.SDK_INT,
             enabled = Config.AppSwitcherSnapshot.IS_ENABLED,
             secureWhilePausedEnabled = Config.AppSwitcherSnapshot.IS_SECURE_WHILE_PAUSED_ENABLED,
+            blockCapture = Config.Security.BLOCK_SCREEN_CAPTURE_IN_RELEASE && !isDebuggable,
         )
 
     /** 프로세스가 되살아나면 새 액티비티라 onCreate 마다 건다. */
     fun onCreate(activity: Activity) {
+        isDebuggable = (activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (plan.alwaysSecure) activity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         applyRecentsBackground(activity)
         if (!plan.disableRecentsScreenshot) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

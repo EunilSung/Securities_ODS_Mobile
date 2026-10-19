@@ -1,0 +1,15 @@
+appId: com.eunilsung.ods
+name: 보안 키패드로 비밀번호 135790 을 넣는다
+---
+- tapOn:
+    id: pin_key_${PIN_1 || '1'}
+- tapOn:
+    id: pin_key_${PIN_2 || '3'}
+- tapOn:
+    id: pin_key_${PIN_3 || '5'}
+- tapOn:
+    id: pin_key_${PIN_4 || '7'}
+- tapOn:
+    id: pin_key_${PIN_5 || '9'}
+- tapOn:
+    id: pin_key_${PIN_6 || '0'}

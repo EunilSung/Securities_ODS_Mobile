@@ -4,6 +4,7 @@ import com.eunilsung.ods.data.local.seed.DemoAccounts
 import com.eunilsung.ods.domain.model.Staff
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
+import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.repository.LoginRepository
 import com.eunilsung.ods.domain.util.LoginPolicy
 import com.eunilsung.ods.util.Log
@@ -14,10 +15,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * 서버 없이 도는 로그인 — [DemoAccounts] 로만 인증하고, 아이디별 틀린 횟수와 잠금을 기기에 센다.
+ * 서버 없이 도는 로그인 — [DemoAccounts] 로만 인증하고, 사번별 틀린 횟수와 잠금을 기기에 센다.
  *
- * Talk 의 같은 클래스와 달리 **비밀번호를 저장하지 않는다**(자동 로그인 없음). 기억하는 것은 아이디뿐이다.
- * 없는 아이디도 틀린 횟수를 세고 같은 결과를 돌려준다 — 어느 아이디가 있는지 드러내지 않는다.
+ * Talk 의 같은 클래스와 달리 **비밀번호를 저장하지 않는다**(자동 로그인 없음). 기억하는 것은 사번뿐이다.
+ * 없는 사번도 틀린 횟수를 세고 같은 결과를 돌려준다 — 어느 사번이 있는지 드러내지 않는다.
  */
 class LocalLoginRepositoryImpl(
     private val settings: Settings,
@@ -53,14 +54,23 @@ class LocalLoginRepositoryImpl(
 
         settings.remove(failureKey(id))
         if (isSaveId()) settings.putString(KEY_SAVED_ID, staff.id) else settings.remove(KEY_SAVED_ID)
+        _lastLogoutReason.value = null
         _currentStaff.value = staff
         Log.message("[Login/Local] success ${staff.id}")
         return LoginResult.Success(staff)
     }
 
-    override fun logout() {
-        Log.message("[Login/Local] logout ${_currentStaff.value?.id}")
+    private val _lastLogoutReason = MutableStateFlow<LogoutReason?>(null)
+    override val lastLogoutReason: StateFlow<LogoutReason?> = _lastLogoutReason.asStateFlow()
+
+    override fun logout(reason: LogoutReason) {
+        Log.message("[Login/Local] logout ${_currentStaff.value?.id} ($reason)")
+        _lastLogoutReason.value = reason
         _currentStaff.value = null
+    }
+
+    override fun clearLogoutReason() {
+        _lastLogoutReason.value = null
     }
 
     override fun savedId(): String? = if (isSaveId()) settings.getStringOrNull(KEY_SAVED_ID) else null

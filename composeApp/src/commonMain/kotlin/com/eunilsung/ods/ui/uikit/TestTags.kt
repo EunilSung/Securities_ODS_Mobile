@@ -18,6 +18,13 @@ object TestTags {
     /** 상단 제목줄의 뒤로 버튼. iOS 에는 시스템 뒤로 가기가 없어 흐름이 이것을 누른다. */
     const val TOP_BACK = "top_back"
 
+    /** 보안 키패드의 숫자 키는 `pin_key_<숫자>` 이다. 배열이 섞여도 숫자로 누를 수 있다. */
+    const val PIN_KEY_PREFIX = "pin_key_"
+    const val APP_LOCK_SCREEN = "app_lock_screen"
+    const val APP_LOCK_LOGOUT = "app_lock_logout"
+    const val SETTING_SECURITY = "setting_security"
+    const val SETTING_LOCK_NOW = "setting_lock_now"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }

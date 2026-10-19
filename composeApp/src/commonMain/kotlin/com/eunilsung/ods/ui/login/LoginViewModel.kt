@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
+import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.usecase.LoginUseCases
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,9 +15,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * 로그인 화면 — 아이디·비밀번호 입력, 아이디 저장, 결과(틀림·잠김·닿지 못함).
+ * 로그인 화면 — 사번·비밀번호 입력, 사번 저장, 결과(틀림·잠김·닿지 못함).
  *
- * 로그인되면 화면을 덮던 로그인 창이 사라진다(메인이 고객 상태를 보고 가린다). 로그아웃되면 비밀번호를 비우고 처음 상태로 돌린다.
+ * 잠금 비밀번호를 너무 많이 틀려 데이터를 지우고 로그아웃됐다면 그 사실을 알린다.
+ *
+ * 로그인되면 화면을 덮던 로그인 창이 사라진다(메인이 직원 상태를 보고 가린다). 로그아웃되면 비밀번호를 비우고 처음 상태로 돌린다.
  */
 class LoginViewModel(
     private val useCases: LoginUseCases,
@@ -68,5 +71,6 @@ class LoginViewModel(
         id = useCases.getSavedId().orEmpty(),
         saveId = useCases.isSaveId(),
         usesDemoData = useCases.getAppInfo().usesDemoData,
+        dataWiped = useCases.getLogoutReason() == LogoutReason.WIPED,
     )
 }

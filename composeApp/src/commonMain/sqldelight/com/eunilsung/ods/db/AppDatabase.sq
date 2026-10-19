@@ -19,3 +19,7 @@ INSERT OR IGNORE INTO WatchStockEntity VALUES ?;
 
 updateQuote:
 UPDATE WatchStockEntity SET price = ?, volume = ? WHERE code = ?;
+
+wipeBusinessData {
+    DELETE FROM WatchStockEntity;
+}

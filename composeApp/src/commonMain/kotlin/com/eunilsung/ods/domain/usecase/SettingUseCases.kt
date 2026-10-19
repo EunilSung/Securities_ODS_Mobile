@@ -21,4 +21,9 @@ class SettingUseCases(
     val getAppInfo: GetAppInfoUseCase,
     val observeStaff: ObserveStaffUseCase,
     val logout: LogoutUseCase,
+    val observeAppLock: ObserveAppLockUseCase,
+    val setAppBiometricEnabled: SetAppBiometricEnabledUseCase,
+    val isBiometricAvailable: IsBiometricAvailableUseCase,
+    val authenticateBiometric: AuthenticateBiometricUseCase,
+    val lockApp: LockAppUseCase,
 )
