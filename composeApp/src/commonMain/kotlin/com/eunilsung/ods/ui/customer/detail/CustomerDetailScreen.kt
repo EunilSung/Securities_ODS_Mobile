@@ -42,6 +42,7 @@ import com.eunilsung.ods.ui.customer.displayPhone
 import com.eunilsung.ods.ui.customer.label
 import com.eunilsung.ods.ui.main.LocalRightNavigator
 import com.eunilsung.ods.ui.main.popToEmptyRoot
+import com.eunilsung.ods.ui.risk.RiskAssessmentScreen
 import com.eunilsung.ods.ui.schedule.detail.VisitDetailScreen
 import com.eunilsung.ods.ui.schedule.label
 import com.eunilsung.ods.ui.schedule.register.NewVisitScreen
@@ -72,6 +73,7 @@ import ods.composeapp.generated.resources.customer_detail
 import ods.composeapp.generated.resources.customer_hide_info
 import ods.composeapp.generated.resources.customer_no_upcoming_visits
 import ods.composeapp.generated.resources.customer_upcoming_visits
+import ods.composeapp.generated.resources.risk_assess
 import ods.composeapp.generated.resources.schedule_add
 import ods.composeapp.generated.resources.customer_phone
 import ods.composeapp.generated.resources.customer_risk_assessed_on
@@ -101,6 +103,7 @@ data class CustomerDetailScreen(val customerId: String) : Screen {
             viewModel.events.collect { event ->
                 when (event) {
                     is CustomerDetailEvent.OpenConsultationEditor -> rightNavigator.push(ConsultationEditorScreen(event.customerId))
+                    is CustomerDetailEvent.OpenRiskAssessment -> rightNavigator.push(RiskAssessmentScreen(event.customerId))
                     is CustomerDetailEvent.OpenNewVisit -> rightNavigator.push(NewVisitScreen(customerId = event.customerId))
                     is CustomerDetailEvent.OpenVisit -> rightNavigator.push(VisitDetailScreen(event.visitId))
                 }
@@ -149,7 +152,7 @@ fun CustomerDetailContent(
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             ProfileSection(customer, today, uiState.maskPersonalInfo)
             SectionGap()
-            RiskSection(customer, today)
+            RiskSection(customer, today, onAssess = { onAction(CustomerDetailActions.OnRiskAssessClick) })
             SectionGap()
             AccountSection(uiState.accounts, uiState.maskPersonalInfo)
             SectionGap()
@@ -192,8 +195,10 @@ private fun ProfileSection(customer: Customer, today: LocalDate, mask: Boolean) 
 }
 
 @Composable
-private fun RiskSection(customer: Customer, today: LocalDate) {
-    SectionHeader(stringResource(Res.string.customer_risk_profile))
+private fun RiskSection(customer: Customer, today: LocalDate, onAssess: () -> Unit) {
+    SectionHeader(stringResource(Res.string.customer_risk_profile)) {
+        OutlineButton(text = stringResource(Res.string.risk_assess), onClick = onAssess, modifier = Modifier.testTag(TestTags.RISK_START))
+    }
     val profile = customer.riskProfile
     Column(modifier = Modifier.padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.Space16), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (profile == null) {

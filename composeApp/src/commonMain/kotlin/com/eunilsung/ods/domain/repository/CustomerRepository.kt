@@ -5,6 +5,7 @@ import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.NewConsultation
 import com.eunilsung.ods.domain.model.NewCustomer
+import com.eunilsung.ods.domain.model.RiskProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -28,6 +29,9 @@ interface CustomerRepository {
 
     /** 새 고객을 등록한다. */
     suspend fun register(customer: NewCustomer, nowMillis: Long): Customer
+
+    /** 투자성향을 바꾼다. 진단한 시각을 함께 남겨 유효기간을 따진다. */
+    suspend fun saveRiskProfile(customerId: String, profile: RiskProfile, assessedAtMillis: Long)
 
     /** 상담 기록을 남긴다. [staffName] 은 기록한 직원이다. */
     suspend fun addConsultation(consultation: NewConsultation, staffName: String, nowMillis: Long): Consultation

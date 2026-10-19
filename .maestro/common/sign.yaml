@@ -1,0 +1,18 @@
+appId: com.eunilsung.ods
+name: 서명 칸에 두 획을 긋는다
+---
+- scrollUntilVisible:
+    element:
+      id: signature_pad
+    direction: DOWN
+    centerElement: true
+- swipe:
+    from:
+      id: signature_pad
+    direction: RIGHT
+    duration: 600
+- swipe:
+    from:
+      id: signature_pad
+    direction: UP
+    duration: 600

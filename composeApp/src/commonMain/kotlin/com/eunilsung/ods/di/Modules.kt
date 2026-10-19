@@ -1,6 +1,11 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.repository.LocalSignatureRepositoryImpl
+import com.eunilsung.ods.domain.repository.SignatureRepository
+import com.eunilsung.ods.domain.usecase.RiskAssessmentUseCases
+import com.eunilsung.ods.domain.usecase.SaveRiskAssessmentUseCase
+import com.eunilsung.ods.ui.risk.RiskAssessmentViewModel
 import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
 import com.eunilsung.ods.data.mapper.VisitMapper
 import com.eunilsung.ods.domain.repository.VisitRepository
@@ -171,6 +176,11 @@ val appModule = module {
     singleOf(::VisitDetailUseCases)
     singleOf(::NewVisitUseCases)
 
+    /** 서버 모드에서는 서명 그림을 서버로 보내는 구현으로 바꾼다. 기기에는 지문만 남긴다. */
+    single<SignatureRepository> { LocalSignatureRepositoryImpl(get()) }
+    singleOf(::SaveRiskAssessmentUseCase)
+    singleOf(::RiskAssessmentUseCases)
+
     /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
     single<AppLockRepository> { LocalAppLockRepositoryImpl(get()) }
     single<LocalDataWiper> { LocalDataWiperImpl(get()) }
@@ -214,4 +224,5 @@ val appModule = module {
     viewModelOf(::ScheduleViewModel)
     viewModelOf(::VisitDetailViewModel)
     viewModelOf(::NewVisitViewModel)
+    viewModelOf(::RiskAssessmentViewModel)
 }

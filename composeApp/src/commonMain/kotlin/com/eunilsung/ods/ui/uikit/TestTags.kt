@@ -61,6 +61,15 @@ object TestTags {
     const val NEW_VISIT_SUBMIT = "new_visit_submit"
     const val CUSTOMER_ADD_VISIT = "customer_add_visit"
 
+    const val SIGNATURE_PAD = "signature_pad"
+    const val RISK_START = "risk_start"
+    /** 진단 선택지는 `risk_option_<번호>` 이다(0부터). */
+    const val RISK_OPTION_PREFIX = "risk_option_"
+    const val RISK_NEXT = "risk_next"
+    const val RISK_RESULT = "risk_result"
+    const val RISK_CONFIRM = "risk_confirm"
+    const val RISK_SAVE = "risk_save"
+
     const val STOCK_ITEM = "stock_item"
     const val MORE_LOGOUT = "more_logout"
 }
