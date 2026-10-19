@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * 고객 상세 — 기본 정보, 투자성향, 계좌, 상담 이력을 한 고객에 묶어 내놓는다.
+ * 고객 상세 — 기본 정보, 투자성향, 계좌, 방문 예정, 상담 이력을 한 고객에 묶어 내놓는다.
  *
  * 상세를 열면 그 고객과 상담을 시작한 것으로 본다(넓은 태블릿의 상담 칸이 따라온다).
  */
@@ -35,11 +35,13 @@ class CustomerDetailViewModel(
             useCases.observeAccounts(id),
             useCases.observeConsultations(id),
             useCases.observeMaskPersonalInfo(),
-        ) { customer, accounts, consultations, mask ->
+            useCases.observeUpcomingVisits(id),
+        ) { customer, accounts, consultations, mask, visits ->
             CustomerDetailUiState(
                 customer = customer,
                 accounts = accounts,
                 consultations = consultations,
+                upcomingVisits = visits,
                 maskPersonalInfo = mask,
                 today = todayInSeoul(),
             )
@@ -56,10 +58,15 @@ class CustomerDetailViewModel(
                 useCases.startConsult(action.customerId)
             }
             CustomerDetailActions.OnToggleMask -> useCases.setMaskPersonalInfo(!useCases.observeMaskPersonalInfo().value)
-            CustomerDetailActions.OnAddConsultationClick -> {
-                val id = customerId.value ?: return
-                viewModelScope.launch { _events.send(CustomerDetailEvent.OpenConsultationEditor(id)) }
-            }
+            CustomerDetailActions.OnAddConsultationClick -> send { CustomerDetailEvent.OpenConsultationEditor(it) }
+            CustomerDetailActions.OnAddVisitClick -> send { CustomerDetailEvent.OpenNewVisit(it) }
+            is CustomerDetailActions.OnVisitClick -> viewModelScope.launch { _events.send(CustomerDetailEvent.OpenVisit(action.visitId)) }
         }
+    }
+
+    /** 지금 보는 고객 id 로 한 번만 처리할 일을 보낸다. */
+    private fun send(event: (String) -> CustomerDetailEvent) {
+        val id = customerId.value ?: return
+        viewModelScope.launch { _events.send(event(id)) }
     }
 }

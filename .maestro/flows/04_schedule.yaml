@@ -1,0 +1,59 @@
+appId: com.eunilsung.ods
+name: 다음 주 방문 일정을 잡고, 방문을 마쳐 상담을 기록
+---
+- runFlow: ../common/login.yaml
+- assertVisible:
+    id: visit_item
+    index: 0
+- tapOn:
+    id: schedule_add
+- tapOn:
+    id: new_visit_customer_search
+- inputText: "7731"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: new_visit_customer
+    index: 0
+- tapOn:
+    id: new_visit_week_next
+- scrollUntilVisible:
+    element:
+      id: time_slot_1030
+    direction: DOWN
+- tapOn:
+    id: time_slot_1030
+- scrollUntilVisible:
+    element:
+      id: new_visit_place
+    direction: DOWN
+- tapOn:
+    id: new_visit_place
+- inputText: "Pangyo office"
+- runFlow: ../common/dismiss_keyboard.yaml
+- scrollUntilVisible:
+    element:
+      id: new_visit_submit
+    direction: DOWN
+- tapOn:
+    id: new_visit_submit
+- assertVisible:
+    id: visit_complete
+- assertVisible: "Pangyo office"
+- tapOn:
+    id: visit_complete
+- tapOn:
+    id: consult_content
+- inputText: "Explained overseas equity fund"
+- runFlow: ../common/dismiss_keyboard.yaml
+- tapOn:
+    id: consult_save
+- assertVisible: "완료|Done"
+- tapOn:
+    id: visit_open_customer
+- assertVisible:
+    id: customer_detail_name
+    text: "박준호"
+- scrollUntilVisible:
+    element:
+      text: "Explained overseas equity fund"
+    direction: DOWN

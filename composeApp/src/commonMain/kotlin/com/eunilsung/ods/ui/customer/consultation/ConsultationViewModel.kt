@@ -2,6 +2,7 @@ package com.eunilsung.ods.ui.customer.consultation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.NewConsultation
 import com.eunilsung.ods.domain.usecase.ConsultUseCases
 import kotlinx.coroutines.channels.Channel
@@ -31,7 +32,7 @@ class ConsultationViewModel(
     fun onAction(action: ConsultationActions) {
         when (action) {
             is ConsultationActions.OnEnter -> if (_uiState.value.customerId != action.customerId) {
-                _uiState.value = ConsultationUiState(customerId = action.customerId)
+                _uiState.value = ConsultationUiState(customerId = action.customerId, topic = action.topic ?: ConsultTopic.GENERAL)
             }
             is ConsultationActions.OnChannelChange -> _uiState.update { it.copy(channel = action.channel) }
             is ConsultationActions.OnTopicChange -> _uiState.update { it.copy(topic = action.topic) }

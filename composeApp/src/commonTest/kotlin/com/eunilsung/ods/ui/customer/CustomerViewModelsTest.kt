@@ -4,7 +4,10 @@ import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalUserPreferenceRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
+import com.eunilsung.ods.data.mapper.VisitMapper
+import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.Gender
@@ -58,7 +61,8 @@ import kotlin.test.assertTrue
 class CustomerViewModelsTest {
     private val dispatcher = StandardTestDispatcher()
     private val settings = MapSettings()
-    private val customers = LocalCustomerRepositoryImpl(createTestDatabase(), CustomerMapper())
+    private val database = createTestDatabase()
+    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper())
     private val session = LocalConsultSessionRepositoryImpl()
     private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
     private val preferences = LocalUserPreferenceRepositoryImpl(settings)
@@ -81,6 +85,7 @@ class CustomerViewModelsTest {
             observeMaskPersonalInfo = ObserveMaskPersonalInfoUseCase(preferences),
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
             startConsult = StartConsultUseCase(session),
+            observeUpcomingVisits = ObserveUpcomingVisitsUseCase(LocalVisitRepositoryImpl(database, VisitMapper())),
         )
     )
 

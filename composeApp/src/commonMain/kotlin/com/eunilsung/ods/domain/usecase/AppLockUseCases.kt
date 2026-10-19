@@ -138,4 +138,5 @@ class MainUseCases(
     val lockIfInactive: LockIfInactiveUseCase,
     val fetchWatchlist: FetchWatchlistUseCase,
     val refreshCustomers: RefreshCustomersUseCase,
+    val refreshVisits: RefreshVisitsUseCase,
 )

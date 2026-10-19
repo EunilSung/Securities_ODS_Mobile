@@ -81,9 +81,51 @@ SELECT * FROM AccountEntity WHERE customerId = ? ORDER BY openedAt;
 insertAccount:
 INSERT INTO AccountEntity VALUES ?;
 
+CREATE TABLE VisitEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    scheduledAt INTEGER NOT NULL,
+    place TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    memo TEXT NOT NULL,
+    status TEXT NOT NULL
+);
+
+CREATE INDEX VisitEntity_time ON VisitEntity(scheduledAt);
+
+selectVisitsBetween:
+SELECT v.id, v.customerId, COALESCE(c.name, '') AS customerName, v.scheduledAt, v.place, v.purpose, v.memo, v.status
+FROM VisitEntity v
+LEFT JOIN CustomerEntity c ON c.id = v.customerId
+WHERE v.scheduledAt >= :fromMillis AND v.scheduledAt < :untilMillis
+ORDER BY v.scheduledAt;
+
+selectVisit:
+SELECT v.id, v.customerId, COALESCE(c.name, '') AS customerName, v.scheduledAt, v.place, v.purpose, v.memo, v.status
+FROM VisitEntity v
+LEFT JOIN CustomerEntity c ON c.id = v.customerId
+WHERE v.id = ?;
+
+selectUpcomingVisits:
+SELECT v.id, v.customerId, COALESCE(c.name, '') AS customerName, v.scheduledAt, v.place, v.purpose, v.memo, v.status
+FROM VisitEntity v
+LEFT JOIN CustomerEntity c ON c.id = v.customerId
+WHERE v.customerId = :customerId AND v.status = 'SCHEDULED' AND v.scheduledAt >= :fromMillis
+ORDER BY v.scheduledAt;
+
+countVisits:
+SELECT COUNT(*) FROM VisitEntity;
+
+insertVisit:
+INSERT INTO VisitEntity VALUES ?;
+
+updateVisitStatus:
+UPDATE VisitEntity SET status = ? WHERE id = ?;
+
 wipeBusinessData {
     DELETE FROM WatchStockEntity;
     DELETE FROM CustomerEntity;
     DELETE FROM ConsultationEntity;
     DELETE FROM AccountEntity;
+    DELETE FROM VisitEntity;
 }
