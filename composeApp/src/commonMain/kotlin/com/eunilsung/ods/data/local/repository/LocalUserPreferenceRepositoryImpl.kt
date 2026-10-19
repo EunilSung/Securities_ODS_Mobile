@@ -24,23 +24,16 @@ class LocalUserPreferenceRepositoryImpl(
         _listDensity.value = density
     }
 
-    override fun lastQuoteCode(): String? = settings.getStringOrNull(KEY_LAST_QUOTE_CODE)
+    private val _maskPersonalInfo = MutableStateFlow(settings.getBoolean(KEY_MASK_PERSONAL_INFO, true))
+    override val maskPersonalInfo: StateFlow<Boolean> = _maskPersonalInfo.asStateFlow()
 
-    override fun setLastQuoteCode(code: String) {
-        settings.putString(KEY_LAST_QUOTE_CODE, code)
-    }
-
-    private val _hideAmounts = MutableStateFlow(settings.getBoolean(KEY_HIDE_AMOUNTS, false))
-    override val hideAmounts: StateFlow<Boolean> = _hideAmounts.asStateFlow()
-
-    override fun setHideAmounts(hide: Boolean) {
-        settings.putBoolean(KEY_HIDE_AMOUNTS, hide)
-        _hideAmounts.value = hide
+    override fun setMaskPersonalInfo(mask: Boolean) {
+        settings.putBoolean(KEY_MASK_PERSONAL_INFO, mask)
+        _maskPersonalInfo.value = mask
     }
 
     private companion object {
         const val KEY_LIST_DENSITY = "pref.listDensity"
-        const val KEY_LAST_QUOTE_CODE = "pref.lastQuoteCode"
-        const val KEY_HIDE_AMOUNTS = "pref.hideAmounts"
+        const val KEY_MASK_PERSONAL_INFO = "pref.maskPersonalInfo"
     }
 }

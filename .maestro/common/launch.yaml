@@ -1,0 +1,5 @@
+appId: com.eunilsung.ods
+name: 앱을 처음 상태로 띄운다
+---
+- launchApp:
+    clearState: true

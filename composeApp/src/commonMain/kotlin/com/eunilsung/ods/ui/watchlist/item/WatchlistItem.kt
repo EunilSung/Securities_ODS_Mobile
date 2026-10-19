@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
 import com.eunilsung.ods.ui.theme.LocalListDensity
 import com.eunilsung.ods.ui.theme.tokens
+import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.click.clickable
 import com.eunilsung.ods.ui.uikit.stock.tickFlash
 import com.eunilsung.ods.ui.util.changeLabel
@@ -42,6 +44,7 @@ fun WatchlistItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(TestTags.STOCK_ITEM)
             .background(if (isSelected) AppColors.PrimaryBg else AppColors.Transparent)
             .tickFlash(stock.price)
             .clickable(onClick = onClick)

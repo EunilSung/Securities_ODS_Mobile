@@ -11,10 +11,10 @@ class SetListDensityUseCase(private val repository: UserPreferenceRepository) {
     operator fun invoke(density: ListDensity) = repository.setListDensity(density)
 }
 
-class ObserveHideAmountsUseCase(private val repository: UserPreferenceRepository) {
-    operator fun invoke() = repository.hideAmounts
+class ObserveMaskPersonalInfoUseCase(private val repository: UserPreferenceRepository) {
+    operator fun invoke() = repository.maskPersonalInfo
 }
 
-class SetHideAmountsUseCase(private val repository: UserPreferenceRepository) {
-    operator fun invoke(hide: Boolean) = repository.setHideAmounts(hide)
+class SetMaskPersonalInfoUseCase(private val repository: UserPreferenceRepository) {
+    operator fun invoke(mask: Boolean) = repository.setMaskPersonalInfo(mask)
 }

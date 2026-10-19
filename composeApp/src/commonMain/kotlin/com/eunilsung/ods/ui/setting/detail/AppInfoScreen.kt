@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
-import com.eunilsung.ods.ui.setting.SettingActions
 import com.eunilsung.ods.ui.setting.SettingUiState
 import com.eunilsung.ods.ui.setting.SettingViewModel
 import com.eunilsung.ods.ui.setting.component.SettingValueRow
@@ -27,7 +26,7 @@ import ods.composeapp.generated.resources.setting_data_source
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-/** 앱 정보 — 버전, 시세·계좌 데이터가 시연용인지 실제인지. */
+/** 앱 정보 — 버전, 고객·시세 데이터가 시연용인지 실제인지. */
 class AppInfoScreen : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
@@ -35,14 +34,14 @@ class AppInfoScreen : Screen {
     override fun Content() {
         val viewModel: SettingViewModel = koinViewModel()
         val uiState by viewModel.uiState.collectAsState()
-        AppInfoContent(uiState, viewModel::onAction)
+        AppInfoContent(uiState)
     }
 }
 
 @Composable
-fun AppInfoContent(uiState: SettingUiState, onAction: (SettingActions) -> Unit) {
+fun AppInfoContent(uiState: SettingUiState) {
     val info = uiState.appInfo
-    SettingDetailScaffold(title = stringResource(Res.string.setting_app_info), uiState = uiState, onAction = onAction) {
+    SettingDetailScaffold(title = stringResource(Res.string.setting_app_info)) {
         SettingValueRow(
             label = stringResource(Res.string.setting_app_version),
             value = if (info.versionName.isBlank()) "-" else "${info.versionName} (${info.versionCode})",

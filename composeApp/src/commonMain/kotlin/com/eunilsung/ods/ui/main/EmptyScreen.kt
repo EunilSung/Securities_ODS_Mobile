@@ -43,7 +43,7 @@ fun Navigator.popToEmptyRoot() {
 }
 
 /**
- * 한 단계 뒤로 — 위에 쌓인 화면(종목 상세 위의 주문)이 있으면 그것만 닫고, 아니면 오른쪽을 비운다.
+ * 한 단계 뒤로 — 위에 쌓인 화면이 있으면 그것만 닫고, 아니면 오른쪽을 비운다.
  */
 fun Navigator.popOrClose() {
     if (size > 2) pop() else popToEmptyRoot()

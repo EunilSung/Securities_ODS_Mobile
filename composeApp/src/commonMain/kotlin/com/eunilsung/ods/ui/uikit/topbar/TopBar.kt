@@ -14,11 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
+import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.click.clickable
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.arrow_back_icon
@@ -45,7 +47,7 @@ fun TopBar(
     ) {
         if (onBack != null) {
             Box(
-                modifier = Modifier.size(40.dp).clickable(cornerRadius = 20.dp, onClick = onBack),
+                modifier = Modifier.size(40.dp).testTag(TestTags.TOP_BACK).clickable(cornerRadius = 20.dp, onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

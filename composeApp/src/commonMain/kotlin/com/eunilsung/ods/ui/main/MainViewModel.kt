@@ -2,9 +2,8 @@ package com.eunilsung.ods.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
+import com.eunilsung.ods.domain.usecase.ObserveStaffUseCase
 import com.eunilsung.ods.domain.usecase.ObserveListDensityUseCase
-import com.eunilsung.ods.domain.usecase.ObserveOpenOrdersUseCase
 import com.eunilsung.ods.domain.usecase.StockUseCases
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -19,24 +18,23 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * 메인 — 로그인 여부, 탭 배지, 목록 밀도처럼 앱 전체가 보는 값을 낸다.
+ * 메인 — 로그인 여부, 목록 밀도처럼 앱 전체가 보는 값을 낸다.
  *
  * 로그인되면 탭 화면이 열리기 전에 첫 시세를 받아 두고, 로그아웃되면 [MainScreenEvent.LoggedOut] 을 보내 열린 상세를 닫게 한다.
  */
 class MainViewModel(
     private val stockUseCases: StockUseCases,
     observeListDensity: ObserveListDensityUseCase,
-    observeOpenOrders: ObserveOpenOrdersUseCase,
-    private val observeCustomer: ObserveCustomerUseCase,
+    private val observeStaff: ObserveStaffUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<MainUiState> =
-        combine(observeCustomer(), observeListDensity(), observeOpenOrders()) { customer, density, openOrders ->
-            MainUiState(isLoggedIn = customer != null, openOrderCount = openOrders.size, listDensity = density)
+        combine(observeStaff(), observeListDensity()) { staff, density ->
+            MainUiState(isLoggedIn = staff != null, listDensity = density)
         }.stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-            MainUiState(isLoggedIn = observeCustomer().value != null, listDensity = observeListDensity().value),
+            MainUiState(isLoggedIn = observeStaff().value != null, listDensity = observeListDensity().value),
         )
 
     private val _events = Channel<MainScreenEvent>(Channel.BUFFERED)
@@ -44,7 +42,7 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
-            observeCustomer()
+            observeStaff()
                 .map { it != null }
                 .distinctUntilChanged()
                 .drop(1)
@@ -54,7 +52,7 @@ class MainViewModel(
 
     fun onAction(action: MainActions) {
         when (action) {
-            MainActions.OnForeground -> if (observeCustomer().value != null) prefetch()
+            MainActions.OnForeground -> if (observeStaff().value != null) prefetch()
         }
     }
 

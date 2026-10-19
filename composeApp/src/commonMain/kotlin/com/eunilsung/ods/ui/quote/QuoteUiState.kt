@@ -16,6 +16,4 @@ data class QuoteUiState(
     /** [period] 의 봉(오래된 것부터). */
     val candles: List<Candle> = emptyList(),
     val orderBook: OrderBook? = null,
-    /** 현재가 탭 위쪽의 종목 줄. 종목 상세로 열렸을 때는 비어 있다. */
-    val watchlist: List<Stock> = emptyList(),
 )

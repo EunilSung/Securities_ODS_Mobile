@@ -62,14 +62,10 @@ import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import com.eunilsung.ods.Config
 import com.eunilsung.ods.ui.login.LoginScreen
-import com.eunilsung.ods.ui.main.tab.BalanceTab
-import com.eunilsung.ods.ui.order.OrderPane
 import com.eunilsung.ods.ui.main.tab.CurrentAppTab
 import com.eunilsung.ods.ui.main.tab.MoreTab
-import com.eunilsung.ods.ui.main.tab.OrderTab
-import com.eunilsung.ods.ui.main.tab.QuoteTab
 import com.eunilsung.ods.ui.main.tab.TabItem
-import com.eunilsung.ods.ui.main.tab.WatchlistTab
+import com.eunilsung.ods.ui.main.tab.MarketTab
 import com.eunilsung.ods.ui.main.tab.rememberAppTabState
 import com.eunilsung.ods.ui.theme.AppColors
 import com.eunilsung.ods.ui.theme.AppTheme
@@ -112,7 +108,7 @@ object MainScreen : Screen {
                 CompositionLocalProvider(LocalListDensity provides uiState.listDensity) {
                     AppHosts(rightNavigator = rightNavigator) {
                         if (uiState.isLoggedIn) {
-                            MainContent(openOrderCount = uiState.openOrderCount)
+                            MainContent()
                         } else {
                             LoginScreen()
                         }
@@ -131,13 +127,13 @@ fun rememberImeHeight(): Dp {
 }
 
 /**
- * 화면 폭으로 폰 · 태블릿(2칸) · 넓은 태블릿(3칸) 레이아웃을 가른다.
+ * 화면 폭으로 폰 · 태블릿(2칸) 레이아웃을 가른다.
  *
  * 기준은 기기 종류가 아니라 **지금 창의 폭**이다 — 폴더블을 펼치거나 태블릿을 돌리거나 분할 화면으로 줄이면 그 자리에서 바뀐다.
  * 오른쪽 화면 스택([LocalRightNavigator])은 모든 레이아웃이 같이 쓰므로 전환해도 보던 상세 화면이 유지된다.
  */
 @Composable
-fun MainContent(openOrderCount: Int) {
+fun MainContent() {
     val imeHeight = rememberImeHeight()
     val isKeyboardVisible = imeHeight > 0.dp
     val rightNavigator = LocalRightNavigator.current
@@ -145,17 +141,14 @@ fun MainContent(openOrderCount: Int) {
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isTablet = maxWidth >= Config.Layout.TABLET_MIN_WIDTH_DP.dp
-        val isWideTablet = maxWidth >= Config.Layout.WIDE_TABLET_MIN_WIDTH_DP.dp
 
         CompositionLocalProvider(
             LocalRightPaneOpen provides rightPaneOpen,
             LocalIsTablet provides isTablet,
-            LocalOrderPaneVisible provides isWideTablet,
         ) {
             when {
-                isWideTablet -> WideTablet(rightNavigator, isKeyboardVisible, imeHeight, openOrderCount)
-                isTablet -> Tablet(rightNavigator, isKeyboardVisible, imeHeight, openOrderCount)
-                else -> Phone(rightNavigator, isKeyboardVisible, imeHeight, openOrderCount)
+                isTablet -> Tablet(rightNavigator, isKeyboardVisible, imeHeight)
+                else -> Phone(rightNavigator, isKeyboardVisible, imeHeight)
             }
         }
     }
@@ -176,12 +169,11 @@ fun Tablet(
     rightNavigator: Navigator,
     isKeyboardVisible: Boolean,
     imeHeight: Dp,
-    openOrderCount: Int,
 ) {
     TabletLayout(
         main = {
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(1f)) { LeftPane(openOrderCount) }
+                Box(modifier = Modifier.weight(1f)) { LeftPane() }
                 KeyBoardPane(
                     modifier = Modifier.background(AppColors.Bg),
                     isKeyboardVisible = isKeyboardVisible,
@@ -192,35 +184,6 @@ fun Tablet(
         },
         sub = { RightPaneContent(rightNavigator) }
     )
-}
-
-/**
- * 넓은 태블릿(가로) — 왼쪽 탭 목록 · 가운데 종목 상세(차트+호가) · 오른쪽 주문 칸.
- *
- * 주문 칸은 가운데에 열린 종목을 따라가고, 가운데 호가를 누르면 그 가격이 주문 칸에 들어간다.
- */
-@Composable
-fun WideTablet(
-    rightNavigator: Navigator,
-    isKeyboardVisible: Boolean,
-    imeHeight: Dp,
-    openOrderCount: Int,
-) {
-    Row(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-            Box(modifier = Modifier.weight(1f)) { LeftPane(openOrderCount) }
-            KeyBoardPane(
-                modifier = Modifier.background(AppColors.Bg),
-                isKeyboardVisible = isKeyboardVisible,
-                imeHeight = imeHeight,
-                fillIdleBottomInset = true,
-            )
-        }
-        LineDivider(modifier = Modifier.fillMaxHeight(), isWidth = true)
-        Box(modifier = Modifier.weight(1.5f).fillMaxHeight().clipToBounds()) { RightPaneContent(rightNavigator) }
-        LineDivider(modifier = Modifier.fillMaxHeight(), isWidth = true)
-        Box(modifier = Modifier.weight(1f).fillMaxHeight()) { OrderPane() }
-    }
 }
 
 /** 오른쪽 스택의 맨 위 화면. 쌓이면 오른쪽에서, 닫히면 왼쪽에서 밀려 들어온다. */
@@ -246,17 +209,13 @@ private fun stackTransition(event: StackEvent): ContentTransform {
     return enter togetherWith exit
 }
 
-/**
- * 하단 탭과 탭 본문.
- *
- * @param openOrderCount 주문 탭 배지(미체결 건수).
- */
+/** 하단 탭과 탭 본문. */
 @Composable
-fun LeftPane(openOrderCount: Int) {
-    val tabList = listOf(WatchlistTab, QuoteTab, OrderTab, BalanceTab, MoreTab)
+fun LeftPane() {
+    val tabList = listOf(MarketTab, MoreTab)
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val tabState = rememberAppTabState(tabList, WatchlistTab)
+    val tabState = rememberAppTabState(tabList, MarketTab)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -274,7 +233,6 @@ fun LeftPane(openOrderCount: Int) {
                             tab = tab,
                             modifier = Modifier.weight(1f),
                             isSelected = tabState.current == tab,
-                            badgeCount = if (tab == OrderTab) openOrderCount else 0,
                             onClick = { tabState.current = tab }
                         )
                     }
@@ -304,7 +262,7 @@ private const val OverlayParallaxFraction = 0.3f
 /**
  * 폰 — 탭 목록이 바닥에 깔리고, 상세 화면은 오른쪽에서 밀려 들어와 덮는다.
  *
- * 상세 위에 주문 화면이 쌓이면 뒤로 가기는 한 단계씩 돌아가고, 왼쪽에서 오른쪽으로 밀면 쌓인 화면을 모두 닫는다.
+ * 상세 위에 다른 화면이 쌓이면 뒤로 가기는 한 단계씩 돌아가고, 왼쪽에서 오른쪽으로 밀면 쌓인 화면을 모두 닫는다.
  * 덮개 안에서 쌓이거나 한 단계 돌아갈 때만 화면을 밀고, 덮개가 새로 열릴 때는 덮개 자체가 밀려 들어오므로 안쪽은 그대로 둔다.
  * 뒤 목록은 [OverlayParallaxFraction] 만큼 함께 움직인다.
  */
@@ -313,7 +271,6 @@ fun Phone(
     rightNavigator: Navigator,
     isKeyboardVisible: Boolean,
     imeHeight: Dp,
-    openOrderCount: Int,
 ) {
     val current = rightNavigator.lastItem
     val hasOverlay = current !is EmptyScreen
@@ -370,7 +327,7 @@ fun Phone(
                 }
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(1f)) { LeftPane(openOrderCount) }
+                Box(modifier = Modifier.weight(1f)) { LeftPane() }
                 KeyBoardPane(
                     modifier = Modifier.background(AppColors.Bg),
                     isKeyboardVisible = isKeyboardVisible,

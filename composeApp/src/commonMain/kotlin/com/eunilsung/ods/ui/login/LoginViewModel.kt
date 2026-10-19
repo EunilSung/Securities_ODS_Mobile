@@ -27,7 +27,7 @@ class LoginViewModel(
 
     init {
         viewModelScope.launch {
-            useCases.observeCustomer()
+            useCases.observeStaff()
                 .drop(1)
                 .filter { it == null }
                 .collect { _uiState.value = initialState() }

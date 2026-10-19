@@ -3,11 +3,9 @@ package com.eunilsung.ods.data.local.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.eunilsung.ods.data.local.seed.AccountSeed
 import com.eunilsung.ods.data.local.seed.StockSeed
 import com.eunilsung.ods.data.mapper.StockMapper
 import com.eunilsung.ods.db.AppDatabase
-import com.eunilsung.ods.db.HoldingEntity
 import com.eunilsung.ods.domain.model.Stock
 import com.eunilsung.ods.domain.repository.StockRepository
 import kotlinx.coroutines.Dispatchers
@@ -50,9 +48,6 @@ class LocalStockRepositoryImpl(
                 database.transaction {
                     StockSeed.watchlist.forEachIndexed { index, row ->
                         queries.insertStockIfAbsent(mapper.toEntity(row, index.toLong()))
-                    }
-                    AccountSeed.holdings.forEach { (code, quantity, averagePrice) ->
-                        queries.insertHoldingIfAbsent(HoldingEntity(code, quantity, averagePrice))
                     }
                 }
             }

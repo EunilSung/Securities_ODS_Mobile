@@ -15,19 +15,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
 import com.eunilsung.ods.Config
 import com.eunilsung.ods.domain.model.ChartPeriod
 import com.eunilsung.ods.domain.model.Stock
-import com.eunilsung.ods.ui.main.LocalOrderPaneVisible
-import com.eunilsung.ods.ui.order.rememberOrderLauncher
 import com.eunilsung.ods.ui.quote.chart.CandleChart
 import com.eunilsung.ods.ui.quote.orderbook.OrderBookView
 import com.eunilsung.ods.ui.theme.AppColors
@@ -35,7 +29,6 @@ import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
 import com.eunilsung.ods.ui.uikit.line.LineDivider
 import com.eunilsung.ods.ui.uikit.segment.SegmentedControl
-import com.eunilsung.ods.ui.uikit.stock.StockPickerRow
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.chart_period_day
@@ -46,62 +39,24 @@ import ods.composeapp.generated.resources.quote_chart
 import ods.composeapp.generated.resources.quote_order_book
 import ods.composeapp.generated.resources.tab_quote
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
-
-/** 현재가 탭 — 마지막으로 본 종목을 열고, 위쪽 종목 줄에서 관심종목을 바꿔 볼 수 있다. */
-object QuoteScreen : Screen {
-    @Composable
-    override fun Content() {
-        val viewModel: QuoteViewModel = koinViewModel(key = "quote-tab")
-        val uiState by viewModel.uiState.collectAsState()
-
-        val orderLauncher = rememberOrderLauncher()
-        val orderPaneVisible = LocalOrderPaneVisible.current
-
-        LaunchedEffect(Unit) {
-            viewModel.onAction(QuoteActions.OnEnterTab)
-        }
-
-        QuoteContent(
-            uiState = uiState,
-            onAction = viewModel::onAction,
-            onBack = null,
-            bottomBar = if (orderPaneVisible) null else {
-                { QuoteOrderButtons(onSideClick = { orderLauncher.open(uiState.code, it) }) }
-            },
-            onOrderBookPriceClick = { orderLauncher.pickPrice(uiState.code, it) },
-        )
-    }
-}
 
 /**
- * 현재가 화면 전체 — 상태 없이 값과 콜백만 받는다. 현재가 탭과 종목 상세가 함께 쓴다.
+ * 현재가 화면 전체 — 상태 없이 값과 콜백만 받는다. 시장 탭의 종목 상세가 쓴다.
  *
  * 폭이 [Config.Layout.QUOTE_SIDE_BY_SIDE_MIN_WIDTH_DP] 이상이면 차트와 호가를 좌우로, 아니면 위아래로 놓는다.
  *
  * @param onBack 주면 상단에 뒤로 버튼을 그린다(종목 상세).
- * @param bottomBar 화면 아래에 붙는 줄(매수·매도 버튼). 태블릿 가로처럼 주문 칸이 따로 있으면 null.
- * @param onOrderBookPriceClick 호가 행을 눌렀을 때 — 그 가격으로 주문한다.
  */
 @Composable
 fun QuoteContent(
     uiState: QuoteUiState,
     onAction: (QuoteActions) -> Unit,
     onBack: (() -> Unit)?,
-    bottomBar: (@Composable () -> Unit)? = null,
-    onOrderBookPriceClick: ((Long) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val stock = uiState.stock
     Column(modifier = modifier.fillMaxSize().background(AppColors.Bg)) {
         TopBar(title = stock?.name ?: stringResource(Res.string.tab_quote), onBack = onBack)
-        if (uiState.watchlist.isNotEmpty()) {
-            StockPickerRow(
-                stocks = uiState.watchlist,
-                selectedCode = uiState.code,
-                onSelect = { onAction(QuoteActions.OnSelectStock(it)) },
-            )
-        }
         LineDivider()
         if (stock == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -117,7 +72,7 @@ fun QuoteContent(
                     }
                     LineDivider(modifier = Modifier.fillMaxHeight(), isWidth = true)
                     Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                        OrderBookSection(uiState, stock, onOrderBookPriceClick)
+                        OrderBookSection(uiState, stock)
                     }
                 }
             } else {
@@ -126,11 +81,10 @@ fun QuoteContent(
                     SectionGap()
                     ChartSection(uiState, stock, chartHeight = 240.dp, onAction = onAction)
                     SectionGap()
-                    OrderBookSection(uiState, stock, onOrderBookPriceClick)
+                    OrderBookSection(uiState, stock)
                 }
             }
         }
-        bottomBar?.invoke()
     }
 }
 
@@ -163,7 +117,7 @@ private fun ChartSection(uiState: QuoteUiState, stock: Stock, chartHeight: Dp, o
 }
 
 @Composable
-private fun OrderBookSection(uiState: QuoteUiState, stock: Stock, onPriceClick: ((Long) -> Unit)?) {
+private fun OrderBookSection(uiState: QuoteUiState, stock: Stock) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.Space12)) {
         Text(
             text = stringResource(Res.string.quote_order_book),
@@ -180,7 +134,6 @@ private fun OrderBookSection(uiState: QuoteUiState, stock: Stock, onPriceClick: 
                 orderBook = orderBook,
                 currentPrice = stock.price,
                 basePrice = stock.previousClose,
-                onPriceClick = onPriceClick,
             )
         }
     }

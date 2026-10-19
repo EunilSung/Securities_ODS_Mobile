@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
+import com.eunilsung.ods.ui.uikit.exposeTestTags
 
 /**
  * 앱 전역 호스트 — 오른쪽 화면 스택을 내려 주고, 상단·좌우 인셋을 한 번에 처리한다.
@@ -33,7 +34,7 @@ fun AppHosts(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal
             )
         ) { innerPadding ->
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding).exposeTestTags()) {
                 content()
             }
         }

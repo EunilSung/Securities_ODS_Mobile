@@ -13,6 +13,3 @@ val LocalRightPaneOpen = compositionLocalOf { false }
 
 /** 지금 그리는 레이아웃이 태블릿(좌우 2-pane)인지. */
 val LocalIsTablet = compositionLocalOf { false }
-
-/** 오른쪽 끝에 주문 칸이 떠 있는지(태블릿 가로 3칸). 떠 있으면 현재가의 매수·매도 버튼을 숨기고 호가를 누르면 주문 칸에 넣는다. */
-val LocalOrderPaneVisible = compositionLocalOf { false }

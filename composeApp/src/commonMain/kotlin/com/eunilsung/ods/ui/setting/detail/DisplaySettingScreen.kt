@@ -21,13 +21,13 @@ import ods.composeapp.generated.resources.setting_density_comfortable_descriptio
 import ods.composeapp.generated.resources.setting_density_compact_description
 import ods.composeapp.generated.resources.setting_density_section
 import ods.composeapp.generated.resources.setting_display
-import ods.composeapp.generated.resources.setting_hide_amounts_description
-import ods.composeapp.generated.resources.setting_hide_amounts_section
-import ods.composeapp.generated.resources.balance_hide_amounts
+import ods.composeapp.generated.resources.setting_mask_description
+import ods.composeapp.generated.resources.setting_mask_section
+import ods.composeapp.generated.resources.setting_mask_personal_info
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-/** 화면 설정 — 목록 밀도, 잔고 금액 가리기. 바꾸면 바로 앱 전체에 반영된다. */
+/** 화면 설정 — 목록 밀도, 고객 개인정보 가리기. 바꾸면 바로 앱 전체에 반영된다. */
 class DisplaySettingScreen : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
@@ -41,7 +41,7 @@ class DisplaySettingScreen : Screen {
 
 @Composable
 fun DisplaySettingContent(uiState: SettingUiState, onAction: (SettingActions) -> Unit) {
-    SettingDetailScaffold(title = stringResource(Res.string.setting_display), uiState = uiState, onAction = onAction) {
+    SettingDetailScaffold(title = stringResource(Res.string.setting_display)) {
         SettingSectionHeader(stringResource(Res.string.setting_density_section))
         SettingRadioRow(
             title = stringResource(Res.string.density_comfortable),
@@ -57,12 +57,12 @@ fun DisplaySettingContent(uiState: SettingUiState, onAction: (SettingActions) ->
         )
         LineDivider()
 
-        SettingSectionHeader(stringResource(Res.string.setting_hide_amounts_section))
+        SettingSectionHeader(stringResource(Res.string.setting_mask_section))
         SettingToggleRow(
-            title = stringResource(Res.string.balance_hide_amounts),
-            description = stringResource(Res.string.setting_hide_amounts_description),
-            checked = uiState.hideAmounts,
-            onCheckedChange = { onAction(SettingActions.OnHideAmountsChange(it)) },
+            title = stringResource(Res.string.setting_mask_personal_info),
+            description = stringResource(Res.string.setting_mask_description),
+            checked = uiState.maskPersonalInfo,
+            onCheckedChange = { onAction(SettingActions.OnMaskPersonalInfoChange(it)) },
         )
         LineDivider()
     }

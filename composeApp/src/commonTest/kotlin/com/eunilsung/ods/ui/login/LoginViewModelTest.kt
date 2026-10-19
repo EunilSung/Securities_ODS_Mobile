@@ -11,7 +11,7 @@ import com.eunilsung.ods.domain.usecase.GetSavedIdUseCase
 import com.eunilsung.ods.domain.usecase.IsSaveIdUseCase
 import com.eunilsung.ods.domain.usecase.LoginUseCase
 import com.eunilsung.ods.domain.usecase.LoginUseCases
-import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
+import com.eunilsung.ods.domain.usecase.ObserveStaffUseCase
 import com.eunilsung.ods.domain.usecase.SetSaveIdUseCase
 import com.eunilsung.ods.domain.util.LoginPolicy
 import com.russhwolf.settings.MapSettings
@@ -49,7 +49,7 @@ class LoginViewModelTest {
     private fun viewModel(repository: LoginRepository = login) = LoginViewModel(
         LoginUseCases(
             login = LoginUseCase(repository),
-            observeCustomer = ObserveCustomerUseCase(repository),
+            observeStaff = ObserveStaffUseCase(repository),
             getSavedId = GetSavedIdUseCase(repository),
             isSaveId = IsSaveIdUseCase(repository),
             setSaveId = SetSaveIdUseCase(repository),
@@ -112,7 +112,7 @@ class LoginViewModelTest {
         viewModel.enter("test2", DemoAccounts.PASSWORD)
         viewModel.onAction(LoginActions.OnLoginClick)
         advanceUntilIdle()
-        assertEquals("test2", login.currentCustomer.value?.id)
+        assertEquals("test2", login.currentStaff.value?.id)
         assertNull(viewModel.uiState.value.error)
 
         viewModel.onAction(LoginActions.OnTogglePasswordVisible)
