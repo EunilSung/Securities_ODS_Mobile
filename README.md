@@ -45,23 +45,12 @@ open iosApp/iosApp.xcodeproj                # iOS — Xcode 에서 시뮬레이�
 
 ```mermaid
 flowchart LR
-    subgraph UI["ui"]
-        S["XScreen<br/>(Voyager)"] --> C["XContent<br/>(상태 없는 Compose)"]
-        C -- "XActions" --> VM["XViewModel"]
-        VM -- "StateFlow&lt;XUiState&gt;<br/>Channel&lt;XEvent&gt;" --> C
-    end
-    subgraph Domain["domain"]
-        UC["UseCase<br/>(업무 규칙 재확인)"] --> RI["Repository<br/>interface"]
-        P["util<br/>(업무 규칙 순수 함수)"]
-    end
-    subgraph Data["data"]
-        RL["Local*RepositoryImpl"] --> DB[("SQLDelight")]
-        RL --> ST[("Settings")]
-        RL --> M["Mapper<br/>(개인정보 칸 암호화)"]
-    end
-    VM --> UC
-    UC --> P
-    RI -. "Koin 이 구현을 끼움" .-> RL
+    A["<b>ui</b><br/>XScreen · XContent<br/>(Compose)"] -- "XActions" --> B["<b>ui</b><br/>XViewModel"]
+    B -- "StateFlow&lt;XUiState&gt;<br/>XEvent" --> A
+    B --> C["<b>domain</b><br/>UseCase<br/>+ 업무 규칙(util)"]
+    C --> D["<b>domain</b><br/>Repository<br/>interface"]
+    D -. "Koin" .-> E["<b>data</b><br/>Local 구현<br/>+ Mapper(암호화)"]
+    E --> F[("SQLDelight<br/>Settings")]
 ```
 
 - **MVI 변형** — 화면은 `XActions` 만 보내고 ViewModel 의 `StateFlow<XUiState>` 만 그립니다. 한 번만 처리할 일(이동 · 알림)은 `XEvent` 를 `Channel` 로 보냅니다.
