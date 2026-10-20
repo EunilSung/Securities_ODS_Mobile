@@ -1,248 +1,208 @@
 # ODS — 증권사 아웃도어 세일즈 앱
 
-증권사 영업 직원이 태블릿을 들고 **지점 밖에서 고객을 만나** 방문 일정 → 상담 → 투자성향 진단 → 상품 가입·계좌 개설을 현장에서 마치는 앱입니다.
-Kotlin Multiplatform 으로 Android·iOS 를 한 코드로 만들었고, 폰·태블릿 2칸·태블릿 가로 3칸 레이아웃을 창 폭에 따라 바꿉니다.
+![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-7F52FF?logo=kotlin&logoColor=white)
+![Compose Multiplatform](https://img.shields.io/badge/Compose_Multiplatform-1.11.1-4285F4?logo=jetpackcompose&logoColor=white)
+![Android](https://img.shields.io/badge/Android-7.0%2B-34A853?logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-16%2B-000000?logo=apple&logoColor=white)
 
-<p align="center">
-  <img src="docs/screenshots/tablet-customer.jpg" width="900" alt="태블릿 가로 3칸 — 고객 목록 · 고객 상세 · 상담 칸">
-</p>
-<p align="center"><sub>태블릿 가로 3칸 — 왼쪽 고객 목록, 가운데 고객 상세, 오른쪽 상담 칸(상담 중인 고객을 따라가며 바로 기록)</sub></p>
+증권사 영업 직원이 태블릿을 들고 **지점 밖에서 고객을 만나** 상담 · 투자성향 진단 · 상품 가입 · 계좌 개설을 현장에서 마치는 앱입니다.
+Kotlin Multiplatform 과 Compose Multiplatform 으로 Android · iOS 를 한 코드로 만들었고, 창 폭에 따라 폰 · 태블릿 2칸 · 태블릿 3칸 레이아웃으로 바뀝니다.
 
 | 항목 | 내용 |
 |---|---|
-| 플랫폼 | Android · iOS (Kotlin Multiplatform + Compose Multiplatform) |
-| 구조 | Clean Architecture(data · domain · ui) + MVI(Action → ViewModel → `StateFlow<UiState>`, 일회성 Event) |
-| 데이터 | 서버 없이 기기 안 시연용 데이터로 동작하는 **로컬 모드** (SQLDelight) |
-| 검증 | 단위·ViewModel 시나리오 테스트(Android 101 · iOS 97) + Maestro 실화면 흐름 7개 × Android·iOS, 명령 하나(`verifyAll`) |
-| 시연 계정 | `test1` ~ `test3` / `1234` — 처음 로그인하면 앱 잠금 비밀번호 6자리를 정합니다 |
+| 플랫폼 | Android · iOS — 공통 코드(UI 포함)와 플랫폼별 `actual`(생체 인증 · 카메라 · 보안 저장소) |
+| 아키텍처 | Clean Architecture(ui · domain · data) + MVI |
+| 데이터 | 서버 없이 기기 안 시연용 데이터로 도는 **로컬 모드**. 서버 구현을 끼울 자리를 남겨 둠 |
+| 보안 | 직원별 앱 잠금, 5회 오류 시 업무 데이터 삭제, 개인정보 칸 암호화(Keystore · Keychain) |
+| 검증 | 단위 · ViewModel 시나리오 테스트(JVM 117 · iOS 113) + Maestro 실화면 흐름 7개 × Android · iOS, 명령 하나로 실행 |
 
 ---
 
-## 화면 둘러보기
+## 개발 환경
 
-> 스크린샷의 고객·계좌·시세는 모두 시연용 예시 값입니다. 개인정보 가리기를 켠 상태(기본값)라 전화번호·생년월일·주소·계좌번호가 가려져 있습니다.
+| 구분 | 버전 |
+|---|---|
+| Kotlin · Compose Multiplatform | 2.3.20 · 1.11.1 (Material3) |
+| Gradle · Android Gradle Plugin | 9.3.1 · 8.11.2 |
+| JDK | 17 (JVM 타깃 11) |
+| Android | compileSdk · targetSdk 36, minSdk 24 (Android 7.0) |
+| iOS | 배포 타깃 16.0, Xcode 26 |
+| 검증 도구 | kotlin.test · kotlinx-coroutines-test · Maestro 2.11 |
 
-### 1. 오늘의 방문 일정
+### 실행
 
-<p>
-  <img src="docs/screenshots/phone-schedule.jpg" width="250" alt="폰 일정 화면">
-  &nbsp;
-  <img src="docs/screenshots/tablet-schedule.jpg" width="560" alt="태블릿 일정 화면">
-</p>
+```bash
+./gradlew :composeApp:installDebug          # Android (에뮬레이터 또는 기기)
+open iosApp/iosApp.xcodeproj                # iOS — Xcode 에서 시뮬레이터를 고르고 실행
+```
 
-앱을 열면 먼저 보이는 탭입니다. 한 주 달력에서 날을 고르면 그날의 방문이 시각순으로 나오고, 방문이 있는 날에는 점이 찍힙니다.
-일정을 등록할 때는 고객(이름·초성·전화번호 검색), 날짜, 30분 단위 시각, 장소, 목적을 받고 **지난 시각은 받지 않습니다.**
-방문을 **완료**하면 그 고객과 상담 중으로 바뀌고, 방문 목적(계좌 개설·투자성향 진단·상품 가입)이 주제로 미리 골라진 상담 기록 화면이 열립니다.
-
-### 2. 고객 — 검색 · 상세 · 상담 이력
-
-<p>
-  <img src="docs/screenshots/phone-customers.jpg" width="250" alt="고객 목록">
-  &nbsp;
-  <img src="docs/screenshots/phone-customer.jpg" width="250" alt="고객 상세">
-</p>
-
-- **검색**: 이름 일부, 한글 초성(`ㄱㅎㄴ`), 전화번호 숫자 일부로 찾습니다. 목록에서 투자성향이 없거나 1년이 지난 고객은 주황으로 `성향 미진단`·`재진단 필요` 를 보입니다.
-- **상세**: 기본 정보, 투자성향, 보유 계좌, 가입 상품, 방문 예정, 상담 이력이 한 화면에 있고, 구역마다 그 구역의 업무(진단·개설·일정 추가·상담 기록)로 가는 버튼이 있습니다.
-- **개인정보 가리기**: 기본으로 켜져 있어 고객 앞에서 태블릿을 펼쳐도 안전합니다. 제목줄의 눈 버튼으로 바로 전환합니다.
-- **넓은 태블릿(1000dp 이상)**: 맨 위 스크린샷처럼 오른쪽 끝에 **상담 칸**이 생깁니다. 가운데에서 시세를 보여 주거나 상품을 설명하는 동안에도 상담 중인 고객과 메모가 남아 있습니다.
-
-### 3. 투자성향 진단 — 고객 확인과 전자서명
-
-<p>
-  <img src="docs/screenshots/phone-risk-question.jpg" width="250" alt="투자성향 문항">
-  &nbsp;
-  <img src="docs/screenshots/phone-risk-signature.jpg" width="250" alt="진단 결과와 서명">
-</p>
-
-금융투자협회 표준 투자자정보확인서를 줄인 **7문항**을 하나씩 묻고(나이 문항은 생년월일로 미리 고름), 점수 0~100 으로 **안정형 ~ 공격투자형 5단계**를 정합니다.
-결과 화면에서 권유할 수 있는 상품 위험등급을 알려 주고, 65세 이상이면 고령투자자 보호 절차를 안내합니다.
-**고객이 직접 응답했다는 확인과 전자서명**을 받아야 저장되고, 저장하면 고객의 성향·진단일이 바뀌며 상담 이력에 기록이 남습니다.
-서명 그림은 기기에 남기지 않고 지문(SHA-256 해시)과 시각만 남깁니다.
-
-### 4. 상품 설명 · 가입 — 적합성 원칙
-
-<p>
-  <img src="docs/screenshots/tablet-product.jpg" width="430" alt="상품 상세와 적합성">
-  &nbsp;
-  <img src="docs/screenshots/tablet-suitability.jpg" width="430" alt="가입 절차의 적합성 확인 단계">
-</p>
-
-상품마다 위험등급(1 매우 높은 위험 ~ 6 매우 낮은 위험), 기대수익, 수수료, **핵심 설명 사항**이 있습니다.
-상세 아래에는 상담 중 고객에게 이 상품이 맞는지 바로 보입니다(위 왼쪽: 위험중립형 고객에게 1등급 ELS → 부적합).
-
-가입은 **고객 → 적합성 → 핵심 설명 → 출금계좌·금액 → 서명** 다섯 단계입니다.
-
-- 투자성향이 없거나 1년이 지났으면 **진단부터** 하게 막습니다(진단을 마치고 돌아오면 다시 판정).
-- 성향보다 위험한 상품은 권유할 수 없으므로, **고객이 스스로 원한다는 확인**을 받아야 넘어갑니다(위 오른쪽).
-- 핵심 설명은 항목마다 설명했다는 표시를 받아야 넘어갑니다.
-- 고령투자자가 고난도·고위험 상품에 가입하면 **2일 숙려기간**이 붙습니다.
-- 화면이 막은 조건도 유스케이스가 저장 직전에 **한 번 더 확인**합니다(적합성·금액·계좌·서명).
-
-### 5. 계좌 개설 — 신분증 촬영 · 고객 직접 입력
-
-<p>
-  <img src="docs/screenshots/phone-id-card.jpg" width="250" alt="신분증 촬영 단계">
-  &nbsp;
-  <img src="docs/screenshots/phone-account-pin.jpg" width="250" alt="고객이 직접 입력하는 계좌 비밀번호">
-</p>
-
-**신분증 촬영 → 본인 확인 → 계좌 종류 → 약관 동의 → 계좌 비밀번호 → 서명** 여섯 단계입니다.
-
-- **신분증**: 카메라로 찍고(Android 시스템 카메라 / iOS UIImagePickerController), 직원이 이름·주민번호 앞 6자리·뒷자리 첫 숫자를 옮겨 적으면 고객 정보와 대조한 뒤 진위를 확인합니다.
-  사진은 확인에만 쓰고 **기기에 남기지 않습니다**(Android 는 임시 파일을 읽자마자 지움). 서버 없는 시연에서는 `시연용 신분증 사용` 으로 넘어갈 수 있습니다.
-- **계좌 종류**: ISA 는 만 19세 이상·1인 1계좌, 연금저축 중복은 까닭과 함께 막습니다.
-- **계좌 비밀번호**: 고객에게 태블릿을 건네 **고객이 직접** 넣습니다. 숫자 배열이 열 때마다 섞이고, 같은·연속·생년월일 숫자는 받지 않으며, 기기에 저장하지 않습니다.
-
-### 6. 시장 — 고객에게 크게 보여 주기
-
-<p>
-  <img src="docs/screenshots/tablet-market.jpg" width="430" alt="시세와 차트">
-  &nbsp;
-  <img src="docs/screenshots/tablet-present.jpg" width="430" alt="고객에게 보여 주기 전체 화면">
-</p>
-
-관심종목 시세, 봉 차트(1분·일·주·월), 10단 호가를 봅니다. 상담 중에 `고객에게 보여 주기` 를 누르면 **종목·현재가·차트만 화면 전체에 크게** 띄우고
-직원용 정보(호가·다른 고객·상담 칸)는 그리지 않습니다. 아래 단추로 관심종목을 넘기며 설명하고, 시연용 시세라는 안내를 함께 보입니다.
-등락색은 국내 관례(상승 빨강·하락 파랑)를 따르고, 색만으로 알리지 않게 ▲▼ 와 부호를 함께 씁니다.
-
-### 7. 직원 인증 · 단말 보안
-
-<p>
-  <img src="docs/screenshots/phone-login.jpg" width="250" alt="로그인">
-  &nbsp;
-  <img src="docs/screenshots/phone-app-lock.jpg" width="250" alt="앱 잠금">
-</p>
-
-밖에서 들고 다니는 단말이라 **잃어버리거나 고객 앞에 둔 채 자리를 비울 때**를 대비했습니다.
-
-- 사번 로그인(5회 오류 시 5분 잠금, 비밀번호 저장 안 함) 뒤 직원별 **6자리 앱 잠금 비밀번호**(+생체 인증)
-- **5분 무조작** 또는 **백그라운드에 1분 넘게** 있다 돌아오면 잠금. 잠겨도 보던 화면은 그대로 두고 풀면 이어 갑니다
-- 잠금 비밀번호를 **5번 틀리면 기기 안 업무 데이터와 잠금 비밀번호를 모두 지우고 로그아웃**합니다(시간으로 풀리지 않게 해 주운 사람이 계속 시도할 수 없게).
-  데이터를 잠근 키도 함께 버려, DB 파일에 지운 행의 조각이 남아도 풀 수 없습니다
-- **기기 DB 의 개인정보 칸과 잠금 비밀번호 설정을 암호화**해 둡니다. 자세한 내용은 [기기에 남는 데이터 · 암호화](#기기에-남는-데이터--암호화)
-- 앱 전환기 화면 가리기(Android·iOS), 배포용 Android 빌드의 화면 캡처 차단
+- `local.properties` 에 Android SDK 경로(`sdk.dir`)가 필요합니다.
+- 시연 계정 `test1` ~ `test3` / `1234`. 처음 로그인하면 앱 잠금 비밀번호 6자리를 정합니다.
 
 ---
 
-## 업무 규칙 한눈에
+## 아키텍처
 
-규칙은 모두 `domain/util` 에 순수 함수로 두고 단위 테스트로 지킵니다.
+```mermaid
+flowchart LR
+    subgraph UI["ui"]
+        S["XScreen<br/>(Voyager)"] --> C["XContent<br/>(상태 없는 Compose)"]
+        C -- "XActions" --> VM["XViewModel"]
+        VM -- "StateFlow&lt;XUiState&gt;<br/>Channel&lt;XEvent&gt;" --> C
+    end
+    subgraph Domain["domain"]
+        UC["UseCase<br/>(업무 규칙 재확인)"] --> RI["Repository<br/>interface"]
+        P["util<br/>(업무 규칙 순수 함수)"]
+    end
+    subgraph Data["data"]
+        RL["Local*RepositoryImpl"] --> DB[("SQLDelight")]
+        RL --> ST[("Settings")]
+        RL --> M["Mapper<br/>(개인정보 칸 암호화)"]
+    end
+    VM --> UC
+    UC --> P
+    RI -. "Koin 이 구현을 끼움" .-> RL
+```
+
+- **MVI 변형** — 화면은 `XActions` 만 보내고 ViewModel 의 `StateFlow<XUiState>` 만 그립니다. 한 번만 처리할 일(이동 · 알림)은 `XEvent` 를 `Channel` 로 보냅니다.
+- **의존 방향** — 화면은 ViewModel 만, ViewModel 은 유스케이스만 봅니다. 여러 저장소를 잇는 업무(가입 · 계좌 개설 · 진단 저장)는 유스케이스가 하고,
+  화면이 이미 막은 조건(적합성 · 금액 · 계좌 · 서명 · 약관)도 저장 직전에 **한 번 더 확인**합니다.
+- **저장소 갈아 끼우기** — 저장소는 모두 인터페이스 뒤에 있고 `di/Modules.kt` 한 곳에서 구현을 고릅니다. 서버 주소 자리는 `Config.Server` 입니다.
+
+### 프로젝트 구조
+
+```
+composeApp/src/
+  commonMain/kotlin/com/eunilsung/ods/
+    data/      local(저장소 구현 · 시연용 데이터 · 암호화 · 데이터 삭제) · mapper
+    domain/    model · repository(interface) · usecase · util(업무 규칙)
+    ui/        main(폰 · 태블릿 레이아웃) · login · schedule · customer · risk · product · account
+               watchlist · quote · consult · applock · more · uikit(공용 부품) · theme
+    di/        Modules.kt (Koin)
+    Config.kt  서버 주소 · DB 이름 · 화면 폭 기준 · 보안 설정
+  commonMain/sqldelight/          AppDatabase.sq
+  commonMain/composeResources/    values(영문) · values-ko(한글) · drawable
+  androidMain/   actual · BiometricPrompt · 카메라(FileProvider) · Keystore 암호 · 앱 전환기 가리기
+  iosMain/       actual · LAContext · 카메라(UIImagePickerController) · Keychain 암호 · 앱 전환기 가리기
+  commonTest/    업무 규칙 · 저장소 · ViewModel 시나리오 (androidUnitTest · iosTest 에서 함께 돈다)
+iosApp/          Xcode 프로젝트
+.maestro/        실화면 흐름(Android · iOS 공용) · run.sh
+```
+
+### 적응형 레이아웃
+
+기기 종류가 아니라 **지금 창의 폭**으로 가릅니다(`Config.Layout`). 상세 화면은 모두 하나의 오른쪽 스택(`LocalRightNavigator`)에 쌓아,
+창 크기가 바뀌어도 보던 화면이 그대로 이어집니다.
+
+| 창 폭 | 레이아웃 |
+|---|---|
+| 600dp 미만 | 폰 — 탭 목록 위로 상세가 오른쪽에서 밀려 들어옴 |
+| 600dp 이상 | 태블릿 2칸 — 목록 · 상세 |
+| 1000dp 이상 | 태블릿 3칸 — 목록 · 상세 · 상담 칸(상담 중인 고객 요약 · 바로 기록 · 최근 상담) |
+
+---
+
+## 기술 스택
+
+| 영역 | 사용 기술 | 쓰임 |
+|---|---|---|
+| UI | Compose Multiplatform, Material3 | 공통 UI. 봉 차트 · 서명 칸은 `Canvas` 로 직접 그림 |
+| 네비게이션 | Voyager 1.0.1 | 탭 + 오른쪽 스택 하나를 폰 · 태블릿이 공유 |
+| DI | Koin 4.2.1 | 저장소 · 유스케이스 · ViewModel |
+| 기기 DB | SQLDelight 2.3.2 | 고객 · 상담 · 일정 · 계좌 · 가입 · 서명 지문, `Flow` 로 화면에 반영 |
+| 설정 | multiplatform-settings 1.3.0 | 화면 설정 · 앱 잠금 · 로그인 잠금 |
+| 암호 | Android Keystore · iOS Keychain/CommonCrypto · krypto 4.0.10 | 개인정보 칸 암호화, 비밀번호 salt + SHA-256 |
+| 비동기 · 시간 | kotlinx-coroutines 1.10.2 · kotlinx-datetime 0.6.1 | 서울 시간 기준 일정 · 나이 · 유효기간 계산 |
+| 통신 | Ktor 3.4.2 | 서버 모드 자리만 둠 |
+| 플랫폼 기능 | BiometricPrompt · LAContext, FileProvider · UIImagePickerController | 생체 인증, 신분증 촬영 |
+
+---
+
+## 설계 포인트
+
+### 업무 규칙은 순수 함수로
+
+규칙은 `domain/util` 에 플랫폼과 무관한 순수 함수로 두고 단위 테스트로 지킵니다. 화면 · 유스케이스가 같은 함수를 씁니다.
 
 | 규칙 | 내용 | 코드 |
 |---|---|---|
-| 투자성향 | 7문항 → 0~100 → 5단계, 유효기간 1년, 65세 이상 고령투자자 | `RiskAssessmentPolicy`, `hasValidRiskProfile` |
-| 적합성 | 성향 없음·만료 → 진단부터, 성향보다 위험 → 고객 자발 확인 필요 | `suitabilityFor`, `RiskProfile.allows` |
-| 숙려기간 | 고령투자자 × (고난도 또는 1·2등급) → 2일 | `SubscriptionPolicy` |
-| 계좌 개설 | 신분증 대조, ISA 만 19세·1인 1계좌, 연금저축 중복 금지, 약한 비밀번호 금지 | `AccountOpeningPolicy`, `mismatchesWith` |
+| 투자성향 | 7문항 → 0~100점 → 5단계, 유효기간 1년, 65세 이상 고령투자자 안내 | `RiskAssessmentPolicy` |
+| 적합성 | 성향 없음 · 만료 → 진단부터, 성향보다 위험한 상품 → 고객 자발 확인 필요 | `suitabilityFor` |
+| 숙려기간 | 고령투자자 × (고난도 또는 1 · 2등급 상품) → 2일 | `SubscriptionPolicy` |
+| 계좌 개설 | 신분증 대조, ISA 만 19세 · 1인 1계좌, 연금저축 중복 금지, 약한 비밀번호 금지 | `AccountOpeningPolicy` |
 | 서명 | 점 10개 이상, 칸의 15% 이상 퍼져야 받음 | `SignaturePolicy` |
-| 앱 잠금 | 6자리, 5분 무조작·백그라운드 1분, 5회 오류 시 데이터 삭제 | `AppLockPolicy`, `LockIfInactiveUseCase` |
-| 고객 검색 | 이름·초성·전화번호 일부 | `matchesQuery` |
+| 앱 잠금 | 6자리, 5분 무조작 · 백그라운드 1분 초과 시 잠금, 5회 오류 시 데이터 삭제 | `AppLockPolicy` |
 
-## 기기에 남는 데이터 · 암호화
+### 들고 다니는 단말을 위한 보안
 
-서버가 없어 고객 정보가 태블릿 안 DB(SQLDelight)와 설정 파일에 남습니다. 단말을 잃어버리거나 앱 데이터가 통째로 빠져나가도
-**고객 개인정보가 그대로 읽히지 않게** 칸 단위로 잠가 저장하고, 애초에 남기지 않아도 되는 것은 저장하지 않습니다.
+- **앱 잠금** — 직원별 6자리 비밀번호(+생체 인증). 잠겨도 보던 업무 화면은 버리지 않습니다. 5번 틀리면 업무 데이터 · 잠금 비밀번호를 지우고 로그아웃합니다.
+- **개인정보 칸 암호화** — 고객 이름 · 생년월일 · 전화번호 · 주소, 상담 내용, 방문 장소 · 메모, 계좌번호를 칸 단위로 잠가 저장합니다.
+  잠금 비밀번호의 salt · 해시와 기억한 사번도 잠가, 설정 파일만 빼내서는 6자리를 대입해 볼 수 없습니다.
 
-| 구분 | 데이터 | 저장 방식 |
-|---|---|---|
-| 잠가 저장 | 고객 이름·생년월일·전화번호·주소, 상담 내용, 방문 장소·메모, 계좌번호(계좌·가입 내역) | `enc1:` + 암호문 |
-| 잠가 저장 (설정) | 앱 잠금 비밀번호의 salt·해시, 기억한 사번 | `enc1:` + 암호문 |
-| 해시만 | 앱 잠금 비밀번호(salt + SHA-256), 전자서명(그림의 지문) | 원래 값으로 되돌릴 수 없음 |
-| 평문 | 시세·상품 설명, 등급·성향·상태 같은 코드 값, 일시·금액, 화면 설정 | 공개 정보이거나 그것만으로 사람을 알아볼 수 없는 값 |
-| 저장 안 함 | 신분증 사진, 주민번호 뒷자리, 계좌 비밀번호, 서명 그림, 로그인 비밀번호 | 메모리에서만 쓰고 버림 |
+  | | Android | iOS |
+  |---|---|---|
+  | 키 | Keystore 키(꺼낼 수 없음)로 감싼 데이터 키 | Keychain(`WhenUnlockedThisDeviceOnly`) |
+  | 암호 | AES-256-GCM | AES-256-CBC + HMAC-SHA256 |
+  | 백업 | `allowBackup=false` · `dataExtractionRules` | DB 폴더를 백업에서 제외 |
 
-**암호 방식** — 키는 각 플랫폼의 보안 저장소에만 두고 앱 밖으로 꺼내지 않습니다.
+  앱 시작 때 키와 DB 의 짝을 확인해 맞지 않으면 풀 수 없는 데이터를 지우고, 데이터를 지울 때는 키도 버려 DB 파일에 남은 조각까지 풀 수 없게 합니다.
+- **저장하지 않는 것** — 신분증 사진(Android 는 임시 파일을 읽자마자 삭제, iOS 는 메모리로만), 주민번호 뒷자리, 계좌 비밀번호, 서명 그림(지문 해시만), 로그인 비밀번호.
+- **화면 보호** — 앱 전환기에서 화면 가리기(Android · iOS), 배포용 Android 빌드의 화면 캡처 차단. 화면의 전화번호 · 생년월일 · 주소 · 계좌번호는 기본으로 가립니다.
 
-| | Android | iOS |
-|---|---|---|
-| 키 | Keystore 안에서 만든 AES 키(꺼낼 수 없음)로 데이터 키를 감싸 `noBackupFilesDir` 에 둠 | Keychain(`WhenUnlockedThisDeviceOnly`)에 64바이트 키 |
-| 암호 | AES-256-GCM | AES-256-CBC + HMAC-SHA256(암호화한 뒤 서명) |
-| 위·변조 | GCM 인증 태그로 거름 | HMAC 을 상수 시간으로 비교 |
-| 백업 | `allowBackup=false`, `dataExtractionRules` 로 백업·기기 이전 막음 | DB 폴더를 iCloud·Finder 백업에서 뺌 |
+### 로컬 모드와 다국어
 
-**키를 다루는 규칙**
+- 설치만 하면 시연용 고객 · 일정 · 상품 · 시세로 전 과정을 따라갈 수 있습니다. 업무 데이터를 지운 뒤 다시 로그인하면 처음 상태로 돌아옵니다.
+- 한글은 하드코딩하지 않고 `composeResources/values`(영문) · `values-ko`(한글)로 나눴습니다. 상담 이력에 자동으로 남기는 문구도 화면이 만들어 넘깁니다.
 
-- **잠그지 못하면 저장하지 않습니다.** 원본이 서버에 없으니 풀리지 않는 값을 쓰면 데이터를 잃고, 평문으로 두면 잠그는 의미가 없습니다.
-- **키와 DB 의 짝을 앱 시작 때 확인합니다**(`LocalKeyGuard`). 짝이 맞지 않으면(다른 기기로 옮겨졌거나 보안 저장소가 초기화됨) 풀 수 없는 업무 데이터를 지우고, 다음 로그인 때 시연용 데이터로 다시 시작합니다.
-- **앱 잠금을 5번 틀려 데이터를 지울 때 키도 버립니다.** DB 파일에 지운 행의 조각이 남아도 풀 수 없습니다.
-- 칸을 잠그면 SQL 로 정렬·검색할 수 없어 **이름 순 정렬·고객 검색·계좌번호 순번 세기는 값을 푼 뒤에** 합니다.
-- 설정에 평문으로 남아 있던 값은 처음 읽을 때 잠가서 다시 씁니다. DB 는 `OdsDatabase_v2.db` 로 새로 시작하고 평문이던 v1 파일은 지웁니다.
+---
 
-코드는 `data/local` 의 `LocalSecret`(잠그기·풀기) · `SecureSettings`(설정) · `LocalKeyGuard`(키 확인·버리기),
-플랫폼별 `AndroidLocalSecretCipher.kt` · `IosLocalSecretCipher.kt` 에 있고, 칸을 잠그고 푸는 일은 매퍼(`CustomerMapper` 등)가 합니다.
-EzQ 프로젝트에서 쓰던 방식을 서버 없는 로컬 모드에 맞게 옮겼습니다.
-
-## 기술 스택 · 구조
-
-| 영역 | 사용 |
-|---|---|
-| UI | Compose Multiplatform, Voyager(오른쪽 스택 하나를 폰·태블릿 레이아웃이 함께 씀) |
-| DI · 저장 | Koin, SQLDelight(기기 DB, 개인정보 칸 암호화), multiplatform-settings, krypto(SHA-256) · Keystore · Keychain/CommonCrypto |
-| 플랫폼 기능 | 생체 인증(BiometricPrompt · LAContext), 카메라(FileProvider · UIImagePickerController), 앱 전환기 가리기 |
-
-```
-composeApp/src/commonMain/kotlin/com/eunilsung/ods/
-  data/    local(로컬 저장소 구현 · 시연용 데이터 · 업무 데이터 삭제 · 암호화) · mapper
-  domain/  model · repository(인터페이스) · usecase · util(업무 규칙)
-  ui/      main(폰·태블릿 레이아웃) · schedule · customer · risk · product · account · quote · consult · applock · uikit
-  di/      Modules.kt — 저장소 구현을 갈라 끼우는 한 곳
-```
-
-- 화면은 ViewModel 만, ViewModel 은 유스케이스만 봅니다. 여러 저장소를 잇는 업무(가입·계좌 개설·진단 저장)는 유스케이스가 합니다.
-- 업무를 마치면 상담 이력에 자동 기록이 남고, 기록한 직원은 로그인한 직원입니다.
-- 한글은 하드코딩하지 않고 `composeResources/values`(영문)·`values-ko`(한글)로 나눴습니다.
-
-### 서버 없이 도는 이유
-
-서버 연동(Ktor 서버·WebSocket·서버 응답 반영·진짜 서버에 붙는 기능 테스트)은 함께 만든 Talk 프로젝트에서 보여 주고,
-ODS 는 **증권 업무 규칙과 현장 UX** 에 집중했습니다. 설치만 하면 바로 전 과정을 따라가 볼 수 있습니다.
-저장소는 모두 인터페이스 뒤에 있고 `Config.Server` · `di/Modules.kt` 한 곳에서 서버 구현으로 갈라 끼울 수 있게 해 두었습니다.
-
-## 실행
+## 테스트 · 검증
 
 ```bash
-./gradlew :composeApp:installDebug          # Android
-open iosApp/iosApp.xcodeproj                # iOS (Xcode 에서 시뮬레이터를 고르고 실행)
+./gradlew :composeApp:verifyAll --continue   # 전체 — 약 18분, 꺼진 기기도 켜서 돈다
+./gradlew :composeApp:testDebugUnitTest      # 빠르게 — JVM 테스트만
 ```
 
-JDK 17 과 `local.properties` 의 `sdk.dir` 이 필요합니다. 개발 규칙·구조는 [CLAUDE.md](CLAUDE.md), 디자인 방향은 [docs/design-proposal.html](docs/design-proposal.html) 에 있습니다.
+Android Studio 에서는 실행 구성 `검증 - 전체 (실화면 포함)` · `검증 - 빠르게 (JVM)` 을 고릅니다.
 
-## 검증 — 한 번에
-
-```bash
-./gradlew :composeApp:verifyAll --continue
-```
-
-Android Studio 에서는 실행 구성 **`검증 - 전체 (실화면 포함)`** 을 고르고 실행합니다(고칠 때마다는 `검증 - 빠르게 (JVM)`). 기기를 켜는 것까지 18분쯤 걸립니다.
-
-1. 단위·ViewModel 시나리오 테스트(Android JVM) — 업무 규칙과 화면 상태·이벤트를 인메모리 DB 위에서 봅니다
-2. 같은 테스트(iOS 시뮬레이터)
-3. Android 앱 빌드 → 에뮬레이터에 설치 → Maestro 실화면 흐름 7개
-4. iOS 앱 빌드 → 시뮬레이터에 설치 → 같은 흐름 7개
-
-| 실화면 흐름 | 확인하는 것 |
+| 층 | 내용 |
 |---|---|
-| 로그인·시장 | 로그인, 시세 상세, 고객에게 보여 주기, 로그아웃 |
-| 앱 잠금 | 지금 잠그기 → 풀기, 5번 틀리면 데이터 삭제 후 로그인 화면 |
-| 고객 | 전화번호 검색, 상담 기록, 신규 고객 등록 |
-| 방문 일정 | 다음 주 일정 등록, 방문 완료 → 상담 기록 |
-| 투자성향 | 7문항, 고객 확인, 서명, 저장 후 상담 이력 |
-| 상품 가입 | 적합성 → 핵심 설명 → 계좌·금액 → 서명 → 완료 |
-| 계좌 개설 | 신분증 확인 → 계좌 종류 → 약관 → 고객 비밀번호 → 서명 → 새 계좌 |
+| 단위 테스트 | 업무 규칙, 저장소(인메모리 DB), 암호화(대역 키 · 플랫폼 암호 코드) |
+| ViewModel 시나리오 | 진짜 로컬 저장소 위에 화면의 ViewModel 을 세워 상태 · 이벤트를 확인. Android(JVM) · iOS 시뮬레이터 양쪽에서 돈다 |
+| 실화면 흐름 (Maestro) | 로그인 · 시장 / 앱 잠금 · 데이터 삭제 / 고객 · 상담 / 방문 일정 / 투자성향 · 서명 / 상품 가입 / 계좌 개설 — Android 에뮬레이터 · iOS 시뮬레이터 |
 
-**준비** — Maestro(`curl -fsSL https://get.maestro.mobile.dev | bash`), Xcode, 그리고 `local.properties` 에 이 PC 의 검증 기기를 적습니다(꺼져 있으면 켜서 씁니다).
+- 검증 기기는 `local.properties` 의 `e2e.androidAvd` · `e2e.iosDevice` 로 정합니다. 결과는 `composeApp/build/test-results/`, `build/maestro/<android|ios>/report.xml`.
+- 자동으로 확인하지 못하는 것: 실제 카메라 촬영, 생체 인증, 배포 빌드의 캡처 차단, 백업 복원처럼 키를 실제로 잃는 경우.
 
-```properties
-e2e.androidAvd=<에뮬레이터 이름>
-e2e.iosDevice=<시뮬레이터 UDID 또는 이름>
-```
+### 아직 없는 것
 
-**결과** — `composeApp/build/test-results/`(JVM·iOS 테스트), `build/maestro/<android|ios>/report.xml` 과 스크린샷·로그.
+서버 연동(원격 단말 잠금 포함), 신분증 OCR · 사진 속 주민번호 가리기, 숙려기간 중 철회, 가입 내역 상세 · 해지, 전용 글꼴.
 
-**자동으로 확인하지 못하는 것** — 실제 카메라 촬영, 생체 인증, 배포 빌드의 화면 캡처 차단, 백업 복원처럼 키를 실제로 잃는 경우. 손으로 확인합니다.
-암호 코드는 단위 테스트에서 대역 키로 검증하고(테스트 실행 파일에서는 Keystore·Keychain 을 쓸 수 없습니다), 실제 키는 실화면 흐름에서 씁니다.
+---
 
-## 아직 없는 것
+## 앱 소개
 
-서버 연동(원격 단말 잠금 포함), 신분증 OCR·사진 속 주민번호 가리기, 숙려기간 중 철회, 가입 내역 상세·해지, 앱 안 테마 고르기, 전용 글꼴.
+**밖에서 만나는 고객 상담, 태블릿 하나로 끝까지.**
+방문 일정부터 상담 기록, 투자성향 진단, 상품 가입, 계좌 개설까지 — 지점에 돌아가지 않고 고객 앞에서 마칩니다.
+
+- **오늘의 방문** — 주간 달력과 고른 날의 방문, 방문을 마치면 바로 상담 기록
+- **고객 상담** — 이름 · 초성 · 전화번호로 찾고, 상담 이력과 보유 계좌 · 가입 상품을 한 화면에
+- **투자성향 진단 · 전자서명** — 7문항 진단 후 고객 확인과 서명까지
+- **적합성 원칙에 맞춘 가입** — 성향보다 위험한 상품은 고객 확인 없이 진행하지 않음
+- **현장 계좌 개설** — 신분증 촬영 · 대조, 고객이 직접 입력하는 계좌 비밀번호
+- **고객에게 보여 주기** — 종목 · 시세 · 차트만 화면 가득 크게
+
+<p align="center">
+  <img src="docs/screenshots/phone-schedule.jpg" width="160" alt="방문 일정">
+  <img src="docs/screenshots/phone-customer.jpg" width="160" alt="고객 상세">
+  <img src="docs/screenshots/phone-risk-signature.jpg" width="160" alt="투자성향 서명">
+  <img src="docs/screenshots/phone-id-card.jpg" width="160" alt="신분증 확인">
+  <img src="docs/screenshots/phone-app-lock.jpg" width="160" alt="앱 잠금">
+</p>
+<p align="center">
+  <img src="docs/screenshots/tablet-customer.jpg" width="280" alt="태블릿 3칸 — 고객 · 상세 · 상담 칸">
+  <img src="docs/screenshots/tablet-suitability.jpg" width="280" alt="태블릿 — 상품 적합성">
+  <img src="docs/screenshots/tablet-present.jpg" width="280" alt="고객에게 보여 주기">
+</p>
+
+<p align="center"><sub>화면의 고객 · 계좌 · 시세는 모두 시연용 예시 값입니다. 디자인 방향은 <a href="docs/design-proposal.html">docs/design-proposal.html</a> 에 있습니다.</sub></p>
