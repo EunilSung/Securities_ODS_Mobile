@@ -1,5 +1,6 @@
 package com.eunilsung.ods.data.local
 
+import com.eunilsung.ods.data.remote.server.AuthTokenStore
 import com.eunilsung.ods.db.AppDatabase
 import com.eunilsung.ods.domain.repository.LocalDataWiper
 import com.eunilsung.ods.util.Log
@@ -11,13 +12,16 @@ import kotlinx.coroutines.withContext
  *
  * 지운 행이 DB 파일 안에 조각으로 남아도 잠긴 값이고 키가 없으니 풀 수 없다([LocalKeyGuard.shred]).
  * 업무 테이블을 새로 만들면 `AppDatabase.sq` 의 `wipeBusinessData` 에도 더한다.
+ * 서버 모드면 서버 인증 토큰([tokenStore])도 지운다 — 잃어버린 단말로 서버 데이터를 다시 받을 수 없게.
  */
 class LocalDataWiperImpl(
     private val database: AppDatabase,
     private val keyGuard: LocalKeyGuard,
+    private val tokenStore: AuthTokenStore? = null,
 ) : LocalDataWiper {
     override suspend fun wipe() = withContext(Dispatchers.Default) {
         database.appDatabaseQueries.wipeBusinessData()
+        tokenStore?.clear()
         keyGuard.shred()
         Log.message("[Wipe] business data wiped")
     }

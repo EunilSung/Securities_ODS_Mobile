@@ -1,5 +1,7 @@
 package com.eunilsung.ods
 
+import com.eunilsung.ods.data.remote.server.SERVER_BASE_URL
+
 object Config {
     /** 디버그 로그 on/off — 기본 꺼짐. */
     object Log {
@@ -9,20 +11,22 @@ object Config {
     /**
      * 서버 연동.
      *
+     * 주소는 빌드할 때 `local.properties` 의 `server.baseUrl`(또는 환경변수 `ODS_SERVER_BASE_URL`)에서 정해진다.
      * 비어 있으면 서버 없이 기기 안 시연용 데이터만으로 돈다(`data/local/repository`).
-     * 주소가 생기면 `di/Modules.kt` 에서 서버 구현(`data/repository`)으로 바꿔 끼운다.
+     * 주소가 있으면 `di/Modules.kt` 가 서버 구현(`data/repository`)으로 바꿔 끼운다.
      */
     object Server {
-        const val BASE_URL: String = ""
+        val BASE_URL: String = SERVER_BASE_URL.trimEnd('/')
         val IS_ENABLED: Boolean = BASE_URL.isNotBlank()
     }
 
     /**
      * 로컬 데이터베이스(SQLDelight). [NAME] 을 바꾸면 새 DB 로 시작한다.
      * v2 부터 개인정보 칸을 잠근다. 평문으로 저장했던 예전 DB([LEGACY_NAMES])는 앱이 DB 를 열 때 지운다 — 시연용 데이터라 옮기지 않는다.
+     * 서버 모드는 다른 파일을 쓴다 — 시연용 데이터와 서버에서 받은 데이터가 한 DB 에 섞이지 않는다.
      */
     object Database {
-        const val NAME: String = "OdsDatabase_v2.db"
+        val NAME: String = if (Server.IS_ENABLED) "OdsDatabase_server_v1.db" else "OdsDatabase_v2.db"
         val LEGACY_NAMES: List<String> = listOf("OdsDatabase_v1.db")
     }
 

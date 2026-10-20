@@ -8,6 +8,8 @@ import com.eunilsung.ods.domain.model.Product
 import com.eunilsung.ods.domain.model.Signature
 import com.eunilsung.ods.domain.model.SignaturePurpose
 import com.eunilsung.ods.domain.model.Subscription
+import com.eunilsung.ods.domain.model.SubscriptionRejectedException
+import com.eunilsung.ods.domain.model.SubscriptionRejection
 import com.eunilsung.ods.domain.model.Suitability
 import com.eunilsung.ods.domain.repository.CustomerRepository
 import com.eunilsung.ods.domain.repository.LoginRepository
@@ -97,7 +99,16 @@ class SubscribeProductUseCase(
         } else {
             null
         }
-        val created = products.subscribe(subscription, now, coolingOff)
+        val created = try {
+            products.subscribe(subscription, now, coolingOff)
+        } catch (e: SubscriptionRejectedException) {
+            return when (e.reason) {
+                SubscriptionRejection.NEEDS_ASSESSMENT -> SubscribeResult.NeedsAssessment
+                SubscriptionRejection.UNSUITABLE_NOT_CONFIRMED -> SubscribeResult.UnsuitableNotConfirmed
+                SubscriptionRejection.INVALID_AMOUNT -> SubscribeResult.InvalidAmount
+                SubscriptionRejection.INVALID_ACCOUNT -> SubscribeResult.InvalidAccount
+            }
+        }
         signatures.record(customer.id, SignaturePurpose.PRODUCT_SUBSCRIPTION, signature, now)
         customers.addConsultation(NewConsultation(customer.id, ConsultChannel.VISIT, ConsultTopic.PRODUCT, note), staff.name, now)
         return SubscribeResult.Subscribed(created)

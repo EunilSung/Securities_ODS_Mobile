@@ -3,6 +3,7 @@ package com.eunilsung.ods.domain.usecase
 import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.AccountTypeBlock
+import com.eunilsung.ods.domain.model.AccountTypeBlockedException
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.IdCardInfo
@@ -99,7 +100,11 @@ class OpenAccountUseCase(
         if (!pinSet) return OpenAccountResult.PinRequired
         if (!SignaturePolicy.isEnough(signature)) return OpenAccountResult.SignatureRequired
 
-        val account = customers.openAccount(customerId, type, now)
+        val account = try {
+            customers.openAccount(customerId, type, now)
+        } catch (e: AccountTypeBlockedException) {
+            return OpenAccountResult.TypeBlocked(e.block)
+        }
         signatures.record(customerId, SignaturePurpose.ACCOUNT_OPENING, signature, now)
         customers.addConsultation(NewConsultation(customerId, ConsultChannel.VISIT, ConsultTopic.ACCOUNT_OPENING, note), staff.name, now)
         return OpenAccountResult.Opened(account)
