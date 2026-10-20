@@ -60,7 +60,7 @@ class LoginViewModelTest {
             getSavedId = GetSavedIdUseCase(repository),
             isSaveId = IsSaveIdUseCase(repository),
             setSaveId = SetSaveIdUseCase(repository),
-            getAppInfo = GetAppInfoUseCase(FakeVersion),
+            getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
             getLogoutReason = GetLogoutReasonUseCase(repository),
             clearLogoutReason = ClearLogoutReasonUseCase(repository),
         ),

@@ -40,7 +40,8 @@ import kotlinx.coroutines.withContext
 /**
  * 서버 모드 고객 저장소. 화면은 [local] 처럼 기기 DB 를 보고, 이 저장소가 서버에서 받은 담당 고객으로 DB 를 맞춘다.
  *
- * [refresh] 는 고객·계좌·상담·가입·서명 기록을 서버가 준 그대로 한 번에 바꾼다. 등록·개설·기록은 서버가 받아 준 뒤에만
+ * [refresh] 는 고객·계좌·상담·가입·서명 기록을 서버가 준 값으로 한 번에 덮어쓴다. 지우지는 않는다 — 서버에는 지우는 길이 없고,
+ * 비우고 다시 채우면 먼저 출발한 다시 받기가 그 사이에 저장한 행을 지운다. 등록·개설·기록은 서버가 받아 준 뒤에만
  * 돌려받은 행을 DB 에 넣는다. 서버가 거절하거나 닿지 못하면 던진다 — ISA·연금 제한은 [AccountTypeBlockedException] 이다.
  * 다시 연결되거나 고객 데이터가 바뀌었다는 알림이 오면 다시 받는다.
  */
@@ -79,7 +80,6 @@ class CustomerRepositoryImpl(
             val book = server.customers().valueOrNull() ?: return@withLock false
             withContext(Dispatchers.Default) {
                 database.transaction {
-                    queries.clearCustomerBook()
                     book.customers.forEach { queries.upsertCustomer(mapper.toEntity(serverMapper.toModel(it))) }
                     book.accounts.forEach { queries.upsertAccount(mapper.toEntity(serverMapper.toModel(it))) }
                     book.consultations.forEach { queries.upsertConsultation(mapper.toEntity(serverMapper.toModel(it))) }

@@ -57,6 +57,12 @@ tasks.test {
 }
 
 /**
+ * 로컬 서버 포트. 기본 8095 — 앱(`server.baseUrl`)과 기능 테스트·실화면 흐름의 기본 주소가 이 포트를 본다.
+ * 같은 PC 의 다른 프로젝트 서버가 8095 을 쓰고 있으면 `-PlocalServerPort=<포트>` 로 피한다. 앱 빌드(composeApp)도 같은 속성을 본다.
+ */
+val localServerPort: String = providers.gradleProperty("localServerPort").orNull ?: "8095"
+
+/**
  * 로컬 개발용 실행 — 내장 PostgreSQL 을 함께 띄운다.
  *
  * PostgreSQL 을 따로 설치하지 않아도 서버가 뜬다. 데이터는 `server/.localdb` 에 남아 다시 켜도 유지된다.
@@ -70,6 +76,7 @@ tasks.register<JavaExec>("runLocal") {
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("com.eunilsung.ods.server.local.LocalServerKt")
     workingDir = projectDir
+    environment("PORT", localServerPort)
     jvmArgs("-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8")
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(17)) })
 }
@@ -84,20 +91,24 @@ abstract class LocalServerService : BuildService<BuildServiceParameters.None>, A
 
     private var process: Process? = null
     private var dataDirectory: File? = null
+    private var healthUrl = ""
 
     @Synchronized
-    fun startIfDown(javaExecutable: String, classpath: String, workingDir: File, logFile: File) {
+    fun startIfDown(javaExecutable: String, classpath: String, workingDir: File, logFile: File, port: String) {
+        healthUrl = "http://localhost:$port/health"
         if (isUp()) return
         dataDirectory = File(workingDir, LOCAL_DB_DIRECTORY)
         logFile.parentFile.mkdirs()
         /** Windows 는 명령줄 길이에 한도가 있어 클래스패스를 파일로 넘긴다. */
         val argFile = File(logFile.parentFile, "local-server.args")
         argFile.writeText("-cp\n\"${classpath.replace("\\", "\\\\")}\"\n")
-        process = ProcessBuilder(
+        val builder = ProcessBuilder(
             javaExecutable, "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8",
             "@${argFile.absolutePath}", MAIN_CLASS,
         ).directory(workingDir)
-            .redirectErrorStream(true).redirectOutput(logFile).start()
+            .redirectErrorStream(true).redirectOutput(logFile)
+        builder.environment()["PORT"] = port
+        process = builder.start()
 
         val deadline = System.currentTimeMillis() + START_TIMEOUT_MS
         while (System.currentTimeMillis() < deadline) {
@@ -132,7 +143,7 @@ abstract class LocalServerService : BuildService<BuildServiceParameters.None>, A
     }
 
     private fun isUp(): Boolean = runCatching {
-        val connection = URI(HEALTH_URL).toURL().openConnection() as HttpURLConnection
+        val connection = URI(healthUrl).toURL().openConnection() as HttpURLConnection
         connection.connectTimeout = PROBE_TIMEOUT_MS
         connection.readTimeout = PROBE_TIMEOUT_MS
         connection.responseCode == 200
@@ -141,7 +152,6 @@ abstract class LocalServerService : BuildService<BuildServiceParameters.None>, A
     private companion object {
         const val MAIN_CLASS = "com.eunilsung.ods.server.local.LocalServerKt"
         const val LOCAL_DB_DIRECTORY = ".localdb"
-        const val HEALTH_URL = "http://localhost:8091/health"
         const val START_TIMEOUT_MS = 180_000L
         const val POLL_MS = 1_000L
         const val PROBE_TIMEOUT_MS = 2_000
@@ -164,6 +174,9 @@ abstract class StartLocalServer : DefaultTask() {
     @get:Internal
     abstract val server: Property<LocalServerService>
 
+    @get:Input
+    abstract val port: Property<String>
+
     @TaskAction
     fun start() {
         server.get().startIfDown(
@@ -171,6 +184,7 @@ abstract class StartLocalServer : DefaultTask() {
             serverClasspath.asPath,
             workingDirectory.get().asFile,
             logFile.get().asFile,
+            port.get(),
         )
     }
 }
@@ -191,6 +205,7 @@ tasks.register<StartLocalServer>("startLocalServer") {
     workingDirectory.set(layout.projectDirectory)
     logFile.set(layout.buildDirectory.file("local-server/server.log"))
     server.set(localServer)
+    port.set(localServerPort)
     usesService(localServer)
     outputs.upToDateWhen { false }
 }

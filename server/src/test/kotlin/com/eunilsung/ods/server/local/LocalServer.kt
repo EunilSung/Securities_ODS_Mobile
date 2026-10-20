@@ -26,6 +26,6 @@ fun main() {
  * 운영 기본 포트(8080)를 피한다. 같은 PC 에서 다른 프로젝트의 서버(Talk 는 8090)가 그 포트를 쓰면
  * 서로의 앱이 엉뚱한 서버에 붙는다. DB 포트도 같은 까닭으로 따로 둔다.
  */
-private const val LOCAL_SERVER_PORT = 8091
+private const val LOCAL_SERVER_PORT = 8095
 private const val LOCAL_DB_DIRECTORY = ".localdb"
-private const val LOCAL_DB_PORT = 54330
+private const val LOCAL_DB_PORT = 54335

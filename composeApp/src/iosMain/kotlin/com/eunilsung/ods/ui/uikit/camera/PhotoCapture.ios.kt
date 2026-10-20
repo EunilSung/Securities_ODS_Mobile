@@ -8,6 +8,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.Foundation.NSData
+import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
@@ -28,7 +29,7 @@ actual fun rememberPhotoCapture(onResult: (ByteArray?) -> Unit): () -> Unit {
         {
             val picker = UIImagePickerController()
             val camera = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
-            picker.sourceType = if (UIImagePickerController.isSourceTypeAvailable(camera)) camera
+            picker.sourceType = if (!isSimulator() && UIImagePickerController.isSourceTypeAvailable(camera)) camera
             else UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypePhotoLibrary
             picker.delegate = delegate
             val presenter = topViewController()
@@ -36,6 +37,11 @@ actual fun rememberPhotoCapture(onResult: (ByteArray?) -> Unit): () -> Unit {
         }
     }
 }
+
+/**
+ * 시뮬레이터인가. 시뮬레이터의 흉내 카메라는 있다고 답하지만 셔터를 눌러도 찍히지 않는다 — 시뮬레이터에서는 사진첩에서 고른다.
+ */
+private fun isSimulator(): Boolean = NSProcessInfo.processInfo.environment["SIMULATOR_UDID"] != null
 
 /** 지금 맨 위에 떠 있는 화면 — 거기서 카메라를 띄운다. */
 private fun topViewController(): UIViewController? {

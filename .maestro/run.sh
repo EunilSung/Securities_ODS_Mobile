@@ -4,11 +4,12 @@
 #   .maestro/run.sh android <apk 경로>
 #   .maestro/run.sh ios
 #
-# 서버 없는 로컬 모드 앱이라 서버를 띄우거나 확인하지 않는다.
 # 기기는 환경변수나 local.properties 로 고른다. 없으면 켜져 있는 에뮬레이터·iPhone 시뮬레이터 중 첫 번째를 쓴다.
 # 실기기는 고르지 않는다.
 #   ODS_ANDROID_AVD / e2e.androidAvd  에뮬레이터 이름. 꺼져 있으면 켠다
 #   ODS_IOS_DEVICE  / e2e.iosDevice   시뮬레이터 UDID 또는 이름. 꺼져 있으면 켠다
+# 앱은 ODS_SERVER_BASE_URL(기본 http://localhost:8095)의 서버에 붙게 빌드되고, 그 서버가 떠 있어야 한다.
+# Android 는 adb reverse 로 에뮬레이터의 localhost 를 이 PC 로 잇고, iOS 는 xcodebuild 에 주소를 넘겨 Gradle 이 서버 모드로 빌드한다.
 # 결과는 build/maestro/<플랫폼>/report.xml(JUnit)과 같은 폴더의 스크린샷·로그로 남는다.
 set -euo pipefail
 
@@ -20,6 +21,8 @@ APP_ID=com.eunilsung.ods
 PLATFORM=${1:?android 또는 ios}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 OUT=$ROOT/build/maestro/$PLATFORM
+SERVER_URL=${ODS_SERVER_BASE_URL:-http://localhost:8095}
+SERVER_PORT=${SERVER_URL##*:}
 
 fail() { echo "[e2e] $*" >&2; exit 1; }
 log() { echo "[e2e] $*" >&2; }
@@ -31,12 +34,13 @@ local_property() {
 
 MAESTRO=$(command -v maestro || echo "$HOME/.maestro/bin/maestro")
 [ -x "$MAESTRO" ] || fail "Maestro 가 없다. 설치: curl -fsSL https://get.maestro.mobile.dev | bash"
+curl -sf "$SERVER_URL/health" >/dev/null || fail "서버($SERVER_URL)에 닿지 않는다. ./gradlew :server:runLocal 로 띄운다"
 
 run_flows() {
     rm -rf "$OUT"
     mkdir -p "$OUT"
     log "$PLATFORM($1) 에서 흐름을 돌린다"
-    "$MAESTRO" --device "$1" test "$ROOT/.maestro" --format junit --output "$OUT/report.xml" --test-output-dir "$OUT"
+    "$MAESTRO" --device "$1" test -e ODS_SERVER="$SERVER_URL" "$ROOT/.maestro" --format junit --output "$OUT/report.xml" --test-output-dir "$OUT"
 }
 
 android_avd_of() { "$ADB" -s "$1" emu avd name 2>/dev/null | head -1 | tr -d '\r'; }
@@ -97,6 +101,9 @@ run_android() {
 
     log "$serial 에 설치한다"
     "$ADB" -s "$serial" install -r "$apk" >/dev/null
+    case "$SERVER_URL" in
+        http://localhost:*) "$ADB" -s "$serial" reverse "tcp:$SERVER_PORT" "tcp:$SERVER_PORT" >/dev/null ;;
+    esac
     ascii_keyboard "$serial"
     run_flows "$serial"
 }
@@ -129,12 +136,14 @@ run_ios() {
     log "iOS 앱을 빌드한다 (로그: $build_log)"
     xcodebuild -project "$ROOT/$IOS_PROJECT" -scheme "$IOS_SCHEME" -configuration Debug \
         -sdk iphonesimulator -destination "id=$udid" -derivedDataPath "$ROOT/build/ios-derived" \
-        build >"$build_log" 2>&1 ||
+        ODS_SERVER_BASE_URL="$SERVER_URL" build >"$build_log" 2>&1 ||
         { tail -30 "$build_log" >&2; fail "iOS 빌드가 실패했다"; }
 
     log "$udid 에 설치한다"
     xcrun simctl terminate "$udid" "$APP_ID" 2>/dev/null || true
     xcrun simctl install "$udid" "$ROOT/build/ios-derived/Build/Products/Debug-iphonesimulator/$IOS_APP"
+    # 시뮬레이터 앱은 카메라 대신 사진첩에서 신분증 사진을 고른다. 고를 사진을 넣어 둔다.
+    xcrun simctl addmedia "$udid" "$ROOT/.maestro/assets/id_card.jpg"
     run_flows "$udid"
 }
 

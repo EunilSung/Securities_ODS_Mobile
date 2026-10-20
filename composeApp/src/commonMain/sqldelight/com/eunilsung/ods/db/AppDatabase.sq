@@ -215,14 +215,6 @@ LEFT JOIN ProductEntity p ON p.id = s.productId
 WHERE s.customerId = ?
 ORDER BY s.subscribedAt DESC;
 
-clearCustomerBook {
-    DELETE FROM CustomerEntity;
-    DELETE FROM ConsultationEntity;
-    DELETE FROM AccountEntity;
-    DELETE FROM SignatureEntity;
-    DELETE FROM SubscriptionEntity;
-}
-
 wipeBusinessData {
     DELETE FROM WatchStockEntity;
     DELETE FROM CustomerEntity;

@@ -59,7 +59,7 @@ class CustomerRepositoryImplTest {
     private val customer = CustomerDto("C1", "한지민", "1985-03-12", "FEMALE", "010-1234-5678", "서울 강남구", "VIP", registeredAtMillis = 10)
 
     @Test
-    fun refreshReplacesDeviceRowsWithServerBook() = runTest {
+    fun refreshWritesServerBookWithoutDroppingRowsSavedMeanwhile() = runTest {
         local.register(NewCustomer("옛 고객", LocalDate(1970, 1, 1), Gender.MALE, "010-0000-0000", "부산"), nowMillis = 1)
         server.book = CustomerBookResponse(
             customers = listOf(customer),
@@ -72,8 +72,8 @@ class CustomerRepositoryImplTest {
         assertTrue(repository.refresh())
 
         val customers = repository.observeCustomers().first()
-        assertEquals(listOf("한지민"), customers.map { it.name })
-        assertEquals(LocalDate(1985, 3, 12), customers.single().birthDate)
+        assertEquals(listOf("옛 고객", "한지민"), customers.map { it.name }.sorted())
+        assertEquals(LocalDate(1985, 3, 12), customers.single { it.id == "C1" }.birthDate)
         assertEquals(listOf(AccountType.ISA), repository.observeAccounts("C1").first().map { it.type })
         assertEquals("시황 안내", repository.observeConsultations("C1").first().single().content)
         assertEquals(1_000_000, products.observeSubscriptions("C1").first().single().amount)

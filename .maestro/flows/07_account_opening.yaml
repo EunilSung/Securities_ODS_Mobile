@@ -1,32 +1,55 @@
 appId: com.eunilsung.ods
 name: 계좌가 없는 고객에게 신분증 확인·약관·비밀번호·서명으로 종합매매 계좌를 개설
 ---
+- runScript:
+    label: 서버 모드 — 지난 실행이 연 계좌가 서버에 남으므로 실행마다 계좌가 없는 새 고객을 등록해 둔다
+    file: ../scripts/server.js
+    env:
+      ACTION: newCustomer
 - runFlow: ../common/login.yaml
 - tapOn:
     id: tab_customer
 - tapOn:
     id: customer_search
-- inputText: "3302"
+- inputText: ${output.search}
 - runFlow: ../common/dismiss_keyboard.yaml
 - tapOn:
     id: customer_item
     index: 0
+- assertVisible:
+    id: customer_detail_name
+    text: ${output.name}
 - scrollUntilVisible:
     element:
       id: account_open
     direction: DOWN
 - tapOn:
     id: account_open
-- tapOn:
-    id: opening_demo_id
+- runFlow:
+    label: 서버 모드에는 시연용 신분증이 없어 신분증을 찍는다
+    file: ../common/capture_id.yaml
 - tapOn:
     id: opening_next
 - tapOn:
-    id: opening_verify
-- extendedWaitUntil:
-    visible:
-      id: opening_id_verified
-    timeout: 5000
+    id: opening_id_name
+- inputText: ${output.name}
+- tapOn:
+    id: opening_rrn_front
+- inputText: ${output.rrnFront}
+- tapOn:
+    id: opening_rrn_back
+- inputText: ${output.rrnBack}
+- runFlow: ../common/dismiss_keyboard.yaml
+- retry:
+    label: 숫자 키패드는 완료로 내려가지 않아 첫 탭이 키보드를 내리는 데 쓰일 수 있다
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: opening_verify
+      - extendedWaitUntil:
+          visible:
+            id: opening_id_verified
+          timeout: 5000
 - tapOn:
     id: opening_next
 - tapOn:

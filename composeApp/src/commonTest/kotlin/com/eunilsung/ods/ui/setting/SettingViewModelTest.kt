@@ -68,7 +68,7 @@ class SettingViewModelTest {
             setListDensity = SetListDensityUseCase(preferences),
             observeMaskPersonalInfo = ObserveMaskPersonalInfoUseCase(preferences),
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
-            getAppInfo = GetAppInfoUseCase(FakeVersion),
+            getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
             observeStaff = ObserveStaffUseCase(login),
             logout = LogoutUseCase(login, appLock, consultSession),
             observeAppLock = ObserveAppLockUseCase(appLock),

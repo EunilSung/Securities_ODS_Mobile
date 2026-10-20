@@ -198,7 +198,7 @@ val appModule = module {
     singleOf(::ObserveCandlesUseCase)
     singleOf(::QuoteUseCases)
 
-    singleOf(::GetAppInfoUseCase)
+    single { GetAppInfoUseCase(get()) }
     singleOf(::SettingUseCases)
 
     singleOf(::CustomerMapper)
