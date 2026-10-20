@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
  * 신규 고객 등록 — 현장에서 처음 만난 고객의 이름·생년월일·성별·휴대폰·주소를 받는다.
  *
  * 등록하면 그 고객과 상담을 시작하고 [NewCustomerEvent.Registered] 로 상세를 연다. 등급은 일반으로 시작한다.
+ * 등록하지 못하면 적은 내용을 그대로 두고 [NewCustomerUiState.saveFailed] 를 켠다.
  */
 class NewCustomerViewModel(
     private val registerCustomer: RegisterCustomerUseCase,
@@ -50,9 +51,13 @@ class NewCustomerViewModel(
             _uiState.update { it.copy(showErrors = true) }
             return
         }
-        _uiState.update { it.copy(isSaving = true) }
+        _uiState.update { it.copy(isSaving = true, saveFailed = false) }
         viewModelScope.launch {
             val customer = registerCustomer(NewCustomer(state.name.trim(), birth, state.gender, phone, state.address.trim()))
+            if (customer == null) {
+                _uiState.update { it.copy(isSaving = false, saveFailed = true) }
+                return@launch
+            }
             _uiState.value = NewCustomerUiState()
             _events.send(NewCustomerEvent.Registered(customer.id))
         }

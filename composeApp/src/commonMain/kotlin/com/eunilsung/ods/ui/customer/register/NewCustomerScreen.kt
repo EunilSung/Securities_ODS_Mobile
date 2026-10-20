@@ -42,6 +42,7 @@ import ods.composeapp.generated.resources.customer_gender
 import ods.composeapp.generated.resources.customer_name
 import ods.composeapp.generated.resources.customer_new
 import ods.composeapp.generated.resources.customer_phone
+import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.new_customer_birth_error
 import ods.composeapp.generated.resources.new_customer_birth_hint
 import ods.composeapp.generated.resources.new_customer_name_error
@@ -122,6 +123,9 @@ fun NewCustomerContent(uiState: NewCustomerUiState, onAction: (NewCustomerAction
                 label = stringResource(Res.string.customer_address),
                 testTag = TestTags.NEW_CUSTOMER_ADDRESS,
             )
+            if (uiState.saveFailed) {
+                Text(text = stringResource(Res.string.error_server_unreachable), style = AppTypography.Body, color = AppColors.Caution)
+            }
             PrimaryButton(
                 text = stringResource(Res.string.new_customer_submit),
                 onClick = { onAction(NewCustomerActions.OnSubmit) },

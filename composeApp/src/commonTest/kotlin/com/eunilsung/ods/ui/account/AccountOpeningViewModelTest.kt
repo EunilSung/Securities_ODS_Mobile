@@ -6,6 +6,8 @@ import com.eunilsung.ods.data.local.repository.LocalIdVerificationRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalSignatureRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
+import com.eunilsung.ods.data.remote.server.ServerException
+import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.AccountTypeBlock
 import com.eunilsung.ods.domain.model.ConsultTopic
@@ -14,7 +16,10 @@ import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.Signature
 import com.eunilsung.ods.domain.model.SignaturePoint
 import com.eunilsung.ods.domain.model.SignaturePurpose
+import com.eunilsung.ods.domain.model.SignatureRecord
 import com.eunilsung.ods.domain.model.Terms
+import com.eunilsung.ods.domain.repository.CustomerRepository
+import com.eunilsung.ods.domain.repository.SignatureRepository
 import com.eunilsung.ods.domain.usecase.AccountOpeningUseCases
 import com.eunilsung.ods.domain.usecase.ObserveAccountsUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
@@ -43,6 +48,18 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountOpeningViewModelTest {
+    /** 서버에 닿지 못해 계좌를 열지 못하는 저장소. */
+    private class OfflineCustomers(delegate: CustomerRepository) : CustomerRepository by delegate {
+        override suspend fun openAccount(customerId: String, type: AccountType, nowMillis: Long): Account =
+            throw ServerException(status = null, code = null)
+    }
+
+    /** 계좌는 열렸지만 서명 기록에서 서버에 닿지 못하는 저장소. */
+    private class OfflineSignatures(delegate: SignatureRepository) : SignatureRepository by delegate {
+        override suspend fun record(customerId: String, purpose: SignaturePurpose, signature: Signature, nowMillis: Long): SignatureRecord =
+            throw ServerException(status = null, code = null)
+    }
+
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
     private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
@@ -51,12 +68,15 @@ class AccountOpeningViewModelTest {
     private val login = MapSettings().let { LocalLoginRepositoryImpl(it, testSecureSettings(it), simulatedRoundTripMillis = 0) }
     private val signature = Signature(listOf(List(20) { SignaturePoint(0.1f + it * 0.03f, 0.5f) }))
 
-    private fun viewModel() = AccountOpeningViewModel(
+    private fun viewModel(
+        openingCustomers: CustomerRepository = customers,
+        openingSignatures: SignatureRepository = signatures,
+    ) = AccountOpeningViewModel(
         AccountOpeningUseCases(
             observeCustomer = ObserveCustomerUseCase(customers),
             observeAccounts = ObserveAccountsUseCase(customers),
             verifyIdCard = VerifyIdCardUseCase(customers, LocalIdVerificationRepositoryImpl(simulatedRoundTripMillis = 0)),
-            openAccount = OpenAccountUseCase(customers, signatures, login),
+            openAccount = OpenAccountUseCase(openingCustomers, openingSignatures, login),
             startConsult = StartConsultUseCase(session),
         )
     )
@@ -70,6 +90,25 @@ class AccountOpeningViewModelTest {
 
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
+
+    /** C005 의 위탁 계좌를 서명 단계까지 채운다. */
+    private suspend fun AccountOpeningViewModel.fillUpToSign() {
+        onAction(AccountOpeningActions.OnEnter("C005"))
+        uiState.first { it.customer != null }
+        onAction(AccountOpeningActions.OnUseDemoId)
+        onAction(AccountOpeningActions.OnNext)
+        onAction(AccountOpeningActions.OnVerify)
+        uiState.first { it.verification != null }
+        onAction(AccountOpeningActions.OnNext)
+        onAction(AccountOpeningActions.OnTypeSelect(AccountType.BROKERAGE))
+        onAction(AccountOpeningActions.OnNext)
+        onAction(AccountOpeningActions.OnAgreeAll)
+        onAction(AccountOpeningActions.OnNext)
+        onAction(AccountOpeningActions.OnPinEntered("2580"))
+        onAction(AccountOpeningActions.OnPinEntered("2580"))
+        onAction(AccountOpeningActions.OnNext)
+        onAction(AccountOpeningActions.OnSignatureChange(signature))
+    }
 
     @Test
     fun wrongIdDetailsAreListedAndNotVerified() = runTest(dispatcher) {
@@ -126,6 +165,35 @@ class AccountOpeningViewModelTest {
         assertEquals(listOf(account), customers.observeAccounts("C005").first())
         assertEquals(ConsultTopic.ACCOUNT_OPENING, customers.observeConsultations("C005").first().first().topic)
         assertEquals(SignaturePurpose.ACCOUNT_OPENING, signatures.observeRecords("C005").first().single().purpose)
+    }
+
+    @Test
+    fun serverFailureKeepsInputSoStaffCanRetry() = runTest(dispatcher) {
+        val vm = viewModel(openingCustomers = OfflineCustomers(customers))
+        vm.fillUpToSign()
+        vm.onAction(AccountOpeningActions.OnSubmit("개설 메모"))
+
+        val state = vm.uiState.first { it.error != null }
+        assertEquals(OpenError.UNREACHABLE, state.error)
+        assertFalse(state.isSaving)
+        assertEquals(OpeningStep.SIGN, state.step)
+        assertEquals(AccountType.BROKERAGE, state.accountType)
+        assertEquals(PinStage.DONE, state.pinStage)
+        assertTrue(state.canProceed)
+        assertTrue(customers.observeAccounts("C005").first().isEmpty())
+        assertTrue(signatures.observeRecords("C005").first().isEmpty())
+    }
+
+    @Test
+    fun signatureRecordFailingAfterOpeningStillReportsOpened() = runTest(dispatcher) {
+        val vm = viewModel(openingSignatures = OfflineSignatures(signatures))
+        vm.fillUpToSign()
+        vm.onAction(AccountOpeningActions.OnSubmit("개설 메모"))
+
+        val done = vm.uiState.first { it.step == OpeningStep.DONE }
+        assertNull(done.error)
+        assertEquals(listOf(assertNotNull(done.opened)), customers.observeAccounts("C005").first())
+        assertEquals(ConsultTopic.ACCOUNT_OPENING, customers.observeConsultations("C005").first().first().topic)
     }
 
     @Test

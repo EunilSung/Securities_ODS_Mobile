@@ -182,6 +182,7 @@ class AccountOpeningViewModel(
                     OpenAccountResult.SignatureRequired -> it.copy(isSaving = false, error = OpenError.SIGNATURE)
                     OpenAccountResult.NotSignedIn -> it.copy(isSaving = false, error = OpenError.NOT_SIGNED_IN)
                     OpenAccountResult.NotFound -> it.copy(isSaving = false, error = OpenError.NOT_FOUND)
+                    OpenAccountResult.Unreachable -> it.copy(isSaving = false, error = OpenError.UNREACHABLE)
                 }
             }
         }

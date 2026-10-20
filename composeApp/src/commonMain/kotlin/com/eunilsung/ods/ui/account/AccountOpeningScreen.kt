@@ -66,6 +66,7 @@ import com.eunilsung.ods.ui.uikit.textfield.FormField
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.app_lock_delete
+import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.opening_account_no
 import ods.composeapp.generated.resources.opening_block_isa_age
 import ods.composeapp.generated.resources.opening_block_isa_duplicate
@@ -515,5 +516,6 @@ private fun OpenError.message(): String = stringResource(
         OpenError.SIGNATURE -> Res.string.opening_error_signature
         OpenError.NOT_SIGNED_IN -> Res.string.opening_error_not_signed_in
         OpenError.NOT_FOUND -> Res.string.opening_error_not_found
+        OpenError.UNREACHABLE -> Res.string.error_server_unreachable
     }
 )

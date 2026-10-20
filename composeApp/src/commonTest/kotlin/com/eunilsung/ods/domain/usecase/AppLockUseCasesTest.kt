@@ -1,13 +1,22 @@
 package com.eunilsung.ods.domain.usecase
 
+import com.eunilsung.ods.data.local.LocalDataWiperImpl
+import com.eunilsung.ods.data.local.LocalKeyGuard
 import com.eunilsung.ods.data.local.repository.LocalAppLockRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
+import com.eunilsung.ods.data.remote.server.AuthTokenStore
+import com.eunilsung.ods.data.repository.LoginRepositoryImpl
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.model.UnlockResult
 import com.eunilsung.ods.domain.repository.LocalDataWiper
 import com.eunilsung.ods.domain.util.AppLockPolicy
+import com.eunilsung.ods.testsupport.FakeOdsServer
+import com.eunilsung.ods.testsupport.FakeServerEvents
+import com.eunilsung.ods.testsupport.awaitUntil
+import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
 import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
 import kotlin.test.Test
@@ -65,6 +74,31 @@ class AppLockUseCasesTest {
 
         appLock.startSession("test1", 0)
         assertFalse(appLock.state.value.isPinSet)
+    }
+
+    @Test
+    fun wipeRevokesServerTokenBeforeClearingIt() = runTest {
+        val server = FakeOdsServer()
+        val secure = testSecureSettings(settings)
+        val tokenStore = AuthTokenStore(secure)
+        val serverLogin = LoginRepositoryImpl(
+            LocalLoginRepositoryImpl(settings, secure, simulatedRoundTripMillis = 0),
+            server,
+            tokenStore,
+            FakeServerEvents(),
+        )
+        val database = createTestDatabase()
+        val serverWiper = LocalDataWiperImpl(database, LocalKeyGuard(database, MapSettings(), testLocalSecret()), tokenStore)
+        val serverUnlock = UnlockWithPinUseCase(appLock, serverWiper, LogoutUseCase(serverLogin, appLock, consultSession))
+        serverLogin.login(LoginRequest("test1", FakeOdsServer.PASSWORD), nowEpochSeconds = 0)
+        appLock.startSession("test1", 0)
+        appLock.setPin("135790")
+        appLock.lock()
+
+        repeat(AppLockPolicy.MAX_ATTEMPTS - 1) { serverUnlock("000000") }
+        assertEquals(UnlockResult.Wiped, serverUnlock("000000"))
+        assertEquals("", tokenStore.token())
+        awaitUntil { server.revoked == listOf("token-1") }
     }
 
     @Test

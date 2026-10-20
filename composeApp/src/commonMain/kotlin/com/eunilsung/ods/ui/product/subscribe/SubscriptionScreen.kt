@@ -62,6 +62,7 @@ import com.eunilsung.ods.ui.util.formatDateTime
 import com.eunilsung.ods.util.withComma
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.customer_search_hint
+import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.risk_assess
 import ods.composeapp.generated.resources.risk_next
 import ods.composeapp.generated.resources.risk_previous
@@ -396,5 +397,6 @@ private fun SubscribeError.message(): String = stringResource(
         SubscribeError.SIGNATURE -> Res.string.subscription_error_signature
         SubscribeError.NOT_SIGNED_IN -> Res.string.subscription_error_not_signed_in
         SubscribeError.NOT_FOUND -> Res.string.subscription_error_not_found
+        SubscribeError.UNREACHABLE -> Res.string.error_server_unreachable
     }
 )
