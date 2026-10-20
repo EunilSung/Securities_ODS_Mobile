@@ -22,3 +22,6 @@ node_modules/
 
 # 로컬 개발용 내장 PostgreSQL 데이터
 server/.localdb/
+
+# 서버 배포 비밀값
+deploy/.env
