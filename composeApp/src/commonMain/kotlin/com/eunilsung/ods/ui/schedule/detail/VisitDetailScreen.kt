@@ -45,6 +45,7 @@ import com.eunilsung.ods.ui.uikit.section.InfoRow
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import com.eunilsung.ods.ui.util.formatDateTime
 import ods.composeapp.generated.resources.Res
+import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.visit_cancel
 import ods.composeapp.generated.resources.visit_cancel_confirm
 import ods.composeapp.generated.resources.visit_cancel_keep
@@ -118,6 +119,9 @@ fun VisitDetailContent(uiState: VisitDetailUiState, onAction: (VisitDetailAction
                     modifier = Modifier.testTag(TestTags.VISIT_OPEN_CUSTOMER),
                 )
                 if (visit.status == VisitStatus.SCHEDULED) {
+                    if (uiState.actionFailed) {
+                        Text(text = stringResource(Res.string.error_server_unreachable), style = AppTypography.Body, color = AppColors.Caution)
+                    }
                     Text(text = stringResource(Res.string.visit_complete_note), style = AppTypography.Caption, color = AppColors.TextSub)
                     PrimaryButton(
                         text = stringResource(Res.string.visit_complete),

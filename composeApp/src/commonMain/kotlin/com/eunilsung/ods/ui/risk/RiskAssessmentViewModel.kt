@@ -88,6 +88,7 @@ class RiskAssessmentViewModel(
                 }
                 SaveRiskResult.SignatureRequired -> _uiState.update { it.copy(isSaving = false, error = RiskSaveError.SIGNATURE_REQUIRED) }
                 SaveRiskResult.NotSignedIn -> _uiState.update { it.copy(isSaving = false, error = RiskSaveError.NOT_SIGNED_IN) }
+                SaveRiskResult.Unreachable -> _uiState.update { it.copy(isSaving = false, error = RiskSaveError.UNREACHABLE) }
             }
         }
     }

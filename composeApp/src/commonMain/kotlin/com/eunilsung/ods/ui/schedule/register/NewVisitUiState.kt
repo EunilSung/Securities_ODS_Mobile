@@ -25,6 +25,8 @@ data class NewVisitUiState(
     /** 고른 날·시각이 이미 지났다. */
     val inPast: Boolean = false,
     val isSaving: Boolean = false,
+    /** 서버에 닿지 못했거나 서버가 받아 주지 않아 등록하지 못했다. 적은 내용은 그대로 두어 다시 누를 수 있다. */
+    val saveFailed: Boolean = false,
 ) {
     val customerError: Boolean get() = customer == null
     val timeError: Boolean get() = time == null

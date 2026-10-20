@@ -56,7 +56,7 @@ class LocalLoginRepositoryImpl(
         }
 
         settings.remove(failureKey(id))
-        if (isSaveId()) secureSettings.putString(KEY_SAVED_ID, staff.id) else secureSettings.remove(KEY_SAVED_ID)
+        rememberId(staff.id)
         _lastLogoutReason.value = null
         _currentStaff.value = staff
         Log.message("[Login/Local] success ${staff.id}")
@@ -74,6 +74,11 @@ class LocalLoginRepositoryImpl(
 
     override fun clearLogoutReason() {
         _lastLogoutReason.value = null
+    }
+
+    /** 로그인한 사번을 기억한다. 사번 저장이 꺼져 있으면 기억한 것도 지운다. 서버 로그인도 같은 자리를 쓴다. */
+    fun rememberId(staffId: String) {
+        if (isSaveId()) secureSettings.putString(KEY_SAVED_ID, staffId) else secureSettings.remove(KEY_SAVED_ID)
     }
 
     override fun savedId(): String? = if (isSaveId()) secureSettings.getStringOrNull(KEY_SAVED_ID) else null

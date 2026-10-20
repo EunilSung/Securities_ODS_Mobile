@@ -8,6 +8,8 @@ import com.eunilsung.ods.domain.model.Product
 import com.eunilsung.ods.domain.model.Signature
 import com.eunilsung.ods.domain.model.SignaturePurpose
 import com.eunilsung.ods.domain.model.Subscription
+import com.eunilsung.ods.domain.model.SubscriptionRejectedException
+import com.eunilsung.ods.domain.model.SubscriptionRejection
 import com.eunilsung.ods.domain.model.Suitability
 import com.eunilsung.ods.domain.repository.CustomerRepository
 import com.eunilsung.ods.domain.repository.LoginRepository
@@ -17,6 +19,7 @@ import com.eunilsung.ods.domain.util.SignaturePolicy
 import com.eunilsung.ods.domain.util.SubscriptionPolicy
 import com.eunilsung.ods.domain.util.suitabilityFor
 import com.eunilsung.ods.domain.util.todayInSeoul
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
@@ -57,12 +60,19 @@ sealed interface SubscribeResult {
 
     /** 고객이나 상품을 찾지 못했다. */
     data object NotFound : SubscribeResult
+
+    /** 서버에 닿지 못했거나 서버가 받아 주지 않아 가입하지 못했다. */
+    data object Unreachable : SubscribeResult
 }
 
 /**
  * 상품에 가입한다 — 적합성·금액·계좌·서명을 다시 확인하고, 가입·서명 기록·상담 이력을 남긴다.
  *
  * 화면이 이미 막았더라도 여기서 한 번 더 본다. 고령투자자가 고난도·고위험 상품에 가입하면 숙려기간을 붙인다.
+ *
+ * 가입이 본 작업이라 먼저 한다. 이것이 실패하면 아무것도 남기지 않고 [SubscribeResult.Unreachable].
+ * 가입한 뒤 서명 기록·상담 이력이 실패해도 [SubscribeResult.Subscribed] 다 — 이미 된 가입을 실패라고 알리면
+ * 직원이 다시 가입해 같은 가입이 겹친다. 그때 빠진 서명 기록·상담 이력은 남지 않는다.
  *
  * @param note 상담 이력에 남길 문구. 화면이 고객 언어로 만들어 넘긴다.
  */
@@ -97,9 +107,24 @@ class SubscribeProductUseCase(
         } else {
             null
         }
-        val created = products.subscribe(subscription, now, coolingOff)
-        signatures.record(customer.id, SignaturePurpose.PRODUCT_SUBSCRIPTION, signature, now)
-        customers.addConsultation(NewConsultation(customer.id, ConsultChannel.VISIT, ConsultTopic.PRODUCT, note), staff.name, now)
+        val created = try {
+            products.subscribe(subscription, now, coolingOff)
+        } catch (e: SubscriptionRejectedException) {
+            return when (e.reason) {
+                SubscriptionRejection.NEEDS_ASSESSMENT -> SubscribeResult.NeedsAssessment
+                SubscriptionRejection.UNSUITABLE_NOT_CONFIRMED -> SubscribeResult.UnsuitableNotConfirmed
+                SubscriptionRejection.INVALID_AMOUNT -> SubscribeResult.InvalidAmount
+                SubscriptionRejection.INVALID_ACCOUNT -> SubscribeResult.InvalidAccount
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return SubscribeResult.Unreachable
+        }
+        orNullOnFailure { signatures.record(customer.id, SignaturePurpose.PRODUCT_SUBSCRIPTION, signature, now) }
+        orNullOnFailure {
+            customers.addConsultation(NewConsultation(customer.id, ConsultChannel.VISIT, ConsultTopic.PRODUCT, note), staff.name, now)
+        }
         return SubscribeResult.Subscribed(created)
     }
 

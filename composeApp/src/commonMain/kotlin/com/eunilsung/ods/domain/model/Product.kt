@@ -60,3 +60,8 @@ data class NewSubscription(
     val amount: Long,
     val unsuitableConfirmed: Boolean,
 )
+
+/** 가입을 받지 않은 까닭 — 유스케이스가 본 뒤에도 서버가 한 번 더 보고 막을 수 있다. */
+enum class SubscriptionRejection { NEEDS_ASSESSMENT, UNSUITABLE_NOT_CONFIRMED, INVALID_AMOUNT, INVALID_ACCOUNT }
+
+class SubscriptionRejectedException(val reason: SubscriptionRejection) : IllegalStateException(reason.name)

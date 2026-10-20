@@ -53,6 +53,7 @@ import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import kotlinx.datetime.LocalDate
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.customer_search_hint
+import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.new_visit_change_customer
 import ods.composeapp.generated.resources.new_visit_customer
 import ods.composeapp.generated.resources.new_visit_customer_error
@@ -164,6 +165,9 @@ fun NewVisitContent(uiState: NewVisitUiState, onAction: (NewVisitActions) -> Uni
                     testTag = TestTags.NEW_VISIT_MEMO,
                     singleLine = false,
                 )
+                if (uiState.saveFailed) {
+                    Text(text = stringResource(Res.string.error_server_unreachable), style = AppTypography.Caption, color = AppColors.Caution)
+                }
                 PrimaryButton(
                     text = stringResource(Res.string.new_visit_submit),
                     onClick = { onAction(NewVisitActions.OnSubmit) },

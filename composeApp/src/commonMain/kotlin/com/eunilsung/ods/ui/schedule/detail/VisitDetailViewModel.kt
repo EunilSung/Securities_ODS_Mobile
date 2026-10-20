@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
  * 방문 상세 — 일정 내용과 완료·취소.
  *
  * 완료하면 그 고객과 상담 중으로 두고, 방문 목적을 주제로 상담 기록을 연다. 취소는 확인을 한 번 더 받는다.
+ * 완료·취소를 남기지 못하면 [VisitDetailUiState.actionFailed] 를 켜고 상담 기록은 열지 않는다.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class VisitDetailViewModel(
@@ -30,12 +31,14 @@ class VisitDetailViewModel(
 
     private val visitId = MutableStateFlow<String?>(null)
     private val confirmingCancel = MutableStateFlow(false)
+    private val actionFailed = MutableStateFlow(false)
 
     val uiState: StateFlow<VisitDetailUiState> = combine(
         visitId.filterNotNull().flatMapLatest { useCases.observeVisit(it) },
         confirmingCancel,
-    ) { visit, confirming ->
-        VisitDetailUiState(visit = visit, isConfirmingCancel = confirming)
+        actionFailed,
+    ) { visit, confirming, failed ->
+        VisitDetailUiState(visit = visit, isConfirmingCancel = confirming, actionFailed = failed)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), VisitDetailUiState())
 
     private val _events = Channel<VisitDetailEvent>(Channel.BUFFERED)
@@ -49,16 +52,21 @@ class VisitDetailViewModel(
                 viewModelScope.launch { _events.send(VisitDetailEvent.OpenCustomer(visit.customerId)) }
             }
             VisitDetailActions.OnComplete -> if (visit != null && visit.status == VisitStatus.SCHEDULED) {
+                actionFailed.value = false
                 viewModelScope.launch {
-                    useCases.completeVisit(visit)
-                    _events.send(VisitDetailEvent.OpenConsultation(visit.customerId, visit.purpose.topic))
+                    if (useCases.completeVisit(visit)) {
+                        _events.send(VisitDetailEvent.OpenConsultation(visit.customerId, visit.purpose.topic))
+                    } else {
+                        actionFailed.value = true
+                    }
                 }
             }
             VisitDetailActions.OnCancelClick -> if (visit?.status == VisitStatus.SCHEDULED) confirmingCancel.value = true
             VisitDetailActions.OnCancelDismiss -> confirmingCancel.value = false
             VisitDetailActions.OnCancelConfirm -> {
                 confirmingCancel.update { false }
-                if (visit != null) viewModelScope.launch { useCases.cancelVisit(visit.id) }
+                actionFailed.value = false
+                if (visit != null) viewModelScope.launch { if (!useCases.cancelVisit(visit.id)) actionFailed.value = true }
             }
         }
     }

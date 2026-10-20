@@ -7,12 +7,18 @@ import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalSignatureRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
 import com.eunilsung.ods.data.mapper.ProductMapper
+import com.eunilsung.ods.data.remote.server.ServerException
+import com.eunilsung.ods.domain.model.Consultation
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.LoginRequest
+import com.eunilsung.ods.domain.model.NewConsultation
 import com.eunilsung.ods.domain.model.NewSubscription
 import com.eunilsung.ods.domain.model.Signature
 import com.eunilsung.ods.domain.model.SignaturePoint
+import com.eunilsung.ods.domain.model.Subscription
 import com.eunilsung.ods.domain.model.Suitability
+import com.eunilsung.ods.domain.repository.CustomerRepository
+import com.eunilsung.ods.domain.repository.ProductRepository
 import com.eunilsung.ods.domain.usecase.ObserveAccountsUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomersUseCase
@@ -26,6 +32,7 @@ import com.eunilsung.ods.domain.util.todayInSeoul
 import com.eunilsung.ods.testsupport.createTestDatabase
 import com.eunilsung.ods.testsupport.testLocalSecret
 import com.eunilsung.ods.testsupport.testSecureSettings
+import com.eunilsung.ods.ui.product.subscribe.SubscribeError
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionActions
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionEvent
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionStep
@@ -50,6 +57,18 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubscriptionTest {
+    /** 서버에 닿지 못해 가입하지 못하는 저장소. */
+    private class OfflineProducts(delegate: ProductRepository) : ProductRepository by delegate {
+        override suspend fun subscribe(subscription: NewSubscription, nowMillis: Long, coolingOffUntilMillis: Long?): Subscription =
+            throw ServerException(status = null, code = null)
+    }
+
+    /** 가입은 됐지만 상담 이력을 남길 때 서버에 닿지 못하는 저장소. */
+    private class OfflineConsultations(delegate: CustomerRepository) : CustomerRepository by delegate {
+        override suspend fun addConsultation(consultation: NewConsultation, staffName: String, nowMillis: Long): Consultation =
+            throw ServerException(status = null, code = null)
+    }
+
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
     private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
@@ -60,7 +79,7 @@ class SubscriptionTest {
     private val subscribe = SubscribeProductUseCase(customers, products, signatures, login)
     private val signature = Signature(listOf(List(20) { SignaturePoint(0.1f + it * 0.03f, 0.5f) }))
 
-    private fun viewModel() = SubscriptionViewModel(
+    private fun viewModel(subscribe: SubscribeProductUseCase = this.subscribe) = SubscriptionViewModel(
         SubscriptionUseCases(
             observeProduct = ObserveProductUseCase(products),
             observeCustomers = ObserveCustomersUseCase(customers),
@@ -81,6 +100,17 @@ class SubscriptionTest {
 
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
+
+    /** C007 의 P004 가입을 서명 단계까지 채운다. */
+    private suspend fun SubscriptionViewModel.fillUpToSign() {
+        onAction(SubscriptionActions.OnEnter("P004", "C007"))
+        uiState.first { it.step == SubscriptionStep.SUITABILITY && it.suitability != null }
+        onAction(SubscriptionActions.OnNext)
+        repeat(3) { onAction(SubscriptionActions.OnKeyPointToggle(it)) }
+        onAction(SubscriptionActions.OnNext)
+        onAction(SubscriptionActions.OnNext)
+        onAction(SubscriptionActions.OnSignatureChange(signature))
+    }
 
     @Test
     fun suitabilityFollowsProfileAndValidity() = runTest {
@@ -163,5 +193,33 @@ class SubscriptionTest {
         val done = vm.uiState.first { it.step == SubscriptionStep.DONE }
         assertNotNull(done.result)
         assertEquals(400_000, products.observeSubscriptions("C007").first().single().amount)
+    }
+
+    @Test
+    fun serverFailureKeepsInputSoStaffCanRetry() = runTest(dispatcher) {
+        val vm = viewModel(SubscribeProductUseCase(customers, OfflineProducts(products), signatures, login))
+        vm.fillUpToSign()
+        assertEquals(SubscriptionStep.SIGN, vm.uiState.value.step)
+        vm.onAction(SubscriptionActions.OnSubmit("메모"))
+
+        val state = vm.uiState.first { it.error != null }
+        assertEquals(SubscribeError.UNREACHABLE, state.error)
+        assertFalse(state.isSaving)
+        assertEquals(SubscriptionStep.SIGN, state.step)
+        assertEquals(300_000, state.amount)
+        assertTrue(state.canProceed)
+        assertTrue(products.observeSubscriptions("C007").first().isEmpty())
+    }
+
+    @Test
+    fun consultationFailingAfterSubscribingStillReportsSubscribed() = runTest(dispatcher) {
+        val vm = viewModel(SubscribeProductUseCase(OfflineConsultations(customers), products, signatures, login))
+        vm.fillUpToSign()
+        vm.onAction(SubscriptionActions.OnSubmit("메모"))
+
+        val done = vm.uiState.first { it.step == SubscriptionStep.DONE }
+        assertNull(done.error)
+        assertNotNull(done.result)
+        assertEquals(300_000, products.observeSubscriptions("C007").first().single().amount)
     }
 }

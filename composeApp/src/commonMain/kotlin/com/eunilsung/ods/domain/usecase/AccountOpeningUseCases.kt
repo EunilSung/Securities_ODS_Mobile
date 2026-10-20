@@ -3,6 +3,7 @@ package com.eunilsung.ods.domain.usecase
 import com.eunilsung.ods.domain.model.Account
 import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.AccountTypeBlock
+import com.eunilsung.ods.domain.model.AccountTypeBlockedException
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.IdCardInfo
@@ -20,6 +21,7 @@ import com.eunilsung.ods.domain.util.AccountOpeningPolicy
 import com.eunilsung.ods.domain.util.SignaturePolicy
 import com.eunilsung.ods.domain.util.mismatchesWith
 import com.eunilsung.ods.domain.util.todayInSeoul
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 
 /** 신분증 확인 결과. */
@@ -66,12 +68,19 @@ sealed interface OpenAccountResult {
     data object SignatureRequired : OpenAccountResult
     data object NotSignedIn : OpenAccountResult
     data object NotFound : OpenAccountResult
+
+    /** 서버에 닿지 못했거나 서버가 받아 주지 않아 계좌를 열지 못했다. */
+    data object Unreachable : OpenAccountResult
 }
 
 /**
  * 계좌를 연다 — 신분증 확인·계좌 종류 제한·필수 약관·비밀번호·서명을 다시 확인하고, 계좌·서명 기록·상담 이력을 남긴다.
  *
  * 계좌 비밀번호는 고객이 직접 넣고, 기기에는 남기지 않는다(서버 모드에서는 암호화해 서버로만 보낸다).
+ *
+ * 계좌 개설이 본 작업이라 먼저 한다. 이것이 실패하면 아무것도 남기지 않고 [OpenAccountResult.Unreachable].
+ * 계좌가 열린 뒤 서명 기록·상담 이력이 실패해도 [OpenAccountResult.Opened] 다 — 이미 열린 계좌를 실패라고 알리면
+ * 직원이 다시 열어 계좌가 겹친다. 그때 빠진 서명 기록·상담 이력은 남지 않는다.
  *
  * @param note 상담 이력에 남길 문구. 화면이 고객 언어로 만들어 넘긴다.
  */
@@ -99,9 +108,19 @@ class OpenAccountUseCase(
         if (!pinSet) return OpenAccountResult.PinRequired
         if (!SignaturePolicy.isEnough(signature)) return OpenAccountResult.SignatureRequired
 
-        val account = customers.openAccount(customerId, type, now)
-        signatures.record(customerId, SignaturePurpose.ACCOUNT_OPENING, signature, now)
-        customers.addConsultation(NewConsultation(customerId, ConsultChannel.VISIT, ConsultTopic.ACCOUNT_OPENING, note), staff.name, now)
+        val account = try {
+            customers.openAccount(customerId, type, now)
+        } catch (e: AccountTypeBlockedException) {
+            return OpenAccountResult.TypeBlocked(e.block)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return OpenAccountResult.Unreachable
+        }
+        orNullOnFailure { signatures.record(customerId, SignaturePurpose.ACCOUNT_OPENING, signature, now) }
+        orNullOnFailure {
+            customers.addConsultation(NewConsultation(customerId, ConsultChannel.VISIT, ConsultTopic.ACCOUNT_OPENING, note), staff.name, now)
+        }
         return OpenAccountResult.Opened(account)
     }
 }

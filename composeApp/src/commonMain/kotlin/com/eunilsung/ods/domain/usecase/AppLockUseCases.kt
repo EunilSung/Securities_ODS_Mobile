@@ -24,7 +24,8 @@ class RegisterAppPinUseCase(private val repository: AppLockRepository) {
 
 /**
  * 잠금 비밀번호로 푼다. [AppLockPolicy.MAX_ATTEMPTS] 번 틀리면 단말 분실로 보고
- * 기기 안 업무 데이터와 모든 잠금 비밀번호를 지운 뒤 로그아웃한다.
+ * 로그아웃한 뒤 기기 안 업무 데이터와 모든 잠금 비밀번호를 지운다.
+ * 로그아웃을 먼저 해야 서버 모드에서 지우기 전에 서버 토큰을 거두라고 보낼 수 있다(닿지 않아도 기기에서는 지운다).
  */
 class UnlockWithPinUseCase(
     private val repository: AppLockRepository,
@@ -39,9 +40,9 @@ class UnlockWithPinUseCase(
             }
             is AppLockRepository.PinCheck.Wrong ->
                 if (check.failures >= AppLockPolicy.MAX_ATTEMPTS) {
+                    logout(LogoutReason.WIPED)
                     wiper.wipe()
                     repository.clearAll()
-                    logout(LogoutReason.WIPED)
                     UnlockResult.Wiped
                 } else {
                     UnlockResult.Wrong(AppLockPolicy.MAX_ATTEMPTS - check.failures)

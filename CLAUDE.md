@@ -1,7 +1,9 @@
 # Securities_ODS_Mobile
 
 증권사 ODS(아웃도어 세일즈) 앱. 영업 직원이 태블릿으로 지점 밖에서 고객을 만나 상담·투자성향 진단·상품 가입·계좌 개설을 마친다.
-Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture + MVI. **서버 없이 기기 안 시연용 데이터로만 도는 로컬 모드**다.
+Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture + MVI.
+서버 주소(`server.baseUrl`)가 있으면 **Ktor 서버(`:server`)에 붙는 서버 모드**, 비어 있으면 **기기 안 시연용 데이터로만 도는 로컬 모드**다.
+앱과 서버의 요청·응답 모델은 `:shared` 에 있다.
 기능·화면 설명은 [README.md](README.md), 디자인 방향은 `docs/design-proposal.html` 에 있다.
 
 ## 규칙
@@ -16,9 +18,17 @@ Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture +
    화면이 이미 막은 조건(적합성·금액·계좌·서명·약관)도 저장 직전에 유스케이스가 **한 번 더 확인**한다.
 6. **고객 개인정보는 기기에 최소한만 남긴다.** 신분증 사진·주민번호 뒷자리·계좌 비밀번호·서명 그림은 저장하지 않는다(서명은 해시만).
    화면의 전화번호·생년월일·주소·계좌번호는 `maskPersonalInfo` 설정을 따른다.
-7. **고친 뒤에는 `verifyAll` 을 통과시킨다** — 단위·ViewModel 시나리오 테스트(JVM·iOS)와 Maestro 실화면 흐름(Android·iOS).
+7. **고친 뒤에는 `verifyAll` 을 통과시킨다** — 서버 테스트, 단위·ViewModel 시나리오·실 서버 기능 테스트(JVM·iOS)와 Maestro 실화면 흐름(Android·iOS, 서버 모드).
    사용자 실기기는 요청했을 때만 쓴다.
 8. **기능마다 브랜치를 따고, 7번이 끝나면 `main` 에 머지한다.** 원격 저장소가 없으니 푸시는 하지 않는다.
+
+### 서버
+
+- 스키마는 `server/src/main/resources/db/migration` 의 Flyway SQL 이 기준이다. 나간 마이그레이션은 고치지 않고 새 번호를 더한다.
+- 누구인지는 토큰(`callerStaffId`)으로만 안다. 본문·쿼리의 직원 id 를 믿지 않는다. 남의 방문 일정은 없는 것과 같은 응답을 준다.
+- 바꾸는 일은 모두 REST 로 한다. WebSocket 은 시세와 "바뀌었다" 알림만 보낸다. 앱 화면은 서버가 아니라 기기 DB 를 본다.
+- 화면·유스케이스가 막은 조건(계좌 종류, 가입 적합성·금액·계좌)은 서버도 한 번 더 막는다.
+- 계약을 바꿀 때는 `:shared` 를 먼저 고치고 `./gradlew :server:test` 를 돌린다. 서버 테스트는 내장 PostgreSQL 이라 설치할 것이 없다.
 
 ## 작업 방식
 
@@ -65,12 +75,18 @@ Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture +
 
 ```bash
 ./gradlew :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinIosSimulatorArm64   # 양쪽 컴파일
-./gradlew :composeApp:testDebugUnitTest      # 단위·ViewModel 시나리오 (JVM) — 고칠 때마다
-./gradlew :composeApp:verifyAll --continue   # 전체: JVM → iOS 시뮬레이터 테스트 → 실화면 Android → iOS (18분쯤)
-./gradlew :composeApp:e2eAndroid             # 실화면만 (e2eIos 도 있다)
+./gradlew :composeApp:testDebugUnitTest      # 단위·ViewModel 시나리오 (JVM, 서버 없이) — 고칠 때마다
+./gradlew :server:test                       # 서버 (내장 PostgreSQL)
+./gradlew :composeApp:testDebugUnitTest -PfunctionalTest=true --tests "*functest*"   # 실 서버 기능 테스트 (로컬 서버를 띄워 붙는다)
+./gradlew :composeApp:verifyAll -PfunctionalTest=true --continue   # 전체: 서버 → JVM → iOS 시뮬레이터 → 실화면 Android → iOS
+./gradlew :composeApp:e2eAndroid -PfunctionalTest=true             # 실화면만 (e2eIos 도 있다)
+./gradlew :server:runLocal                   # 로컬 서버 http://localhost:8095 (내장 PostgreSQL 54335, 데이터 server/.localdb)
 ```
 
-- Android Studio 실행 구성: `검증 - 빠르게 (JVM)` · `검증 - 전체 (실화면 포함)`
+- Android Studio 실행 구성: `테스트 (서버 없이)` · `기능테스트 (실 서버)` · `검증 - 빠르게 (JVM)` · `검증 - 전체 (실화면 포함)`
+- 서버 모드 앱은 `local.properties` 의 `server.baseUrl`(또는 환경변수 `ODS_SERVER_BASE_URL`)로 빌드한다. 주소는 빌드할 때 박히므로 바꾸면 다시 빌드한다.
+  Android 에뮬레이터는 `http://10.0.2.2:8095`, iOS 시뮬레이터는 `http://localhost:8095`. 포트가 겹치면 `-PlocalServerPort=<포트>`
+- 검증용 로컬 서버는 빌드가 도는 동안만 뜬다(`:server:startLocalServer`). 이미 떠 있으면 그 서버를 쓴다
 - 기기는 `local.properties` 의 `e2e.androidAvd`·`e2e.iosDevice`. 꺼져 있으면 `.maestro/run.sh` 가 켠다
 - 결과: `composeApp/build/test-results/`, `build/maestro/<android|ios>/report.xml`
 

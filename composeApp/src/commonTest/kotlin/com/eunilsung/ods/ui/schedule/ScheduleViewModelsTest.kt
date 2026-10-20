@@ -5,10 +5,13 @@ import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
 import com.eunilsung.ods.data.mapper.VisitMapper
+import com.eunilsung.ods.data.remote.server.ServerException
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.NewVisit
+import com.eunilsung.ods.domain.model.Visit
 import com.eunilsung.ods.domain.model.VisitPurpose
 import com.eunilsung.ods.domain.model.VisitStatus
+import com.eunilsung.ods.domain.repository.VisitRepository
 import com.eunilsung.ods.domain.usecase.AddVisitResult
 import com.eunilsung.ods.domain.usecase.AddVisitUseCase
 import com.eunilsung.ods.domain.usecase.CancelVisitUseCase
@@ -38,12 +41,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -55,6 +60,12 @@ private const val VisitSeedTomorrowCount = 1
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleViewModelsTest {
+    /** 서버에 닿지 못해 일정을 잡거나 바꾸지 못하는 저장소. */
+    private class OfflineVisits(delegate: VisitRepository) : VisitRepository by delegate {
+        override suspend fun add(visit: NewVisit): Visit = throw ServerException(status = null, code = null)
+        override suspend fun setStatus(id: String, status: VisitStatus): Unit = throw ServerException(status = null, code = null)
+    }
+
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
     private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
@@ -167,5 +178,43 @@ class ScheduleViewModelsTest {
         assertEquals(listOf("오세훈", "윤소희"), vm.uiState.value.customerMatches.map { it.name })
         vm.onAction(NewVisitActions.OnCustomerSelect("C009"))
         assertEquals("오세훈", vm.uiState.value.customer?.name)
+    }
+
+    @Test
+    fun newVisitServerFailureKeepsInputSoStaffCanRetry() = runTest(dispatcher) {
+        val vm = NewVisitViewModel(NewVisitUseCases(ObserveCustomersUseCase(customers), AddVisitUseCase(OfflineVisits(visits))))
+        val tomorrow = today.plus(DatePeriod(days = 1))
+        vm.onAction(NewVisitActions.OnEnter(tomorrow, "C008"))
+        vm.uiState.first { it.customer != null }
+        vm.onAction(NewVisitActions.OnTimeSelect(14, 30))
+        vm.onAction(NewVisitActions.OnPlaceChange("인천 고객 사무실"))
+        vm.onAction(NewVisitActions.OnSubmit)
+
+        val state = vm.uiState.first { it.saveFailed }
+        assertFalse(state.isSaving)
+        assertEquals("윤소희", state.customer?.name)
+        assertEquals(14 to 30, state.time)
+        assertEquals("인천 고객 사무실", state.place)
+        assertTrue(visits.observeVisits(tomorrow.atTimeMillis(0, 0), tomorrow.atTimeMillis(23, 59)).first().none { it.customerId == "C008" })
+    }
+
+    @Test
+    fun completingVisitServerFailureShowsErrorAndKeepsSchedule() = runTest(dispatcher) {
+        val offline = OfflineVisits(visits)
+        val vm = VisitDetailViewModel(VisitDetailUseCases(ObserveVisitUseCase(visits), CompleteVisitUseCase(offline, session), CancelVisitUseCase(offline)))
+        backgroundScope.launch { vm.uiState.collect {} }
+        vm.onAction(VisitDetailActions.OnEnter("V001"))
+        vm.uiState.first { it.visit != null }
+
+        vm.onAction(VisitDetailActions.OnComplete)
+        val state = vm.uiState.first { it.actionFailed }
+        assertEquals(VisitStatus.SCHEDULED, state.visit?.status)
+        assertNull(session.activeCustomerId.value)
+
+        vm.onAction(VisitDetailActions.OnCancelClick)
+        vm.onAction(VisitDetailActions.OnCancelConfirm)
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.actionFailed)
+        assertEquals(VisitStatus.SCHEDULED, vm.uiState.value.visit?.status)
     }
 }

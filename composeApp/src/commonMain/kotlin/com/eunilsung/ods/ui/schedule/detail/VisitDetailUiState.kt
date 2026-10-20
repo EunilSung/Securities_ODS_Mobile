@@ -8,4 +8,6 @@ data class VisitDetailUiState(
     val visit: Visit? = null,
     /** 취소 확인 창이 떠 있는지. */
     val isConfirmingCancel: Boolean = false,
+    /** 완료·취소를 서버에 남기지 못했다. 일정은 그대로라 다시 누를 수 있다. */
+    val actionFailed: Boolean = false,
 )

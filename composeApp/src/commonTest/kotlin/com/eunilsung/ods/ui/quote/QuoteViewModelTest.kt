@@ -57,7 +57,7 @@ class QuoteViewModelTest {
                 observeOrderBook = ObserveOrderBookUseCase(quotes),
                 observeCandles = ObserveCandlesUseCase(quotes),
                 observeWatchlist = ObserveWatchlistUseCase(stocks),
-                getAppInfo = GetAppInfoUseCase(FakeVersion),
+                getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
             )
         )
         backgroundScope.launch { vm.uiState.collect {} }
