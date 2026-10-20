@@ -87,6 +87,8 @@ Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture +
 - 서버 모드 앱은 `local.properties` 의 `server.baseUrl`(또는 환경변수 `ODS_SERVER_BASE_URL`)로 빌드한다. 주소는 빌드할 때 박히므로 바꾸면 다시 빌드한다.
   Android 에뮬레이터는 `http://10.0.2.2:8095`, iOS 시뮬레이터는 `http://localhost:8095`. 포트가 겹치면 `-PlocalServerPort=<포트>`
 - 검증용 로컬 서버는 빌드가 도는 동안만 뜬다(`:server:startLocalServer`). 이미 떠 있으면 그 서버를 쓴다
+- 배포: `DEPLOY_HOST=ubuntu@168.110.2.222 deploy/deploy.sh` (오라클 test-server, https://ods.168.110.2.222.sslip.io).
+  HTTPS 는 같은 인스턴스의 Talk Caddy 가 맡는다 — Talk 의 `deploy/` 를 바꿀 때 `edge` 네트워크와 `~/caddy-sites` import 를 지우지 않는다
 - 기기는 `local.properties` 의 `e2e.androidAvd`·`e2e.iosDevice`. 꺼져 있으면 `.maestro/run.sh` 가 켠다
 - 결과: `composeApp/build/test-results/`, `build/maestro/<android|ios>/report.xml`
 

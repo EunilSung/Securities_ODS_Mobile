@@ -182,9 +182,21 @@ Android Studio 에서는 실행 구성 `검증 - 전체 (실화면 포함)` · `
 - 서버 데이터는 `server/.localdb` 에 쌓이므로 실화면 흐름과 기능 테스트는 실행마다 새 이름 · 번호를 만들어 앞 실행에 기대지 않습니다.
 - 자동으로 확인하지 못하는 것: 실제 카메라 촬영(iOS 시뮬레이터는 사진첩에서 고름), 생체 인증, 배포 빌드의 캡처 차단, 백업 복원처럼 키를 실제로 잃는 경우.
 
+### 배포
+
+`deploy/` 는 오라클 클라우드 무료 인스턴스(1GB) 한 대에 올리는 구성입니다. 서버 · PostgreSQL 16 을 Docker Compose 로 띄우고,
+HTTPS 는 같은 인스턴스의 Talk Caddy 가 맡습니다(80 · 443 은 Caddy 하나만 쓸 수 있어 공용 네트워크 `edge` 와 `~/caddy-sites/ods.caddy` 로 잇습니다).
+
+```bash
+DEPLOY_HOST=ubuntu@168.110.2.222 deploy/deploy.sh   # 배포하는 PC 에서 서버를 빌드해 올리고 /health 를 기다린다
+```
+
+- 처음 한 번은 서버의 `~/ods/.env` 를 `deploy/.env.example` 대로 채웁니다(`DOMAIN`, `DB_PASSWORD`). 지금 주소는 https://ods.168.110.2.222.sslip.io 입니다.
+- 서버 모드 앱을 이 서버에 붙이려면 `server.baseUrl=https://ods.168.110.2.222.sslip.io` 로 빌드합니다.
+
 ### 아직 없는 것
 
-서버 배포 묶음(Docker · 리버스 프록시), 원격 단말 잠금, 신분증 OCR · 사진 속 주민번호 가리기, 숙려기간 중 철회, 가입 내역 상세 · 해지, 전용 글꼴.
+원격 단말 잠금, 신분증 OCR · 사진 속 주민번호 가리기, 숙려기간 중 철회, 가입 내역 상세 · 해지, 전용 글꼴.
 
 ---
 
