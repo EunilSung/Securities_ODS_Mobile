@@ -1,0 +1,936 @@
+<title>ODS 디자인 방향</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 문서형 한 단(최대 1080px) — 현황 → 결정 → 방향 → 원칙 → 폰 시안 → 레이아웃 → 태블릿·보여 주기 시안 → 토큰 → 구현 → 순서 → 정할 것 */
+:root {
+  --bg: #F6F7F9;
+  --paper: #FFFFFF;
+  --ink: #191F28;
+  --ink-sub: #5B6573;
+  --ink-faint: #8B95A1;
+  --line: #E3E6EA;
+  --brand: #1B3A8C;
+  --brand-soft: #E8EDF8;
+  --rise: #E42939;
+  --fall: #1D64DA;
+  --caution: #D9480F;
+  --ok: #1E7F55;
+  --ok-soft: #E4F3EB;
+  --prop: #8A4B00;
+  --prop-soft: #FFF1DD;
+  --code-bg: #F0F2F5;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1014; --paper: #171A20; --ink: #F2F4F6; --ink-sub: #A3ACB9; --ink-faint: #6B7684;
+    --line: #2A2F38; --brand: #8FA8F0; --brand-soft: #1E2A44; --rise: #FF5A64; --fall: #5B95F5; --caution: #FF922B;
+    --ok: #4CC38A; --ok-soft: #17301F; --prop: #FFB547; --prop-soft: #3A2A12; --code-bg: #1E222A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1014; --paper: #171A20; --ink: #F2F4F6; --ink-sub: #A3ACB9; --ink-faint: #6B7684;
+  --line: #2A2F38; --brand: #8FA8F0; --brand-soft: #1E2A44; --rise: #FF5A64; --fall: #5B95F5; --caution: #FF922B;
+  --ok: #4CC38A; --ok-soft: #17301F; --prop: #FFB547; --prop-soft: #3A2A12; --code-bg: #1E222A; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 15px; line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 72px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.3; }
+h1 { font-size: clamp(28px, 4.2vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+.lede { color: var(--ink-sub); font-size: 16px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.section-head { display: flex; flex-direction: column; gap: 6px; }
+
+/* 상태 표시 — 등락색(빨강·파랑)은 쓰지 않는다 */
+.stt { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; line-height: 1.6; white-space: nowrap; vertical-align: 2px; }
+.stt.done { background: var(--ok-soft); color: var(--ok); }
+.stt.prop { background: var(--prop-soft); color: var(--prop); }
+.stt.todo { background: var(--code-bg); color: var(--ink-sub); }
+
+.status { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.st-col { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.st-col h3 { display: flex; align-items: center; gap: 8px; }
+.st-col ul { margin: 0; padding-left: 18px; color: var(--ink-sub); font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.st-col li b { color: var(--ink); font-weight: 600; }
+
+.verdict { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 16px; }
+.verdict strong { color: var(--brand); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+
+.directions { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.dir { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dir.pick { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; }
+.dir .tag { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--code-bg); color: var(--ink-sub); }
+.dir.pick .tag { background: var(--brand); color: #fff; }
+.dir ul { margin: 0; padding-left: 18px; color: var(--ink-sub); font-size: 14px; }
+.swatches { display: flex; gap: 6px; }
+.swatches span { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line); }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.rule { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rule h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.rule .now { font-size: 13px; color: var(--ink-faint); }
+.rule .now b { color: var(--ink-sub); font-weight: 600; }
+.demo-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.demo-box { padding: 6px 10px; border-radius: 8px; background: var(--code-bg); }
+.grades { display: flex; gap: 4px; flex-wrap: wrap; }
+.grades span { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; background: var(--code-bg); border-radius: 10px; padding: 3px; }
+.seg button { font: inherit; font-size: 14px; font-weight: 600; border: 0; background: transparent; color: var(--ink-sub); padding: 6px 14px; border-radius: 8px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.seg button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ===== 앱 시안: 앱 토큰(AppColors)과 같은 값 + 제안한 선택색·위험등급. 페이지 테마와 별개로 라이트/다크 전환 ===== */
+.mocks { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+.mk {
+  --m-bg: #FFFFFF; --m-sub: #F2F4F6; --m-sub2: #F7F8FA; --m-ink: #191F28; --m-ink2: #4E5968; --m-ink3: #8B95A1; --m-dis: #B0B8C1; --m-line: #E5E8EB;
+  --m-brand: #1B3A8C; --m-brand-soft: #E8EDF8; --m-rise: #E42939; --m-fall: #1D64DA; --m-rise-bg: #FDECEE; --m-fall-bg: #E8F0FC;
+  --m-sel: #191F28; --m-sel-ink: #FFFFFF; --m-caution: #D9480F; --m-caution-bg: #FDF0E9;
+  --g1: #9F1239; --g2: #C2410C; --g3: #B45309; --g4: #4D7C0F; --g5: #047857; --g6: #0F766E;
+  --cust: #0F766E; --cust-soft: #E3F4F1;
+}
+.mocks[data-mock="dark"] .mk {
+  --m-bg: #101114; --m-sub: #202329; --m-sub2: #17191D; --m-ink: #F2F4F6; --m-ink2: #B0B8C4; --m-ink3: #8B95A1; --m-dis: #4E5968; --m-line: #2C323B;
+  --m-brand: #6E8FE8; --m-brand-soft: #1E2A44; --m-rise: #FF5A64; --m-fall: #5B95F5; --m-rise-bg: #3A1F23; --m-fall-bg: #1C2A40;
+  --m-sel: #F2F4F6; --m-sel-ink: #101114; --m-caution: #FF922B; --m-caution-bg: #3A2614;
+  --g1: #FB7185; --g2: #FB923C; --g3: #FBBF24; --g4: #A3E635; --g5: #34D399; --g6: #2DD4BF;
+  --cust: #2DD4BF; --cust-soft: #12302C;
+}
+.phone-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; max-width: 100%; }
+.phone-cap { font-size: 13px; color: var(--ink-sub); text-align: center; max-width: 300px; }
+.phone-cap b { color: var(--ink); }
+.phone {
+  width: 300px; max-width: 100%; height: 620px; border-radius: 34px; background: var(--m-bg); color: var(--m-ink);
+  border: 8px solid #0B0D10; box-shadow: 0 12px 30px rgba(15,20,30,.16); overflow: hidden; position: relative;
+  display: flex; flex-direction: column; font-size: 12px; line-height: 1.35;
+}
+.mk .n { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.mk .up { color: var(--m-rise); } .mk .down { color: var(--m-fall); }
+.sb { height: 28px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 18px; font-size: 11px; font-weight: 600; }
+.ph-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px 8px; border-bottom: 1px solid var(--m-line); }
+.ph-head h4 { margin: 0; font-size: 16px; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-head .ic { font-size: 16px; color: var(--m-ink2); }
+.ph-head .btn { font-size: 10.5px; font-weight: 700; color: var(--m-ink); border: 1px solid var(--m-line); border-radius: 6px; padding: 2px 7px; }
+.ph-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+.ph-body > * { flex-shrink: 0; }
+.demo-tag { font-size: 9.5px; font-weight: 700; color: var(--m-brand); background: var(--m-brand-soft); padding: 1px 6px; border-radius: 4px; }
+.tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--m-line); background: var(--m-bg); padding: 7px 0 14px; }
+.tabs div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: var(--m-ink3); }
+.tabs div i { width: 18px; height: 18px; border-radius: 5px; background: currentColor; opacity: .5; }
+.tabs div.on { color: var(--m-ink); font-weight: 700; }
+.tabs div.on i { opacity: 1; background: var(--m-brand); }
+.badge { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.badge.gray { color: var(--m-ink2); background: var(--m-sub); }
+.badge.brand { color: var(--m-brand); background: var(--m-brand-soft); }
+.badge.caution { color: var(--m-caution); background: var(--m-caution-bg); }
+.badge.g1 { color: var(--g1); background: color-mix(in srgb, var(--g1) 13%, transparent); }
+.badge.g2 { color: var(--g2); background: color-mix(in srgb, var(--g2) 13%, transparent); }
+.badge.g3 { color: var(--g3); background: color-mix(in srgb, var(--g3) 13%, transparent); }
+.badge.g4 { color: var(--g4); background: color-mix(in srgb, var(--g4) 13%, transparent); }
+.badge.g5 { color: var(--g5); background: color-mix(in srgb, var(--g5) 13%, transparent); }
+.badge.g6 { color: var(--g6); background: color-mix(in srgb, var(--g6) 13%, transparent); }
+.badge.r-stable { color: var(--g6); background: color-mix(in srgb, var(--g6) 13%, transparent); }
+.badge.r-neutral { color: var(--g3); background: color-mix(in srgb, var(--g3) 13%, transparent); }
+.badge.r-active { color: var(--g2); background: color-mix(in srgb, var(--g2) 13%, transparent); }
+.badge.r-aggr { color: var(--g1); background: color-mix(in srgb, var(--g1) 13%, transparent); }
+.gapband { height: 6px; flex: none; background: var(--m-sub); }
+.blk-t { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px 4px; font-weight: 700; font-size: 12.5px; }
+.blk-t .ob { font-size: 10px; font-weight: 700; color: var(--m-brand); border: 1px solid var(--m-brand); border-radius: 6px; padding: 2px 7px; }
+
+/* 일정 */
+.week { padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 4px; }
+.week .ym { display: flex; justify-content: space-between; font-weight: 700; font-size: 12.5px; padding: 0 4px; }
+.week .ym span { color: var(--m-ink3); font-weight: 400; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+.days div { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--m-ink3); }
+.days b { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: var(--m-ink); font-weight: 600; }
+.days .sel b { background: var(--m-sel); color: var(--m-sel-ink); }
+.days .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--m-ink2); }
+.days .dot.none { background: transparent; }
+.daycap { padding: 6px 14px; font-size: 10.5px; color: var(--m-ink3); border-top: 1px solid var(--m-line); border-bottom: 1px solid var(--m-line); }
+.visit { display: grid; grid-template-columns: 46px 1fr auto; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--m-line); }
+.visit .t { font-weight: 700; font-size: 13px; }
+.visit .nm { font-weight: 600; font-size: 12.5px; }
+.visit .pl { font-size: 10.5px; color: var(--m-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.visit .bs { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.visit.cancel .t, .visit.cancel .nm { color: var(--m-dis); text-decoration: line-through; }
+
+/* 고객 상세 */
+.prof { padding: 10px 14px 8px; display: flex; flex-direction: column; gap: 3px; }
+.prof .top { display: flex; align-items: center; gap: 6px; }
+.prof .top b { font-size: 18px; }
+.prof .top span.age { color: var(--m-ink3); font-size: 11px; }
+.kv { display: grid; grid-template-columns: 64px 1fr; gap: 2px 8px; font-size: 11px; padding: 2px 0; }
+.kv .k { color: var(--m-ink3); }
+.risk { padding: 0 14px 8px; display: flex; flex-direction: column; gap: 4px; }
+.risk .row1 { display: flex; gap: 6px; align-items: center; }
+.risk .row1 span.d { color: var(--m-ink3); font-size: 10px; }
+.acct { display: flex; justify-content: space-between; align-items: center; padding: 5px 14px; }
+.acct b { font-size: 12px; font-weight: 600; }
+.acct small { display: block; color: var(--m-ink3); font-size: 10px; }
+.acct span.d { color: var(--m-ink3); font-size: 10px; }
+.cons { padding: 7px 14px; border-bottom: 1px solid var(--m-line); display: flex; flex-direction: column; gap: 3px; }
+.cons .h { display: flex; gap: 4px; align-items: center; font-size: 9.5px; color: var(--m-ink3); }
+.cons p { font-size: 11px; max-width: none; color: var(--m-ink); }
+
+/* 단계 화면 */
+.stepbar { flex: none; display: flex; gap: 8px; align-items: center; padding: 7px 14px; border-bottom: 1px solid var(--m-line); }
+.stepbar .i { font-size: 10px; color: var(--m-ink3); font-family: var(--font-num); }
+.stepbar b { color: var(--m-brand); font-size: 12px; }
+.stepdots { display: flex; gap: 3px; margin-left: auto; }
+.stepdots span { width: 14px; height: 3px; border-radius: 2px; background: var(--m-line); }
+.stepdots span.on { background: var(--m-brand); }
+.pad { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.pname { color: var(--m-ink3); font-size: 11.5px; font-weight: 600; }
+.suit { border-radius: 10px; padding: 11px 12px; display: flex; flex-direction: column; gap: 5px; background: var(--m-caution-bg); }
+.suit .who { font-weight: 700; font-size: 11.5px; }
+.suit .msg { color: var(--m-caution); font-size: 11px; }
+.compare { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; font-size: 10.5px; }
+.compare div { display: flex; flex-direction: column; gap: 3px; align-items: center; background: var(--m-bg); border-radius: 8px; padding: 6px; }
+.compare small { color: var(--m-ink3); }
+.check { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--m-line); border-radius: 10px; padding: 9px 10px; font-size: 11px; }
+.check i { flex: none; width: 15px; height: 15px; border-radius: 3px; border: 1.5px solid var(--m-ink3); margin-top: 1px; }
+.check.on { border-color: var(--m-sel); }
+.check.on i { background: var(--m-sel); border-color: var(--m-sel); }
+.notice { border-radius: 8px; background: var(--m-sub2); padding: 8px 10px; font-size: 10.5px; color: var(--m-caution); }
+.bottom { flex: none; display: flex; gap: 8px; padding: 10px 12px 16px; border-top: 1px solid var(--m-line); margin-top: auto; }
+.bottom .o { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--m-brand); color: var(--m-brand); font-weight: 700; }
+.bottom .p { flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; background: var(--m-brand); color: #fff; font-weight: 700; }
+.bottom .p.off { background: var(--m-sub); color: var(--m-dis); }
+
+/* 고객 화면 띠 · 키패드 */
+.custbar { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--cust-soft); color: var(--cust); font-size: 10.5px; font-weight: 700; }
+.custbar i { width: 7px; height: 7px; border-radius: 50%; background: var(--cust); }
+.pinbox { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 14px 0; }
+.pinbox h5 { margin: 0; font-size: 18px; text-align: center; }
+.pinbox .g { color: var(--m-ink3); font-size: 11px; text-align: center; max-width: 220px; }
+.dots { display: flex; gap: 14px; margin: 4px 0 6px; }
+.dots span { width: 13px; height: 13px; border-radius: 50%; background: var(--m-line); }
+.dots span.on { background: var(--m-sel); }
+.keys { display: grid; grid-template-columns: repeat(3, 62px); gap: 8px 22px; justify-content: center; }
+.keys span { width: 62px; height: 52px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 500; border-radius: 26px; }
+.keys span.k { background: var(--m-sub2); }
+.link { color: var(--m-brand); font-weight: 700; font-size: 12px; margin-top: 4px; }
+.link.sub { color: var(--m-ink3); font-weight: 600; }
+
+/* 레이아웃 도식 */
+.lays { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.lay { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lay p { font-size: 14px; color: var(--ink-sub); }
+.frame { height: 132px; border: 2px solid var(--ink-faint); border-radius: 10px; display: flex; overflow: hidden; position: relative; background: var(--bg); }
+.frame.narrow { width: 84px; align-self: center; }
+.frame .pn { border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; color: var(--ink-sub); text-align: center; padding: 4px; line-height: 1.35; min-width: 0; }
+.frame .pn small { font-size: 10.5px; opacity: .85; }
+.frame .pn.base { justify-content: flex-start; align-items: flex-start; padding: 3px 6px; font-size: 11px; }
+.frame .pn:last-child { border-right: 0; }
+.frame .pn.hl { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+.frame .layer { position: absolute; top: 22px; bottom: 0; left: 18px; right: 0; background: var(--brand-soft); color: var(--brand); border-left: 1px solid var(--line); box-shadow: -6px 0 12px rgba(0,0,0,.08); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; text-align: center; line-height: 1.35; padding: 4px; }
+
+/* 태블릿 */
+.tablet-scroll { overflow-x: auto; padding-bottom: 6px; width: 100%; }
+.tablet {
+  width: 900px; height: 520px; border-radius: 26px; border: 9px solid #0B0D10; background: var(--m-bg); color: var(--m-ink);
+  display: flex; flex-direction: column; overflow: hidden; font-size: 12px; line-height: 1.35;
+  box-shadow: 0 12px 30px rgba(15,20,30,.16); margin: 0 auto;
+}
+.tgrid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.5fr 1fr; }
+.tgrid > div { border-right: 1px solid var(--m-line); display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.tgrid > div:last-child { border-right: 0; }
+.pane-t { flex: none; padding: 10px 14px 8px; font-weight: 700; font-size: 14px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--m-line); }
+.pane-t .sp { flex: 1; }
+.search { margin: 8px 12px; padding: 7px 10px; border-radius: 8px; background: var(--m-sub); color: var(--m-ink3); font-size: 11px; }
+.crow { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--m-line); gap: 6px; }
+.crow.sel { background: var(--m-brand-soft); }
+.crow .nm { font-weight: 600; font-size: 12.5px; display: flex; gap: 4px; align-items: center; }
+.crow .sub { font-size: 10px; color: var(--m-ink3); }
+.seg-m { display: inline-flex; border: 1px solid var(--m-line); border-radius: 6px; overflow: hidden; }
+.seg-m span { font-size: 10px; padding: 3px 8px; color: var(--m-ink3); }
+.seg-m span.on { background: var(--m-sel); color: var(--m-sel-ink); font-weight: 700; }
+.memo { margin: 0 12px; height: 74px; border: 1px solid var(--m-line); border-radius: 8px; padding: 7px 9px; color: var(--m-ink3); font-size: 10.5px; }
+.save { margin: 8px 12px; text-align: center; padding: 9px 0; border-radius: 8px; background: var(--m-brand); color: #fff; font-weight: 700; font-size: 11.5px; }
+
+/* 고객에게 보여 주기 */
+.present {
+  width: 900px; height: 470px; border-radius: 26px; border: 9px solid #0B0D10; background: var(--m-bg); color: var(--m-ink);
+  display: flex; flex-direction: column; overflow: hidden; margin: 0 auto; padding: 18px 22px; gap: 8px; box-shadow: 0 12px 30px rgba(15,20,30,.16);
+}
+.present .h { display: flex; justify-content: space-between; align-items: flex-start; }
+.present .h b { font-size: 26px; }
+.present .h small { display: block; color: var(--m-ink3); font-size: 12px; }
+.present .price { display: flex; align-items: baseline; gap: 14px; }
+.present .price .big { font-size: 46px; font-weight: 600; }
+.present .price .chg { font-size: 18px; font-weight: 600; }
+.present svg { flex: 1; width: 100%; min-height: 0; }
+.present .foot { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--m-ink3); }
+.present .foot span.nav { border: 1px solid var(--m-brand); color: var(--m-brand); border-radius: 8px; padding: 4px 10px; font-weight: 700; }
+
+/* 표·코드 */
+.table-scroll { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 12px; color: var(--ink-faint); font-weight: 600; letter-spacing: 0.04em; }
+tr:last-child td { border-bottom: 0; }
+td code, p code, li code, h3 code { font-family: var(--font-num); font-size: 13px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(0,0,0,.08); }
+pre { margin: 0; background: var(--code-bg); border-radius: 12px; padding: 16px 18px; overflow-x: auto; font-family: var(--font-num); font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.two > * { min-width: 0; }
+.comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.comp { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.comp .hd { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.comp code { font-family: var(--font-num); font-size: 13px; font-weight: 600; color: var(--brand); overflow-wrap: anywhere; }
+.comp span:not(.stt) { font-size: 13px; color: var(--ink-sub); }
+.steps { display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+.step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.step:last-child { border-bottom: 0; }
+.step .i { font-family: var(--font-num); font-weight: 600; color: var(--brand); }
+.step h3 { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.step p { color: var(--ink-sub); font-size: 14px; }
+.decide { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.decide .q { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.decide .q b { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.decide .q span:not(.stt) { color: var(--ink-sub); font-size: 14px; }
+.foot-note { color: var(--ink-faint); font-size: 13px; }
+</style>
+
+<div class="wrap">
+
+  <header class="section-head" style="gap:12px">
+    <span class="eyebrow">Securities_ODS_Mobile · 디자인 제안 2026-10-20</span>
+    <h1>ODS, 고객과 함께 보는 화면</h1>
+    <p class="lede">ODS 는 직원 혼자 보는 앱이 아닙니다. 상담 테이블 위에서 태블릿을 고객 쪽으로 돌려 시세를 보여 주고, 비밀번호와 서명은 고객이 직접 넣습니다. 이 문서는 지금 앱의 모습을 정리하고, 그 위에서 바꾸면 좋을 것을 제안합니다. 시안의 고객·시세·금액은 모두 예시 값입니다.</p>
+    <div class="chips" aria-label="표시 뜻">
+      <span class="stt done">적용</span><span style="font-size:13px;color:var(--ink-sub)">지금 앱에 있음</span>
+      <span class="stt prop">제안</span><span style="font-size:13px;color:var(--ink-sub)">바꾸자는 것</span>
+      <span class="stt todo">남음</span><span style="font-size:13px;color:var(--ink-sub)">아직 없음</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">현황</span>
+      <h2>한눈에 보기</h2>
+    </div>
+    <div class="status">
+      <div class="st-col">
+        <h3><span class="stt done">적용</span> 지금 앱에 있는 것</h3>
+        <ul>
+          <li><b>색</b> — <code>AppColors</code> 라이트·다크, 브랜드 남색, 등락 빨강·파랑, 경고 주황 <code>Caution</code></li>
+          <li><b>숫자</b> — 시세 글자 고정폭(<code>tnum</code>), 체결 깜빡임(<code>tickFlash</code>)</li>
+          <li><b>밀도</b> — 목록 기본·촘촘 두 단계(<code>ListDensityTokens</code>)</li>
+          <li><b>개인정보 가리기</b> — 기본 켬, 고객 상세의 눈 버튼으로 바로 전환</li>
+          <li><b>단계 화면</b> — 진단·가입·계좌 개설이 같은 틀(단계 머리 + 본문 + 아래 이전/다음)</li>
+          <li><b>보안 키패드</b> — 배열을 섞는 숫자 키, 앱 잠금 6자리·계좌 4자리</li>
+          <li><b>레이아웃</b> — 폰, 태블릿 2칸, 1000dp 이상 3칸(상담 칸)</li>
+          <li><b>고객에게 보여 주기</b> — 현재가·차트 전체 화면</li>
+        </ul>
+      </div>
+      <div class="st-col">
+        <h3><span class="stt prop">제안</span> 바꾸자는 것</h3>
+        <ul>
+          <li><b>선택 표시</b> — 남색 대신 진한 무채색. 남색 <code>#1B3A8C</code>와 하락 파랑 <code>#1D64DA</code>가 같은 계열</li>
+          <li><b>위험등급·투자성향 색</b> — 등락색을 빌려 쓰지 않는 전용 단계색</li>
+          <li><b>고객 화면 띠</b> — 고객이 보는 단계(비밀번호·서명·보여 주기)는 위에 청록 띠와 큰 글자</li>
+          <li><b>테마 구조</b> — getter 마다 다크 여부를 묻는 <code>AppColors</code> → MTS 처럼 <code>OdsTheme</code> 한 벌</li>
+          <li><b>시연 표시</b> — 로컬 모드일 때 제목 옆 ‘시연’ 배지</li>
+          <li><b>글꼴</b> — 기기 기본 → Pretendard(MTS 와 같은 파일)</li>
+        </ul>
+      </div>
+      <div class="st-col">
+        <h3><span class="stt todo">남음</span> 아직 없는 것</h3>
+        <ul>
+          <li>앱 안 <b>테마 고르기</b>, 고객 화면의 <b>글자 크게</b> 설정</li>
+          <li>신분증 촬영 <b>테두리 안내선</b>과 흔들림 경고</li>
+          <li>가입·개설 완료 <b>확인서</b> 화면(고객에게 보여 주는 요약)</li>
+          <li>상담 칸의 <b>빠른 업무 버튼</b>(진단·가입·개설)</li>
+          <li>회사 <b>CI 색</b> 반영, 로고·스플래시</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="verdict">
+      <h2>제안: 직원 화면은 촘촘하게, 고객이 보는 순간은 크고 단순하게 <span class="stt prop">제안</span></h2>
+      <p>목록·상세·상담 칸처럼 <b>직원이 보는 화면</b>은 지금처럼 정보를 많이 담고, 비밀번호·서명·시세 보여 주기처럼 <b>고객이 보는 순간</b>은 글자를 키우고 직원용 정보를 감춘 뒤 위에 <strong>‘고객 화면’ 띠</strong>를 둡니다. 색은 등락에만 빨강·파랑을 쓰고, 선택 상태는 무채색, 위험등급은 전용 단계색으로 떼어 놓습니다.</p>
+      <div class="chips">
+        <span class="chip">등락색은 등락에만</span>
+        <span class="chip">선택은 무채색</span>
+        <span class="chip">위험등급 전용 색</span>
+        <span class="chip">고객 화면 띠</span>
+        <span class="chip">개인정보 가리기 기본</span>
+        <span class="chip">태블릿 3칸 상담 칸</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">방향 비교</span>
+      <h2>세 가지 방향 — C를 제안합니다</h2>
+    </div>
+    <div class="directions">
+      <div class="dir">
+        <span class="tag">A · 지점 창구</span>
+        <h3>지금 앱에 가까운 차분한 라이트</h3>
+        <div class="swatches"><span style="background:#FFFFFF"></span><span style="background:#F2F4F6"></span><span style="background:#1B3A8C"></span><span style="background:#E42939"></span><span style="background:#1D64DA"></span></div>
+        <ul><li>남색 브랜드, 넓은 행, 카드 적음</li><li>고객 앞에서 무난하지만 선택색과 하락색이 섞임</li><li>고객이 보는 순간도 직원 화면과 같은 크기</li></ul>
+      </div>
+      <div class="dir">
+        <span class="tag">B · 업무 도구</span>
+        <h3>HTS 같은 촘촘한 다크</h3>
+        <div class="swatches"><span style="background:#101114"></span><span style="background:#202329"></span><span style="background:#F2F4F6"></span><span style="background:#FF5A64"></span><span style="background:#5B95F5"></span></div>
+        <ul><li>한 화면에 고객·상품·상담을 많이 담음</li><li>밖에서 햇빛 아래 읽기 어렵고 고객에게 무겁게 보임</li><li>서명·비밀번호를 건네기에 낯섦</li></ul>
+      </div>
+      <div class="dir pick">
+        <span class="tag">C · 상담 테이블 (제안)</span>
+        <h3>직원 화면은 A의 밀도, 고객 순간은 크게</h3>
+        <div class="swatches"><span style="background:#FFFFFF"></span><span style="background:#191F28"></span><span style="background:#1B3A8C"></span><span style="background:#0F766E"></span><span style="background:#C2410C"></span></div>
+        <ul><li>한 벌의 토큰에 고객 화면 띠·큰 글자 스타일만 더함</li><li>라이트 기본, 다크는 같은 이름의 두 번째 벌</li><li>현장(야외·서서 사용)에 맞는 대비와 터치 크기</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">ODS 화면 원칙</span>
+      <h2>지킬 것과 고칠 것</h2>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <h3>선택 표시를 하락 파랑과 떼어 놓기 <span class="stt prop">제안</span></h3>
+        <p>지금 세그먼트·선택 줄·주간 달력의 고른 날이 남색 <code>PrimaryMain</code>이고, 바로 옆 하락 숫자가 <code>#1D64DA</code>입니다. MTS 처럼 선택 상태는 진한 무채색(<code>selected</code>)으로 바꾸고, 남색은 브랜드 자리(주 버튼·로그인·탭 아이콘)에만 남깁니다.</p>
+        <div class="demo-row">
+          <span class="demo-box">지금 <b style="color:#1B3A8C">방문</b> · <b style="color:var(--fall)">▼2,700</b></span>
+          <span class="demo-box">제안 <b style="color:var(--ink)">방문</b> · <b style="color:var(--fall)">▼2,700</b></span>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>위험등급·투자성향은 전용 단계색 <span class="stt prop">제안</span></h3>
+        <p>지금 상품 1·2등급은 상승 빨강, 5·6등급은 하락 파랑을 씁니다. 고객 앞에서 ‘빨강 = 오른다’로 읽힐 수 있어, 등락과 겹치지 않는 자홍~청록 여섯 단계를 따로 둡니다. 투자성향도 같은 단계색에 맞춥니다(안정형 청록 … 공격투자형 자홍).</p>
+        <div class="grades">
+          <span style="color:#9F1239;background:#9F12391F">1등급</span><span style="color:#C2410C;background:#C2410C1F">2등급</span><span style="color:#B45309;background:#B453091F">3등급</span><span style="color:#4D7C0F;background:#4D7C0F1F">4등급</span><span style="color:#047857;background:#0478571F">5등급</span><span style="color:#0F766E;background:#0F766E1F">6등급</span>
+        </div>
+      </div>
+      <div class="rule">
+        <h3>고객이 보는 순간은 띠로 알리기 <span class="stt prop">제안</span></h3>
+        <p>계좌 비밀번호·서명·시세 보여 주기 화면 맨 위에 청록 ‘고객 화면’ 띠를 둡니다. 직원은 태블릿을 건넬 때를, 고객은 자기 차례임을 알 수 있습니다. 이 화면들은 제목 22sp 이상, 키패드 키 64dp 이상으로 키우고 직원용 정보(다른 고객·상담 칸)는 그리지 않습니다.</p>
+        <p class="now"><b>적용</b> 보여 주기는 이미 전체 화면 · <b>제안</b> 띠·큰 글자 스타일</p>
+      </div>
+      <div class="rule">
+        <h3>개인정보는 기본으로 가리기 <span class="stt done">적용</span></h3>
+        <p>전화번호 가운데, 생년월일은 연도만, 주소는 시·구까지, 계좌번호는 가운데를 가립니다. 상세 제목줄의 눈 버튼으로 앱 전체 설정을 바로 바꾸고, 자동 상담 기록에는 가린 계좌번호만 남깁니다.</p>
+      </div>
+      <div class="rule">
+        <h3>경고는 주황, 등락은 빨강·파랑만 <span class="stt done">적용</span></h3>
+        <p>적합성 부적합, 재진단 필요, 성향 미진단, 숙려기간, 입력 오류는 모두 <code>Caution</code>(주황)입니다. 빨강을 쓰면 ‘상승’으로 읽힙니다.</p>
+      </div>
+      <div class="rule">
+        <h3>숫자는 고정폭으로 <span class="stt done">적용</span></h3>
+        <p>현재가·호가·금액·시각은 <code>tnum</code> 스타일로 그려 값이 바뀌어도 자리가 흔들리지 않습니다. 글꼴은 아직 기기 기본이라 Android·iOS 모양이 다릅니다 — Pretendard 를 넣자는 것이 <span class="stt prop">제안</span>입니다.</p>
+      </div>
+      <div class="rule">
+        <h3>현장에서 쓰는 크기 <span class="stt done">적용</span></h3>
+        <p>서서 한 손으로 드는 경우가 많아 누르는 곳은 40dp 이상(목록 줄·탭·버튼), 키패드 68dp, 주 버튼 52dp 높이입니다. 단계 화면의 이전·다음은 늘 화면 아래에 고정합니다.</p>
+      </div>
+      <div class="rule">
+        <h3>시연 데이터임을 보이기 <span class="stt prop">제안</span></h3>
+        <p>지금은 로그인 안내·앱 정보·보여 주기 아래에만 ‘시연용’이라고 씁니다. 로컬 모드에서는 화면 제목 옆에 작은 ‘시연’ 배지를 두어 고객이 실제 계좌로 오해하지 않게 합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <div class="section-head">
+        <span class="eyebrow">화면 시안 · 폰 (제안 반영)</span>
+        <h2>일정 · 고객 상세 · 적합성 확인 · 계좌 비밀번호 · 앱 잠금</h2>
+      </div>
+      <div class="seg" role="group" aria-label="시안 테마">
+        <button type="button" id="mock-light" aria-pressed="true">라이트</button>
+        <button type="button" id="mock-dark" aria-pressed="false">다크</button>
+      </div>
+    </div>
+
+    <div class="mocks" id="mocks" data-mock="light">
+
+      <div class="phone-wrap mk">
+        <div class="phone">
+          <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="ph-head"><h4>일정 <span class="demo-tag">시연</span></h4><span class="btn">오늘</span><span class="ic">＋</span></div>
+          <div class="ph-body">
+            <div class="week">
+              <div class="ym">‹ 2026년 10월 ›<span>방문 3건</span></div>
+              <div class="days" id="days"></div>
+            </div>
+            <div class="daycap n">2026.10.20 (화) · 방문 3건</div>
+            <div class="visit"><span class="t n">10:00</span><div><div class="nm">정우성</div><div class="pl">고객 자택(마포구)</div></div><div class="bs"><span class="badge gray">계좌 개설</span><span class="badge brand">예정</span></div></div>
+            <div class="visit"><span class="t n">14:30</span><div><div class="nm">김서윤</div><div class="pl">고객 사무실(서초구)</div></div><div class="bs"><span class="badge gray">투자성향 진단</span><span class="badge brand">예정</span></div></div>
+            <div class="visit"><span class="t n">16:00</span><div><div class="nm">오세훈</div><div class="pl">종로 카페</div></div><div class="bs"><span class="badge gray">상품 가입</span><span class="badge brand">예정</span></div></div>
+            <div class="visit cancel"><span class="t n">17:30</span><div><div class="nm">임재현</div><div class="pl">해운대 고객 사무실</div></div><div class="bs"><span class="badge gray">상담</span><span class="badge gray">취소</span></div></div>
+          </div>
+          <div class="tabs"><div class="on"><i></i>일정</div><div><i></i>고객</div><div><i></i>상품</div><div><i></i>시장</div><div><i></i>더보기</div></div>
+        </div>
+        <p class="phone-cap"><b>일정</b> — 앱을 열면 먼저 보이는 탭. 고른 날은 무채색 원(<span class="stt prop">제안</span>), 오늘은 테두리, 방문 있는 날은 점. 취소한 일정은 긋고 흐리게.</p>
+      </div>
+
+      <div class="phone-wrap mk">
+        <div class="phone">
+          <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="ph-head"><span class="ic">←</span><h4>강하늘</h4><span class="ic">◉</span></div>
+          <div class="ph-body">
+            <div class="prof">
+              <div class="top"><b>강하늘</b><span class="badge gray">VIP</span><span class="age">58세 · 남</span><span class="badge brand" style="margin-left:auto">상담 중</span></div>
+              <div class="kv"><span class="k">휴대폰</span><span class="n">010-****-4587</span><span class="k">생년월일</span><span>1968년생</span><span class="k">주소</span><span>서울 강남구 ***</span></div>
+            </div>
+            <div class="gapband"></div>
+            <div class="blk-t">투자성향<span class="ob">투자성향 진단</span></div>
+            <div class="risk"><div class="row1"><span class="badge r-neutral">위험중립형</span><span class="d n">2026.06.22 진단</span></div></div>
+            <div class="gapband"></div>
+            <div class="blk-t">보유 계좌<span class="ob">계좌 개설</span></div>
+            <div class="acct"><div><b>종합매매</b><small class="n">7001-****-01</small></div><span class="d n">2020.03.24</span></div>
+            <div class="acct"><div><b>연금저축</b><small class="n">7001-****-02</small></div><span class="d n">2022.09.10</span></div>
+            <div class="gapband"></div>
+            <div class="blk-t">상담 이력<span class="ob">상담 기록</span></div>
+            <div class="cons"><div class="h"><span class="n">2026.10.17 19:08</span><span class="badge gray">방문</span><span class="badge gray">시장</span><span>김민준</span></div><p>반도체 업황 문의. 보유 비중 유지 권유, 분기 실적 발표 후 재점검.</p></div>
+          </div>
+          <div class="tabs"><div><i></i>일정</div><div class="on"><i></i>고객</div><div><i></i>상품</div><div><i></i>시장</div><div><i></i>더보기</div></div>
+        </div>
+        <p class="phone-cap"><b>고객 상세</b> — 개인정보는 기본으로 가리고 ◉ 로 전환. 투자성향 배지는 등락색이 아닌 단계색(<span class="stt prop">제안</span>). 구역마다 오른쪽 위에 그 구역의 업무 버튼.</p>
+      </div>
+
+      <div class="phone-wrap mk">
+        <div class="phone">
+          <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="ph-head"><span class="ic">←</span><h4>상품 가입</h4></div>
+          <div class="stepbar"><span class="i">2/5</span><b>적합성 확인</b><span class="stepdots"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></span></div>
+          <div class="ph-body">
+            <div class="pad">
+              <span class="pname">지수형 ELS 제2041회 (원금비보장)</span>
+              <div class="suit">
+                <span class="who">강하늘님 · 투자성향 위험중립형</span>
+                <div class="compare">
+                  <div><small>고객 성향</small><span class="badge r-neutral">위험중립형</span><small>3등급까지</small></div>
+                  <span style="color:var(--m-caution);font-weight:700">≠</span>
+                  <div><small>상품 등급</small><span class="badge g1">1등급 매우 높은 위험</span><small>고난도</small></div>
+                </div>
+                <span class="msg">부적합: 위험중립형 고객에게 1등급 상품은 권유할 수 없습니다.</span>
+              </div>
+              <div class="check"><i></i><span>고객이 투자권유 없이 스스로 가입을 원하며, 투자성향에 맞지 않는다는 안내를 받았습니다.</span></div>
+              <div class="notice">고령투자자의 고난도·고위험 상품 가입이면 2일 숙려기간이 붙습니다.</div>
+            </div>
+          </div>
+          <div class="bottom"><span class="o">이전</span><span class="p off">다음</span></div>
+        </div>
+        <p class="phone-cap"><b>적합성 확인</b> — 고객 성향과 상품 등급을 나란히(<span class="stt prop">제안</span>: 지금은 문장 한 줄). 부적합이면 주황 카드와 고객 자발 확인을 받아야 ‘다음’이 켜짐.</p>
+      </div>
+
+      <div class="phone-wrap mk">
+        <div class="phone">
+          <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="custbar"><i></i>고객 화면 · 직원은 화면을 보지 마세요</div>
+          <div class="stepbar"><span class="i">5/6</span><b>계좌 비밀번호</b><span class="stepdots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></span></div>
+          <div class="pinbox">
+            <h5>계좌 비밀번호 4자리를<br>입력하세요</h5>
+            <span class="g">같은 숫자·연속 숫자·생년월일은 쓸 수 없습니다</span>
+            <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span></div>
+            <div class="keys" id="keys-acct"></div>
+          </div>
+          <div class="bottom"><span class="o">이전</span><span class="p off">다음</span></div>
+        </div>
+        <p class="phone-cap"><b>계좌 비밀번호</b> — 고객이 직접 넣는 순간이라 위에 청록 ‘고객 화면’ 띠와 큰 제목(<span class="stt prop">제안</span>). 숫자 배열은 열 때마다·틀릴 때마다 섞음.</p>
+      </div>
+
+      <div class="phone-wrap mk">
+        <div class="phone">
+          <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="pinbox" style="padding-top:44px">
+            <span style="color:var(--m-brand);font-weight:700;font-size:13px">김민준</span>
+            <h5>잠금 해제</h5>
+            <span class="g">앱 잠금 비밀번호 6자리를 입력하세요</span>
+            <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+            <div class="keys" id="keys-lock"></div>
+            <span class="link">생체 인증으로 풀기</span>
+            <span class="link sub">다른 사번으로 로그인</span>
+          </div>
+        </div>
+        <p class="phone-cap"><b>앱 잠금</b> — 5분 무조작·백그라운드 1분 초과 시 업무 화면 위를 덮음. 5번 틀리면 기기 안 업무 데이터를 지우고 로그아웃.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">레이아웃</span>
+      <h2>폭에 따라 세 가지, 넓으면 상담 칸</h2>
+      <p class="lede">오른쪽 스택 하나를 세 레이아웃이 같이 씁니다. 폴더블을 펼치거나 태블릿을 돌려 폭이 바뀌어도 보던 고객·단계 화면이 이어집니다.</p>
+    </div>
+    <div class="lays">
+      <div class="lay">
+        <h3>폰 · 600dp 미만</h3>
+        <div class="frame narrow"><div class="pn base" style="flex:1">탭</div><div class="layer">상세<br>↓<br>단계</div></div>
+        <p>상세가 오른쪽에서 밀려 덮고, 그 위에 진단·가입·개설 단계가 쌓입니다. 뒤로 가기는 한 단계씩, 왼쪽에서 밀면 모두 닫힙니다. 세로 고정.</p>
+      </div>
+      <div class="lay">
+        <h3>태블릿 · 600–999dp</h3>
+        <div class="frame"><div class="pn" style="flex:1">탭 목록</div><div class="pn hl" style="flex:1.4"><span>상세</span><small>또는 단계 화면</small></div></div>
+        <p>왼쪽 1 : 오른쪽 1.4. 태블릿 세로·iPad 세로가 여기에 듭니다. 상담 기록은 상세 위에 쌓아 엽니다.</p>
+      </div>
+      <div class="lay">
+        <h3>넓은 태블릿 · 1000dp 이상</h3>
+        <div class="frame"><div class="pn" style="flex:1">탭 목록</div><div class="pn" style="flex:1.5"><span>상세</span><small>고객·상품·시세</small></div><div class="pn hl" style="flex:1">상담 칸</div></div>
+        <p>오른쪽 끝 상담 칸은 <b>상담 중 고객</b>을 따라가며 바로 기록할 수 있습니다. 가운데에서 시세를 보여 주거나 상품을 설명해도 고객과 메모가 남습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">화면 시안 · 넓은 태블릿</span>
+      <h2>고객 목록 · 고객 상세 · 상담 칸</h2>
+      <p class="lede">왼쪽에서 고객을 고르면 가운데 상세가 열리고, 그 고객이 오른쪽 상담 칸의 ‘상담 중 고객’이 됩니다. 상담 칸 위쪽 빠른 업무 버튼(진단·가입·개설)은 <span class="stt todo">남음</span>입니다.</p>
+    </div>
+    <div class="mocks" id="mocks-tablet" data-mock="light">
+      <div class="tablet-scroll">
+        <div class="tablet mk">
+          <div class="tgrid">
+            <div>
+              <div class="pane-t">고객 <span class="demo-tag">시연</span><span class="sp"></span>＋</div>
+              <div class="search">이름·초성·전화번호로 찾기</div>
+              <div id="tablet-customers" style="flex:1;overflow:hidden"></div>
+              <div class="tabs"><div><i></i>일정</div><div class="on"><i></i>고객</div><div><i></i>상품</div><div><i></i>시장</div><div><i></i>더보기</div></div>
+            </div>
+            <div>
+              <div class="pane-t"><span>←</span><span>강하늘</span><span class="sp"></span><span style="color:var(--m-ink2)">◉</span></div>
+              <div style="flex:1;overflow:hidden">
+                <div class="prof">
+                  <div class="top"><b>강하늘</b><span class="badge gray">VIP</span><span class="age">58세 · 남</span></div>
+                  <div class="kv"><span class="k">휴대폰</span><span class="n">010-****-4587</span><span class="k">생년월일</span><span>1968년생</span><span class="k">주소</span><span>서울 강남구 ***</span></div>
+                </div>
+                <div class="gapband"></div>
+                <div class="blk-t">투자성향<span class="ob">투자성향 진단</span></div>
+                <div class="risk"><div class="row1"><span class="badge r-neutral">위험중립형</span><span class="d n">2026.06.22 진단</span></div></div>
+                <div class="gapband"></div>
+                <div class="blk-t">가입 상품</div>
+                <div class="acct"><div><b>국고채 3년물</b><small class="n">2026.10.19 · 7001-****-01</small></div><span class="n" style="font-weight:600">1,000,000원</span></div>
+                <div class="gapband"></div>
+                <div class="blk-t">방문 예정<span class="ob">방문 일정 추가</span></div>
+                <div class="acct"><div><b class="n">2026.10.27 10:30</b><small>고객 사무실(강남구)</small></div><span class="badge brand">상담</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="pane-t">상담</div>
+              <div class="prof" style="flex-direction:row;align-items:center;justify-content:space-between">
+                <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:15px">강하늘</b><span style="display:flex;gap:4px"><span class="badge gray">VIP</span><span class="badge r-neutral">위험중립형</span></span></div>
+                <span class="btn" style="font-size:10.5px;border:1px solid var(--m-brand);color:var(--m-brand);border-radius:6px;padding:3px 8px;font-weight:700">상담 종료</span>
+              </div>
+              <div class="gapband"></div>
+              <div class="blk-t">바로 기록</div>
+              <div style="padding:0 12px 6px;display:flex;flex-direction:column;gap:5px">
+                <span class="seg-m"><span class="on">방문</span><span>전화</span><span>지점</span></span>
+                <span class="seg-m"><span>일반</span><span class="on">시장</span><span>계좌 개설</span><span>투자성향</span><span>상품</span></span>
+              </div>
+              <div class="memo">상담 내용과 고객 요청, 다음 할 일을 적으세요.</div>
+              <div class="save">기록 저장</div>
+              <div class="gapband"></div>
+              <div class="blk-t">최근 상담</div>
+              <div class="cons"><div class="h"><span class="n">10.17 19:08</span><span class="badge gray">방문</span><span class="badge gray">시장</span></div><p>반도체 업황 문의. 보유 비중 유지 권유.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">화면 시안 · 고객에게 보여 주기</span>
+      <h2>태블릿을 고객 쪽으로 돌렸을 때</h2>
+      <p class="lede">현재가 위 ‘고객에게 보여 주기’를 누르면 화면 전체에 종목·현재가·차트만 크게 그립니다. 호가·다른 고객·상담 칸은 그리지 않습니다. 아래 단추로 관심종목을 넘기며 설명합니다. 위쪽 ‘고객 화면’ 띠는 <span class="stt prop">제안</span>입니다.</p>
+    </div>
+    <div class="mocks" id="mocks-present" data-mock="light">
+      <div class="tablet-scroll">
+        <div class="present mk">
+          <div class="custbar" style="margin:-18px -22px 4px;padding:6px 22px"><i></i>고객 화면</div>
+          <div class="h"><div><b>삼성전자</b><small class="n">005930 · KOSPI</small></div><span style="font-size:22px">✕</span></div>
+          <div class="price"><span class="big n up">71,700</span><span class="chg n up">▲900 +1.27%</span></div>
+          <span class="seg-m" style="align-self:flex-start"><span>1분</span><span class="on">일</span><span>주</span><span>월</span></span>
+          <svg id="candle-present" viewBox="0 0 840 230" preserveAspectRatio="none" aria-label="일봉 차트 예시"></svg>
+          <div class="foot"><span class="nav">‹</span><span>시연용 시세이며 실제 시세가 아닙니다.</span><span class="nav">SK하이닉스 ›</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">디자인 토큰</span>
+      <h2>색 · 글자 · 간격</h2>
+      <p class="lede">아래 이름은 <code>ui/theme</code> 의 지금 토큰이고, <span class="stt prop">제안</span> 줄은 새로 넣거나 쓰임을 바꾸자는 것입니다. 라이트·다크는 같은 이름의 두 벌입니다.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>토큰</th><th>라이트</th><th>다크</th><th>쓰는 곳</th></tr></thead>
+        <tbody>
+          <tr><td><code>Rise</code> / <code>RiseBg</code></td><td><span class="sw" style="background:#E42939"></span>#E42939 / #FDECEE</td><td><span class="sw" style="background:#FF5A64"></span>#FF5A64 / #3A1F23</td><td>상승, 매수 호가, 차트 양봉 — <b>등락에만</b></td></tr>
+          <tr><td><code>Fall</code> / <code>FallBg</code></td><td><span class="sw" style="background:#1D64DA"></span>#1D64DA / #E8F0FC</td><td><span class="sw" style="background:#5B95F5"></span>#5B95F5 / #1C2A40</td><td>하락, 매도 호가, 차트 음봉 — <b>등락에만</b></td></tr>
+          <tr><td><code>PrimaryMain</code> / <code>PrimaryBg</code></td><td><span class="sw" style="background:#1B3A8C"></span>#1B3A8C / #E8EDF8</td><td><span class="sw" style="background:#6E8FE8"></span>#6E8FE8 / #1E2A44</td><td>주 버튼, 로그인 브랜드, 선택된 탭 아이콘, 진단·개설 같은 구역 버튼 테두리</td></tr>
+          <tr><td><code>selected</code> / <code>onSelected</code> <span class="stt prop">제안</span></td><td><span class="sw" style="background:#191F28"></span>#191F28 / #FFFFFF</td><td><span class="sw" style="background:#F2F4F6"></span>#F2F4F6 / #101114</td><td>세그먼트·주간 달력의 고른 날·체크박스·키패드 점. 지금은 <code>PrimaryMain</code></td></tr>
+          <tr><td><code>Caution</code></td><td><span class="sw" style="background:#D9480F"></span>#D9480F</td><td><span class="sw" style="background:#FF922B"></span>#FF922B</td><td>부적합·재진단·미진단·숙려기간·입력 오류</td></tr>
+          <tr><td><code>riskGrade1~6</code> <span class="stt prop">제안</span></td><td><span class="sw" style="background:#9F1239"></span><span class="sw" style="background:#C2410C"></span><span class="sw" style="background:#B45309"></span><span class="sw" style="background:#4D7C0F"></span><span class="sw" style="background:#047857"></span><span class="sw" style="background:#0F766E"></span></td><td><span class="sw" style="background:#FB7185"></span><span class="sw" style="background:#FB923C"></span><span class="sw" style="background:#FBBF24"></span><span class="sw" style="background:#A3E635"></span><span class="sw" style="background:#34D399"></span><span class="sw" style="background:#2DD4BF"></span></td><td>상품 위험등급 1(매우 높은 위험)~6, 투자성향 배지(공격투자형=1 … 안정형=6). 지금은 <code>Rise</code>·<code>Caution</code>·<code>PrimaryMain</code>·<code>Fall</code> 을 빌려 씀</td></tr>
+          <tr><td><code>customer</code> / <code>customerSoft</code> <span class="stt prop">제안</span></td><td><span class="sw" style="background:#0F766E"></span>#0F766E / #E3F4F1</td><td><span class="sw" style="background:#2DD4BF"></span>#2DD4BF / #12302C</td><td>‘고객 화면’ 띠(비밀번호·서명·보여 주기)</td></tr>
+          <tr><td><code>Bg</code> / <code>Gray50Bg</code> / <code>Gray100Bg</code></td><td>#FFFFFF / #F7F8FA / #F2F4F6</td><td>#101114 / #17191D / #202329</td><td>바탕, 안내 상자·서명 칸, 구역 사이 띠·검색칸</td></tr>
+          <tr><td><code>Text</code> / <code>TextSub</code> / <code>TextDisabled</code></td><td>#191F28 / #6B7684 / #B0B8C1</td><td>#F2F4F6 / #8B95A1 / #4E5968</td><td>본문, 보조·라벨, 막힌 버튼·안내</td></tr>
+          <tr><td><code>Line</code></td><td><span class="sw" style="background:#E5E8EB"></span>#E5E8EB</td><td><span class="sw" style="background:#2C323B"></span>#2C323B</td><td>구분선, 입력칸·세그먼트 테두리</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>글자</th><th>크기 / 굵기</th><th>쓰는 곳</th></tr></thead>
+        <tbody>
+          <tr><td><code>PriceHero</code></td><td>32sp · Bold · tnum</td><td>현재가, 로그인 앱 이름, 진단 결과 성향 <span class="num" style="color:var(--rise);font-weight:600">71,700</span></td></tr>
+          <tr><td><code>CustomerTitle</code> <span class="stt prop">제안</span></td><td>22sp · Bold</td><td>고객 화면의 안내 제목(비밀번호·서명)</td></tr>
+          <tr><td><code>Title</code></td><td>18sp · Bold</td><td>화면 제목, 상세의 고객 이름, 잠금 화면 제목</td></tr>
+          <tr><td><code>Section</code></td><td>15sp · SemiBold</td><td>구역 제목(투자성향·보유 계좌), 버튼 글자, 단계 이름</td></tr>
+          <tr><td><code>ListName</code> / <code>ListPrice</code></td><td>16sp · SemiBold / Bold · tnum</td><td>고객·상품·종목 이름, 목록 가격 (촘촘하면 14sp)</td></tr>
+          <tr><td><code>Body</code> / <code>BodyNumber</code></td><td>14sp · Regular / Medium · tnum</td><td>안내 문구·상담 내용, 시각·금액</td></tr>
+          <tr><td><code>Change</code></td><td>13sp · Medium · tnum</td><td>전일 대비 ▲700 +0.99%</td></tr>
+          <tr><td><code>Caption</code> / <code>CaptionNumber</code></td><td>12sp · Regular (숫자는 tnum)</td><td>배지, 날짜, 가린 계좌번호</td></tr>
+          <tr><td><code>ChartLabel</code></td><td>10sp · Regular · tnum</td><td>차트 눈금·시각</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>간격은 4의 배수(4·8·12·16·20·24dp), 화면 좌우 여백 20dp, 제목줄 52dp, 하단 탭 64dp. 모서리는 4(배지)·6(세그먼트)·8(작은 버튼)·10(주 버튼·카드·체크 줄)·12(서명 칸·신분증 미리보기)·16(확인 창)dp입니다. 목록 행은 기본 위아래 14dp, 촘촘 8dp입니다.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Compose 구현</span>
+      <h2>이렇게 바꾸자는 것</h2>
+    </div>
+    <div class="two">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <h3>1. 색·글자를 <code>OdsTheme</code> 한 벌로 <span class="stt prop">제안</span></h3>
+        <p>지금 <code>AppColors</code> 는 프로퍼티마다 <code>isSystemInDarkTheme()</code> 를 부릅니다. MTS 처럼 불변 객체 두 벌을 CompositionLocal 로 내려 주면 화면은 <code>OdsTheme.colors.selected</code> 로 읽고, 앱 안 테마 고르기도 <code>dark</code> 한 곳만 바꾸면 됩니다.</p>
+      </div>
+<pre>@Immutable
+data class OdsColors(
+    val bg: Color, val gray50: Color, val gray100: Color,
+    val text: Color, val textSub: Color, val textDisabled: Color,
+    val brand: Color, val brandSoft: Color,
+    val selected: Color, val onSelected: Color,
+    val rise: Color, val fall: Color, val caution: Color,
+    val riskGrades: List&lt;Color&gt;,   // 1~6등급
+    val customer: Color, val customerSoft: Color,
+) {
+    fun of(grade: ProductRiskGrade) = riskGrades[grade.level - 1]
+    fun of(profile: RiskProfile) = of(profile.maxProductRisk)
+}
+
+@Composable
+fun OdsTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit) {
+    CompositionLocalProvider(
+        LocalOdsColors provides if (dark) DarkOdsColors else LightOdsColors,
+    ) { MaterialTheme(colorScheme = …, content = content) }
+}</pre>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <h3>2. 고객 화면은 틀 하나로 <span class="stt prop">제안</span></h3>
+        <p>계좌 비밀번호·서명 단계와 보여 주기가 <code>CustomerFacing</code> 으로 감싸면 띠·큰 제목·키패드 크기가 한 번에 바뀝니다. 넓은 태블릿에서는 이 틀이 떠 있는 동안 상담 칸을 그리지 않습니다.</p>
+      </div>
+<pre>@Composable
+fun CustomerFacing(
+    title: String,
+    content: @Composable ColumnScope.() -&gt; Unit,
+) {
+    CompositionLocalProvider(LocalCustomerFacing provides true) {
+        Column {
+            CustomerBanner()             // 청록 띠
+            Text(title, style = OdsTheme.type.customerTitle)
+            content()
+        }
+    }
+}
+
+// SecurePinPad 는 LocalCustomerFacing 이면 키를 64dp → 72dp 로</pre>
+    </div>
+
+    <h3 style="margin-top:8px">공용 부품 — 지금 이름과 바꾸자는 것</h3>
+    <div class="comp-list">
+      <div class="comp"><div class="hd"><code>Badge</code><span class="stt done">적용</span></div><span>등급·성향·상태 이름표. 글자색을 옅게 깐 바탕</span></div>
+      <div class="comp"><div class="hd"><code>RiskGradeBadge · RiskProfileBadge</code><span class="stt prop">제안</span></div><span><code>Badge</code> 위에 단계색을 고르는 일만. 지금은 화면마다 <code>color</code> 확장으로 고름</span></div>
+      <div class="comp"><div class="hd"><code>SegmentedControl</code><span class="stt prop">제안</span></div><span>선택 바탕을 남색 → <code>selected</code></span></div>
+      <div class="comp"><div class="hd"><code>WeekStrip</code><span class="stt prop">제안</span></div><span>고른 날 원을 <code>selected</code>, 오늘 테두리는 그대로</span></div>
+      <div class="comp"><div class="hd"><code>SecurePinPad</code><span class="stt done">적용</span></div><span>숫자 배열 섞기, 자릿수 인자. 고객 화면에서 키 키우기는 제안</span></div>
+      <div class="comp"><div class="hd"><code>SignaturePad</code><span class="stt done">적용</span></div><span>칸 안 터치를 모두 가져가 스크롤·밀어 닫기와 겹치지 않음</span></div>
+      <div class="comp"><div class="hd"><code>SuitabilityCard</code><span class="stt prop">제안</span></div><span>문장 한 줄 → 고객 성향 · ≠ · 상품 등급 나란히</span></div>
+      <div class="comp"><div class="hd"><code>CustomerFacing · CustomerBanner</code><span class="stt prop">제안</span></div><span>고객 화면 띠와 큰 글자</span></div>
+      <div class="comp"><div class="hd"><code>DemoBadge</code><span class="stt prop">제안</span></div><span>로컬 모드에서 제목 옆 ‘시연’</span></div>
+      <div class="comp"><div class="hd"><code>CandleChart · OrderBookView</code><span class="stt done">적용</span></div><span>ODS_Mobile 에서 가져온 시세 부품. Canvas 직접 그리기</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">적용 순서</span>
+      <h2>다섯 단계로 나눠 넣기</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="i">1</span><div><h3>토큰 정리 <span class="stt prop">제안</span></h3><p><code>OdsTheme</code> 도입, 선택 상태를 <code>selected</code> 로. 화면 수정은 세그먼트·주간 달력·체크박스·키패드 점 네 곳.</p></div></div>
+      <div class="step"><span class="i">2</span><div><h3>위험등급 단계색 <span class="stt prop">제안</span></h3><p><code>riskGrade1~6</code> 과 <code>RiskGradeBadge</code>. 상품 목록·상세·적합성 카드·고객 성향 배지를 바꾸고, 단계색이 빨강·파랑 계열로 돌아가지 않게 테스트로 막음.</p></div></div>
+      <div class="step"><span class="i">3</span><div><h3>고객 화면 틀 <span class="stt prop">제안</span></h3><p><code>CustomerFacing</code> 으로 계좌 비밀번호·서명 단계·보여 주기를 감싸고, 넓은 태블릿에서는 그동안 상담 칸을 그리지 않음.</p></div></div>
+      <div class="step"><span class="i">4</span><div><h3>글꼴 · 시연 배지 <span class="stt prop">제안</span></h3><p>Pretendard(MTS 와 같은 네 굵기) 번들, 로컬 모드 ‘시연’ 배지.</p></div></div>
+      <div class="step"><span class="i">5</span><div><h3>다음 <span class="stt todo">남음</span></h3><p>상담 칸 빠른 업무 버튼, 가입·개설 완료 확인서, 신분증 촬영 안내선, 앱 안 테마 고르기, 회사 CI 반영.</p></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">결정</span>
+      <h2>정한 것과 정할 것</h2>
+    </div>
+    <div class="decide">
+      <div class="q"><b><span class="stt done">정함</span> 등락색</b><span>국내 관례 — 상승 빨강, 하락 파랑. 색만으로 알리지 않게 ▲▼ 와 부호를 함께.</span></div>
+      <div class="q"><b><span class="stt done">정함</span> 기본 테마</b><span>기기 설정을 따름. 라이트·다크 같은 토큰 이름.</span></div>
+      <div class="q"><b><span class="stt done">정함</span> 개인정보</b><span>가리기 기본 켬. 신분증 사진·주민번호 뒷자리·계좌 비밀번호·서명 그림은 저장하지 않음.</span></div>
+      <div class="q"><b><span class="stt done">정함</span> 태블릿</b><span>1000dp 이상 3칸, 오른쪽 끝은 상담 칸.</span></div>
+      <div class="q"><b><span class="stt todo">정할 것</span> 방향</b><span>C(상담 테이블)로 갈지.</span></div>
+      <div class="q"><b><span class="stt todo">정할 것</span> 브랜드 색</b><span>지금 남색을 유지할지, 회사 CI 색으로 바꿀지. 어느 쪽이든 선택 표시는 무채색으로 떼어 냄.</span></div>
+      <div class="q"><b><span class="stt todo">정할 것</span> 고객 화면 테마</b><span>기기가 다크여도 고객 화면은 늘 라이트로 보일지(고객 쪽 가독성).</span></div>
+      <div class="q"><b><span class="stt todo">정할 것</span> 글꼴</b><span>Pretendard 를 MTS 와 같이 쓸지.</span></div>
+    </div>
+  </section>
+
+  <p class="foot-note">시안의 고객·계좌·일정·시세 숫자는 모두 예시 값이며 실제 고객 정보나 시세가 아닙니다.</p>
+</div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  function fmt(n) { return Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function rng(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  var days = document.getElementById("days");
+  [["월", 19, 2], ["화", 20, 3], ["수", 21, 1], ["목", 22, 1], ["금", 23, 0], ["토", 24, 0], ["일", 25, 0]].forEach(function (d) {
+    var c = el("div", d[1] === 20 ? "sel" : "");
+    var w = el("span", null, d[0]);
+    if (d[0] === "토") w.style.color = "var(--m-fall)";
+    if (d[0] === "일") w.style.color = "var(--m-rise)";
+    c.appendChild(w); c.appendChild(el("b", "n", String(d[1]))); c.appendChild(el("span", "dot" + (d[2] ? "" : " none")));
+    days.appendChild(c);
+  });
+
+  function keypad(id, seed) {
+    var r = rng(seed), digits = ["0","1","2","3","4","5","6","7","8","9"];
+    for (var i = digits.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = digits[i]; digits[i] = digits[j]; digits[j] = t; }
+    var box = document.getElementById(id);
+    digits.slice(0, 9).forEach(function (d) { box.appendChild(el("span", "k n", d)); });
+    box.appendChild(el("span", null, ""));
+    box.appendChild(el("span", "k n", digits[9]));
+    box.appendChild(el("span", null, "⌫"));
+  }
+  keypad("keys-acct", 7);
+  keypad("keys-lock", 23);
+
+  var customers = [
+    ["강하늘", "VIP", "58세 · 남 · 010-****-4587", "r-neutral", "위험중립형", true, true],
+    ["김서윤", "VIP", "50세 · 여 · 010-****-1190", "caution", "재진단 필요"],
+    ["박준호", "골드", "44세 · 남 · 010-****-7731", "r-aggr", "공격투자형"],
+    ["서지수", "일반", "25세 · 여 · 010-****-5590", "caution", "성향 미진단"],
+    ["오세훈", "VIP", "78세 · 남 · 010-****-8846", "r-stable", "안정형"],
+    ["윤소희", "일반", "39세 · 여 · 010-****-6671", "r-active", "적극투자형"],
+    ["이미영", "골드", "67세 · 여 · 010-****-2214", "r-stable", "안정형"]
+  ];
+  var tc = document.getElementById("tablet-customers");
+  customers.forEach(function (c) {
+    var row = el("div", "crow" + (c[5] ? " sel" : ""));
+    var left = el("div");
+    var nm = el("div", "nm"); nm.appendChild(el("span", null, c[0])); nm.appendChild(el("span", "badge gray", c[1]));
+    if (c[6]) nm.appendChild(el("span", "badge brand", "상담 중"));
+    left.appendChild(nm); left.appendChild(el("div", "sub n", c[2]));
+    row.appendChild(left);
+    row.appendChild(el("span", "badge " + c[3], c[4]));
+    tc.appendChild(row);
+  });
+
+  function svgEl(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function candles(svg, W, H, count, seed, last) {
+    var r = rng(seed), list = [], o = 70800;
+    for (var i = 0; i < count; i++) {
+      var c = Math.round(o + (r() - 0.48) * 1100), h = Math.max(o, c) + r() * 500, l = Math.min(o, c) - r() * 500;
+      list.push({ o: o, c: c, h: h, l: l, v: 0.3 + r() * 0.7 }); o = c;
+    }
+    var drift = last - list[count - 1].c;
+    list.forEach(function (k, i) {
+      var shift = Math.round(drift * i / (count - 1)), next = Math.round(drift * (i + 1) / (count - 1));
+      k.o += shift; k.c += next; k.h = Math.max(k.h + shift, k.o, k.c); k.l = Math.min(k.l + shift, k.o, k.c);
+      if (i > 0) k.o = list[i - 1].c;
+    });
+    list[count - 1].c = last; list[count - 1].h = Math.max(list[count - 1].h, last); list[count - 1].l = Math.min(list[count - 1].l, list[count - 1].o, last);
+    var plotW = W - 60, top = 10, chartBot = H * 0.72, volTop = H * 0.78, volBot = H - 14;
+    var hi = Math.max.apply(null, list.map(function (x) { return x.h; })), lo = Math.min.apply(null, list.map(function (x) { return x.l; }));
+    var span = hi - lo;
+    function y(v) { return top + (hi - v) / span * (chartBot - top); }
+    var lab = { fill: "var(--m-ink3)", "font-size": "10", "font-family": "IBM Plex Mono, ui-monospace, monospace" };
+    for (var g = 1; g <= 3; g++) {
+      var gy = top + (chartBot - top) * g / 4, gv = Math.round((hi - (gy - top) / (chartBot - top) * span) / 100) * 100;
+      svg.appendChild(svgEl("line", { x1: 0, x2: plotW, y1: gy, y2: gy, stroke: "var(--m-line)", "stroke-width": 1 }));
+      svg.appendChild(svgEl("text", Object.assign({ x: plotW + 6, y: gy + 3 }, lab), fmt(gv)));
+    }
+    var step = plotW / count, bw = step * 0.62;
+    list.forEach(function (k, i) {
+      var x = i * step + step / 2, col = k.c >= k.o ? "var(--m-rise)" : "var(--m-fall)";
+      svg.appendChild(svgEl("line", { x1: x, x2: x, y1: y(k.h), y2: y(k.l), stroke: col, "stroke-width": 1 }));
+      svg.appendChild(svgEl("rect", { x: x - bw / 2, y: y(Math.max(k.o, k.c)), width: bw, height: Math.max(1, Math.abs(y(k.o) - y(k.c))), fill: col }));
+      var vh = (volBot - volTop) * k.v;
+      svg.appendChild(svgEl("rect", { x: x - bw / 2, y: volBot - vh, width: bw, height: vh, fill: col, opacity: 0.35 }));
+    });
+    var ly = y(last);
+    svg.appendChild(svgEl("line", { x1: 0, x2: plotW, y1: ly, y2: ly, stroke: "var(--m-rise)", "stroke-width": 1, "stroke-dasharray": "4 4" }));
+    svg.appendChild(svgEl("rect", { x: plotW + 2, y: ly - 8, width: 56, height: 16, rx: 2, fill: "var(--m-rise)" }));
+    svg.appendChild(svgEl("text", Object.assign({}, lab, { x: plotW + 6, y: ly + 4, fill: "#fff", "font-weight": "600" }), fmt(last)));
+    [["05.05", 0, "start"], ["07.28", plotW / 2, "middle"], ["10.20", plotW, "end"]].forEach(function (d) {
+      svg.appendChild(svgEl("text", Object.assign({ x: d[1], y: H - 2, "text-anchor": d[2] }, lab), d[0]));
+    });
+  }
+  candles(document.getElementById("candle-present"), 840, 230, 90, 31, 71700);
+
+  var light = document.getElementById("mock-light"), dark = document.getElementById("mock-dark");
+  var targets = [document.getElementById("mocks"), document.getElementById("mocks-tablet"), document.getElementById("mocks-present")];
+  function setMock(mode) {
+    targets.forEach(function (t) { t.setAttribute("data-mock", mode === "dark" ? "dark" : "light"); });
+    light.setAttribute("aria-pressed", String(mode !== "dark"));
+    dark.setAttribute("aria-pressed", String(mode === "dark"));
+    try { localStorage.setItem("ods-mock", mode); } catch (e) {}
+  }
+  light.addEventListener("click", function () { setMock("light"); });
+  dark.addEventListener("click", function () { setMock("dark"); });
+  try { var saved = localStorage.getItem("ods-mock"); if (saved) setMock(saved); } catch (e) {}
+})();
+</script>
