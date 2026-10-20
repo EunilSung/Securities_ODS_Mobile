@@ -3,14 +3,12 @@ package com.eunilsung.ods.ui.customer
 import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
+import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalUserPreferenceRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
-import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
 import com.eunilsung.ods.data.mapper.ProductMapper
-import com.eunilsung.ods.domain.usecase.ObserveSubscriptionsUseCase
 import com.eunilsung.ods.data.mapper.VisitMapper
-import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.Gender
@@ -27,11 +25,15 @@ import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomersRefreshingUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomersUseCase
 import com.eunilsung.ods.domain.usecase.ObserveMaskPersonalInfoUseCase
+import com.eunilsung.ods.domain.usecase.ObserveSubscriptionsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
 import com.eunilsung.ods.domain.usecase.RefreshCustomersUseCase
 import com.eunilsung.ods.domain.usecase.RegisterCustomerUseCase
 import com.eunilsung.ods.domain.usecase.SetMaskPersonalInfoUseCase
 import com.eunilsung.ods.domain.usecase.StartConsultUseCase
 import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.eunilsung.ods.ui.customer.consultation.ConsultationActions
 import com.eunilsung.ods.ui.customer.consultation.ConsultationEvent
 import com.eunilsung.ods.ui.customer.consultation.ConsultationViewModel
@@ -44,6 +46,12 @@ import com.eunilsung.ods.ui.customer.register.NewCustomerActions
 import com.eunilsung.ods.ui.customer.register.NewCustomerEvent
 import com.eunilsung.ods.ui.customer.register.NewCustomerViewModel
 import com.russhwolf.settings.MapSettings
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -53,21 +61,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CustomerViewModelsTest {
     private val dispatcher = StandardTestDispatcher()
     private val settings = MapSettings()
     private val database = createTestDatabase()
-    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper())
+    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
     private val session = LocalConsultSessionRepositoryImpl()
-    private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
+    private val login = LocalLoginRepositoryImpl(settings, testSecureSettings(settings), simulatedRoundTripMillis = 0)
     private val preferences = LocalUserPreferenceRepositoryImpl(settings)
 
     private fun listViewModel() = CustomerListViewModel(
@@ -88,8 +90,8 @@ class CustomerViewModelsTest {
             observeMaskPersonalInfo = ObserveMaskPersonalInfoUseCase(preferences),
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
             startConsult = StartConsultUseCase(session),
-            observeUpcomingVisits = ObserveUpcomingVisitsUseCase(LocalVisitRepositoryImpl(database, VisitMapper())),
-            observeSubscriptions = ObserveSubscriptionsUseCase(LocalProductRepositoryImpl(database, ProductMapper())),
+            observeUpcomingVisits = ObserveUpcomingVisitsUseCase(LocalVisitRepositoryImpl(database, VisitMapper(testLocalSecret()))),
+            observeSubscriptions = ObserveSubscriptionsUseCase(LocalProductRepositoryImpl(database, ProductMapper(testLocalSecret()))),
         )
     )
 

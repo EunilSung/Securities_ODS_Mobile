@@ -1,5 +1,6 @@
 package com.eunilsung.ods.ui.product
 
+import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalCustomerRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalProductRepositoryImpl
@@ -13,29 +14,23 @@ import com.eunilsung.ods.domain.model.Signature
 import com.eunilsung.ods.domain.model.SignaturePoint
 import com.eunilsung.ods.domain.model.Suitability
 import com.eunilsung.ods.domain.usecase.ObserveAccountsUseCase
-import com.eunilsung.ods.domain.usecase.StartConsultUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomerUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCustomersUseCase
 import com.eunilsung.ods.domain.usecase.ObserveProductUseCase
+import com.eunilsung.ods.domain.usecase.StartConsultUseCase
 import com.eunilsung.ods.domain.usecase.SubscribeProductUseCase
 import com.eunilsung.ods.domain.usecase.SubscribeResult
 import com.eunilsung.ods.domain.usecase.SubscriptionUseCases
 import com.eunilsung.ods.domain.util.suitabilityFor
 import com.eunilsung.ods.domain.util.todayInSeoul
-import com.eunilsung.ods.data.local.repository.LocalConsultSessionRepositoryImpl
 import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionActions
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionEvent
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionStep
 import com.eunilsung.ods.ui.product.subscribe.SubscriptionViewModel
 import com.russhwolf.settings.MapSettings
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -45,15 +40,22 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubscriptionTest {
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
-    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper())
-    private val products = LocalProductRepositoryImpl(database, ProductMapper())
+    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
+    private val products = LocalProductRepositoryImpl(database, ProductMapper(testLocalSecret()))
     private val signatures = LocalSignatureRepositoryImpl(database)
-    private val login = LocalLoginRepositoryImpl(MapSettings(), simulatedRoundTripMillis = 0)
+    private val login = MapSettings().let { LocalLoginRepositoryImpl(it, testSecureSettings(it), simulatedRoundTripMillis = 0) }
     private val session = LocalConsultSessionRepositoryImpl()
     private val subscribe = SubscribeProductUseCase(customers, products, signatures, login)
     private val signature = Signature(listOf(List(20) { SignaturePoint(0.1f + it * 0.03f, 0.5f) }))

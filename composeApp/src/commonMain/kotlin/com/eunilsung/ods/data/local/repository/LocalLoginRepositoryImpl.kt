@@ -8,6 +8,7 @@ import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.repository.LoginRepository
 import com.eunilsung.ods.domain.util.LoginPolicy
 import com.eunilsung.ods.util.Log
+import com.eunilsung.ods.data.local.SecureSettings
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,9 +20,11 @@ import kotlinx.coroutines.flow.asStateFlow
  *
  * Talk 의 같은 클래스와 달리 **비밀번호를 저장하지 않는다**(자동 로그인 없음). 기억하는 것은 사번뿐이다.
  * 없는 사번도 틀린 횟수를 세고 같은 결과를 돌려준다 — 어느 사번이 있는지 드러내지 않는다.
+ * 기억한 사번은 [secureSettings] 로 잠가 둔다.
  */
 class LocalLoginRepositoryImpl(
     private val settings: Settings,
+    private val secureSettings: SecureSettings,
     private val simulatedRoundTripMillis: Long = SIMULATED_ROUND_TRIP_MILLIS,
 ) : LoginRepository {
 
@@ -53,7 +56,7 @@ class LocalLoginRepositoryImpl(
         }
 
         settings.remove(failureKey(id))
-        if (isSaveId()) settings.putString(KEY_SAVED_ID, staff.id) else settings.remove(KEY_SAVED_ID)
+        if (isSaveId()) secureSettings.putString(KEY_SAVED_ID, staff.id) else secureSettings.remove(KEY_SAVED_ID)
         _lastLogoutReason.value = null
         _currentStaff.value = staff
         Log.message("[Login/Local] success ${staff.id}")
@@ -73,13 +76,13 @@ class LocalLoginRepositoryImpl(
         _lastLogoutReason.value = null
     }
 
-    override fun savedId(): String? = if (isSaveId()) settings.getStringOrNull(KEY_SAVED_ID) else null
+    override fun savedId(): String? = if (isSaveId()) secureSettings.getStringOrNull(KEY_SAVED_ID) else null
 
     override fun isSaveId(): Boolean = settings.getBoolean(KEY_SAVE_ID, true)
 
     override fun setSaveId(save: Boolean) {
         settings.putBoolean(KEY_SAVE_ID, save)
-        if (!save) settings.remove(KEY_SAVED_ID)
+        if (!save) secureSettings.remove(KEY_SAVED_ID)
     }
 
     private fun failureKey(id: String) = "login.failures.$id"

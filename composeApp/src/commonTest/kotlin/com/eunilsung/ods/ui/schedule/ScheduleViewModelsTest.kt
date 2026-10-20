@@ -25,12 +25,20 @@ import com.eunilsung.ods.domain.usecase.VisitDetailUseCases
 import com.eunilsung.ods.domain.util.atTimeMillis
 import com.eunilsung.ods.domain.util.todayInSeoul
 import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
 import com.eunilsung.ods.ui.schedule.detail.VisitDetailActions
 import com.eunilsung.ods.ui.schedule.detail.VisitDetailEvent
 import com.eunilsung.ods.ui.schedule.detail.VisitDetailViewModel
 import com.eunilsung.ods.ui.schedule.register.NewVisitActions
 import com.eunilsung.ods.ui.schedule.register.NewVisitEvent
 import com.eunilsung.ods.ui.schedule.register.NewVisitViewModel
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -41,13 +49,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 /** 시연용 일정 중 내일 잡힌 것(서지수). 취소한 일정은 세지 않는다. */
 private const val VisitSeedTomorrowCount = 1
@@ -56,8 +57,8 @@ private const val VisitSeedTomorrowCount = 1
 class ScheduleViewModelsTest {
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
-    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper())
-    private val visits = LocalVisitRepositoryImpl(database, VisitMapper())
+    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
+    private val visits = LocalVisitRepositoryImpl(database, VisitMapper(testLocalSecret()))
     private val session = LocalConsultSessionRepositoryImpl()
     private val today = todayInSeoul()
 

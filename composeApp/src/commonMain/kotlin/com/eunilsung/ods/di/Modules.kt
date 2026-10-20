@@ -1,6 +1,9 @@
 package com.eunilsung.ods.di
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.LocalKeyGuard
+import com.eunilsung.ods.data.local.LocalSecret
+import com.eunilsung.ods.data.local.SecureSettings
 import com.eunilsung.ods.data.local.repository.LocalIdVerificationRepositoryImpl
 import com.eunilsung.ods.domain.repository.IdVerificationRepository
 import com.eunilsung.ods.domain.usecase.AccountOpeningUseCases
@@ -131,11 +134,16 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { Settings() }
+    /** 개인정보 칸·설정을 잠그는 키는 플랫폼 보안 저장소에 있다(`platformModule` 의 `LocalSecretCipher`). */
+    single { LocalSecret(get()) }
+    single { SecureSettings(get(), get()) }
 
+    /** DB 를 열자마자 그 DB 를 잠근 키와 짝이 맞는지 본다. 맞지 않으면 풀 수 없는 업무 데이터를 지운다. */
     single<AppDatabase> {
         val factory: DatabaseDriverFactory = get()
-        AppDatabase(factory.createDriver())
+        AppDatabase(factory.createDriver()).also { LocalKeyGuard(it, get(), get()).ensureReadable() }
     }
+    single { LocalKeyGuard(get(), get(), get()) }
 
     single<UserPreferenceRepository> { LocalUserPreferenceRepositoryImpl(get()) }
     singleOf(::ObserveListDensityUseCase)
@@ -220,8 +228,8 @@ val appModule = module {
     singleOf(::RiskAssessmentUseCases)
 
     /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
-    single<AppLockRepository> { LocalAppLockRepositoryImpl(get()) }
-    single<LocalDataWiper> { LocalDataWiperImpl(get()) }
+    single<AppLockRepository> { LocalAppLockRepositoryImpl(get(), get()) }
+    single<LocalDataWiper> { LocalDataWiperImpl(get(), get()) }
     singleOf(::ObserveAppLockUseCase)
     singleOf(::RegisterAppPinUseCase)
     singleOf(::UnlockWithPinUseCase)
@@ -239,7 +247,7 @@ val appModule = module {
     singleOf(::MainUseCases)
 
     /** 서버가 붙으면 `Config.Server.IS_ENABLED` 로 서버 로그인과 갈라 끼운다. */
-    single<LoginRepository> { LocalLoginRepositoryImpl(get()) }
+    single<LoginRepository> { LocalLoginRepositoryImpl(get(), get()) }
     singleOf(::LoginUseCase)
     singleOf(::LogoutUseCase)
     singleOf(::ObserveStaffUseCase)

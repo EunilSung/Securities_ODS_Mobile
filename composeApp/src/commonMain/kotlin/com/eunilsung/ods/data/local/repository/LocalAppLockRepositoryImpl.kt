@@ -1,5 +1,6 @@
 package com.eunilsung.ods.data.local.repository
 
+import com.eunilsung.ods.data.local.SecureSettings
 import com.eunilsung.ods.domain.model.AppLockState
 import com.eunilsung.ods.domain.repository.AppLockRepository
 import com.eunilsung.ods.util.PinHash
@@ -14,9 +15,11 @@ import kotlinx.coroutines.flow.update
  *
  * 서버 모드에서도 앱 잠금은 기기 안의 일이라 이 구현을 그대로 쓴다. 저장 키에는 사번이 들어가므로
  * 한 기기를 여러 직원이 써도 서로의 비밀번호를 쓰지 않는다.
+ * salt·해시는 [secureSettings] 로 잠가 둔다 — 설정 파일만 빼내서는 6자리 비밀번호를 대입해 볼 수 없다.
  */
 class LocalAppLockRepositoryImpl(
     private val settings: Settings,
+    private val secureSettings: SecureSettings,
 ) : AppLockRepository {
 
     private var staffId: String? = null
@@ -44,8 +47,8 @@ class LocalAppLockRepositoryImpl(
     override fun setPin(pin: String) {
         val id = staffId ?: return
         val salt = PinHash.newSalt()
-        settings.putString(saltKey(id), salt)
-        settings.putString(hashKey(id), PinHash.hash(pin, salt))
+        secureSettings.putString(saltKey(id), salt)
+        secureSettings.putString(hashKey(id), PinHash.hash(pin, salt))
         settings.remove(failureKey(id))
         settings.putString(KEY_STAFF_IDS, (staffIds() + id).joinToString(","))
         _state.value = load(id).copy(isLocked = false)
@@ -53,8 +56,8 @@ class LocalAppLockRepositoryImpl(
 
     override fun checkPin(pin: String): AppLockRepository.PinCheck {
         val id = staffId ?: return AppLockRepository.PinCheck.Wrong(Int.MAX_VALUE)
-        val salt = settings.getStringOrNull(saltKey(id))
-        val stored = settings.getStringOrNull(hashKey(id))
+        val salt = secureSettings.getStringOrNull(saltKey(id))
+        val stored = secureSettings.getStringOrNull(hashKey(id))
         return if (salt != null && stored != null && PinHash.hash(pin, salt) == stored) {
             settings.remove(failureKey(id))
             AppLockRepository.PinCheck.Matched
@@ -99,7 +102,7 @@ class LocalAppLockRepositoryImpl(
     }
 
     private fun load(id: String) = AppLockState(
-        isPinSet = settings.getStringOrNull(hashKey(id)) != null,
+        isPinSet = secureSettings.getStringOrNull(hashKey(id)) != null,
         biometricEnabled = settings.getBoolean(biometricKey(id), false),
     )
 

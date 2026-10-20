@@ -8,13 +8,14 @@ import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.model.UnlockResult
 import com.eunilsung.ods.domain.repository.LocalDataWiper
 import com.eunilsung.ods.domain.util.AppLockPolicy
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class AppLockUseCasesTest {
     private class CountingWiper : LocalDataWiper {
@@ -25,9 +26,9 @@ class AppLockUseCasesTest {
     }
 
     private val settings = MapSettings()
-    private val appLock = LocalAppLockRepositoryImpl(settings)
+    private val appLock = LocalAppLockRepositoryImpl(settings, testSecureSettings(settings))
     private val consultSession = LocalConsultSessionRepositoryImpl()
-    private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
+    private val login = LocalLoginRepositoryImpl(settings, testSecureSettings(settings), simulatedRoundTripMillis = 0)
     private val wiper = CountingWiper()
     private val unlock = UnlockWithPinUseCase(appLock, wiper, LogoutUseCase(login, appLock, consultSession))
     private val lockIfInactive = LockIfInactiveUseCase(appLock)
