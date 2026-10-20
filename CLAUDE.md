@@ -20,7 +20,7 @@ Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture +
    화면의 전화번호·생년월일·주소·계좌번호는 `maskPersonalInfo` 설정을 따른다.
 7. **고친 뒤에는 `verifyAll` 을 통과시킨다** — 서버 테스트, 단위·ViewModel 시나리오·실 서버 기능 테스트(JVM·iOS)와 Maestro 실화면 흐름(Android·iOS, 서버 모드).
    사용자 실기기는 요청했을 때만 쓴다.
-8. **기능마다 브랜치를 따고, 7번이 끝나면 `main` 에 머지한다.** 원격 저장소가 없으니 푸시는 하지 않는다.
+8. **기능마다 브랜치를 따고, 7번이 끝나면 `main` 에 머지한다.** 원격은 GitHub `origin`(EunilSung/Securities_ODS_Mobile)이다. 푸시는 사용자가 요청했을 때만 한다.
 
 ### 서버
 
