@@ -23,8 +23,32 @@ Kotlin Multiplatform(Android · iOS), Compose Multiplatform, Clean Architecture 
 ```bash
 ./gradlew :composeApp:installDebug          # Android
 open iosApp/iosApp.xcodeproj                # iOS (Xcode 에서 실행)
-./gradlew :composeApp:testDebugUnitTest     # 단위 테스트
-maestro --device <기기> test .maestro/flows # 실화면 흐름
 ```
 
-JDK 17, `local.properties` 의 `sdk.dir` 이 필요하다. 구조·규칙·검증 방법은 [CLAUDE.md](CLAUDE.md) 에 있다.
+JDK 17, `local.properties` 의 `sdk.dir` 이 필요하다. 구조·규칙은 [CLAUDE.md](CLAUDE.md) 에 있다.
+
+## 검증 — 한 번에
+
+서버 없는 로컬 모드 앱이라 서버를 띄우지 않고 앱 테스트와 실화면 흐름만 돈다.
+
+```bash
+./gradlew :composeApp:verifyAll --continue
+```
+
+Android Studio 에서는 실행 구성 **`검증 - 전체 (실화면 포함)`** 을 고르고 실행한다(고칠 때마다는 `검증 - 빠르게 (JVM)`).
+
+1. 단위·ViewModel 시나리오 테스트(Android JVM) — 업무 규칙과 화면 상태·이벤트를 인메모리 DB 위에서 본다
+2. 같은 테스트(iOS 시뮬레이터)
+3. Android 앱 빌드 → 에뮬레이터에 설치 → Maestro 실화면 흐름 7개
+4. iOS 앱 빌드 → 시뮬레이터에 설치 → 같은 흐름 7개
+
+**준비** — Maestro(`curl -fsSL https://get.maestro.mobile.dev | bash`), Xcode, 그리고 `local.properties` 에 이 PC 의 검증 기기:
+
+```properties
+e2e.androidAvd=<에뮬레이터 이름>     # 꺼져 있으면 켠다
+e2e.iosDevice=<시뮬레이터 UDID 또는 이름>
+```
+
+**결과** — `composeApp/build/test-results/`(JVM·iOS 테스트), `build/maestro/<android|ios>/report.xml` 과 스크린샷·로그.
+
+**자동으로 확인하지 못하는 것** — 실제 카메라 촬영, 생체 인증, 배포 빌드의 화면 캡처 막기. 손으로 확인한다.

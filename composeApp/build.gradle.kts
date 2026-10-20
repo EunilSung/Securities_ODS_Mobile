@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -146,3 +148,58 @@ dependencies {
 composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
 }
+
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use(::load)
+}
+
+/**
+ * 실화면 흐름과 iOS 테스트에 쓸 시뮬레이터(UDID 또는 이름). 같은 PC 의 다른 작업이 쓰는 시뮬레이터를 피하려면
+ * `local.properties` 의 `e2e.iosDevice` 에 적어 둔다. 없으면 iOS 테스트는 Kotlin 이 고른 기기에서 돈다.
+ */
+val iosTestDevice: String? = providers.environmentVariable("ODS_IOS_DEVICE").orNull
+    ?: localProperties.getProperty("e2e.iosDevice")
+
+tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+    iosTestDevice?.let { device.set(it) }
+}
+
+/**
+ * 실화면 흐름(`.maestro`)을 기기에 돌린다. 기기를 고르고 켜고 앱을 설치하고 Maestro 를 부르는 일은 `.maestro/run.sh` 가 한다.
+ * 서버 없는 로컬 모드 앱이라 서버를 띄우지 않는다. 기기 상태를 보는 작업이라 매번 돈다.
+ */
+val maestroRunner = rootProject.file(".maestro/run.sh").absolutePath
+
+val e2eAndroid by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "실화면 흐름을 Android 에뮬레이터에 돌린다"
+    dependsOn("assembleDebug")
+    commandLine("bash", maestroRunner, "android", layout.buildDirectory.file("outputs/apk/debug/composeApp-debug.apk").get().asFile.absolutePath)
+    outputs.upToDateWhen { false }
+}
+
+val e2eIos by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "실화면 흐름을 iOS 시뮬레이터에 돌린다"
+    commandLine("bash", maestroRunner, "ios")
+    outputs.upToDateWhen { false }
+}
+
+/**
+ * 전체 검증 — 앱 테스트(JVM) → 앱 테스트(iOS 시뮬레이터) → 실화면 흐름(Android → iOS).
+ *
+ * ```
+ * ./gradlew :composeApp:verifyAll --continue
+ * ```
+ *
+ * Android Studio 에서는 실행 구성 `검증 - 전체 (실화면 포함)` 을 고른다. `--continue` 로 돌리면 앞이 깨져도 끝까지 돌고,
+ * 깨진 단계가 마지막에 모여 나온다. 기기는 `local.properties` 의 `e2e.androidAvd`·`e2e.iosDevice` 로 고르고, 꺼져 있으면 켠다.
+ */
+val verifyAll by tasks.registering {
+    group = "verification"
+    description = "앱 테스트(JVM·iOS)와 실화면 흐름(Android·iOS)을 한 번에 돌린다"
+    dependsOn("testDebugUnitTest", "iosSimulatorArm64Test", e2eAndroid, e2eIos)
+}
+tasks.named { it == "iosSimulatorArm64Test" }.configureEach { mustRunAfter("testDebugUnitTest") }
+e2eAndroid { mustRunAfter("iosSimulatorArm64Test") }
+e2eIos { mustRunAfter(e2eAndroid) }

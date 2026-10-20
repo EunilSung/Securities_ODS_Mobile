@@ -96,10 +96,20 @@ iosApp/         Xcode 프로젝트 (Info.plist 에 Face ID·카메라·사진첩
 ## 테스트와 검증
 
 ```bash
+./gradlew :composeApp:verifyAll --continue         # 전체: JVM 테스트 → iOS 시뮬레이터 테스트 → 실화면(Android → iOS)
 ./gradlew :composeApp:testDebugUnitTest            # 공통 테스트 (Android JVM)
 ./gradlew :composeApp:iosSimulatorArm64Test        # 공통 테스트 (iOS 시뮬레이터)
-maestro --device <기기> test .maestro/flows        # 실화면 흐름 (앱을 먼저 설치)
+./gradlew :composeApp:e2eAndroid                   # 실화면 흐름만 (Android) — 빌드·설치까지 한다
+./gradlew :composeApp:e2eIos                       # 실화면 흐름만 (iOS)
 ```
+
+- **Android Studio 에서는 실행 구성을 고른다**(`.run`): 고칠 때마다 `검증 - 빠르게 (JVM)`, 머지 전에는 `검증 - 전체 (실화면 포함)`.
+  전체는 기기를 켜는 것까지 18분쯤 걸린다(Android 태블릿 에뮬레이터가 가장 느리다)
+- **기기는 `local.properties` 의 `e2e.androidAvd`(에뮬레이터 이름)·`e2e.iosDevice`(시뮬레이터 UDID·이름)로 고른다.** 꺼져 있으면 켠다.
+  없으면 켜져 있는 에뮬레이터·iPhone 시뮬레이터 중 첫 번째를 쓰고, 실기기는 고르지 않는다. iOS 테스트(`iosSimulatorArm64Test`)도 같은 시뮬레이터에서 돈다
+- 기기 고르기·켜기·설치·Maestro 실행은 `.maestro/run.sh` 가 한다(`.maestro/run.sh android <apk>`, `.maestro/run.sh ios`). 서버는 띄우지 않는다
+- 결과: JVM `composeApp/build/test-results/testDebugUnitTest`, iOS `…/iosSimulatorArm64Test`, 실화면 `build/maestro/<플랫폼>/report.xml` 과 같은 폴더의 스크린샷·로그
+- `--continue` 로 돌리면 하나가 깨져도 끝까지 돌고 깨진 단계가 마지막에 모여 나온다
 
 - 저장소·ViewModel 테스트는 인메모리 DB(`testsupport/createTestDatabase`). SQLDelight 흐름은 `Dispatchers.Default` 에서 오므로
   `advanceUntilIdle` 대신 `uiState.first { 조건 }` 으로 기다린다
@@ -108,7 +118,7 @@ maestro --device <기기> test .maestro/flows        # 실화면 흐름 (앱을 
 - 흐름: 로그인·시장·고객에게 보여 주기 / 앱 잠금·데이터 삭제 / 고객·상담·신규 등록 / 방문 일정 / 투자성향 진단·서명 / 상품 가입 / 계좌 개설
 - **Maestro 주의**
   - 키보드 내리기는 `pressKey: Enter` 로 한다(`common/dismiss_keyboard.yaml`). Android `hideKeyboard` 는 뒤로 가기라 키보드가 없으면 앱이 닫힌다
-  - 에뮬레이터 키보드가 한글 자판이면 영문 입력이 한글로 바뀐다 — `adb shell input keyevent 204` 로 영문으로 바꿔 둔다
+  - 에뮬레이터 키보드가 한글 자판이면 영문 입력이 한글로 바뀐다 — `run.sh` 가 흐름 전에 영문(ASCII) 자판이 될 때까지 언어 전환 키(204)를 누른다
   - iOS 에는 시스템 뒤로 가기가 없어 상단 뒤로(`top_back`)를 누른다. 폰에서 상세가 닫히는 애니메이션 중에는 탭이 먹지 않으니 `waitForAnimationToEnd`
   - 서명은 `common/sign.yaml` 이 서명 칸에서 두 번 swipe 한다
   - 신분증은 시연용 신분증 버튼으로 넘긴다(로컬 모드에서만 보인다). 실제 카메라는 손으로 확인한다
