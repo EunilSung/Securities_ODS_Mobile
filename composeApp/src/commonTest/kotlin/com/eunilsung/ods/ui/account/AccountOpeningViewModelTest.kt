@@ -22,14 +22,9 @@ import com.eunilsung.ods.domain.usecase.OpenAccountUseCase
 import com.eunilsung.ods.domain.usecase.StartConsultUseCase
 import com.eunilsung.ods.domain.usecase.VerifyIdCardUseCase
 import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -38,15 +33,22 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountOpeningViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
-    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper())
+    private val customers = LocalCustomerRepositoryImpl(database, CustomerMapper(testLocalSecret()))
     private val signatures = LocalSignatureRepositoryImpl(database)
     private val session = LocalConsultSessionRepositoryImpl()
-    private val login = LocalLoginRepositoryImpl(MapSettings(), simulatedRoundTripMillis = 0)
+    private val login = MapSettings().let { LocalLoginRepositoryImpl(it, testSecureSettings(it), simulatedRoundTripMillis = 0) }
     private val signature = Signature(listOf(List(20) { SignaturePoint(0.1f + it * 0.03f, 0.5f) }))
 
     private fun viewModel() = AccountOpeningViewModel(

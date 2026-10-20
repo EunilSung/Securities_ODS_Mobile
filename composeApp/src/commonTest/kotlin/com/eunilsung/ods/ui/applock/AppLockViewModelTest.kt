@@ -17,7 +17,15 @@ import com.eunilsung.ods.domain.usecase.SetAppBiometricEnabledUseCase
 import com.eunilsung.ods.domain.usecase.UnlockWithBiometricUseCase
 import com.eunilsung.ods.domain.usecase.UnlockWithPinUseCase
 import com.eunilsung.ods.domain.util.AppLockPolicy
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -26,13 +34,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppLockViewModelTest {
@@ -44,9 +45,9 @@ class AppLockViewModelTest {
     }
 
     private val settings = MapSettings()
-    private val appLock = LocalAppLockRepositoryImpl(settings)
+    private val appLock = LocalAppLockRepositoryImpl(settings, testSecureSettings(settings))
     private val consultSession = LocalConsultSessionRepositoryImpl()
-    private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
+    private val login = LocalLoginRepositoryImpl(settings, testSecureSettings(settings), simulatedRoundTripMillis = 0)
     private val prompt = BiometricPromptText("t", "s", "n")
     private val wiper = object : LocalDataWiper {
         override suspend fun wipe() = Unit

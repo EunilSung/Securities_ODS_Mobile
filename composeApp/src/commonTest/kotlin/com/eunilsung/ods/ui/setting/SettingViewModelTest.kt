@@ -10,20 +10,28 @@ import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.BiometricAuthenticator
 import com.eunilsung.ods.domain.usecase.AuthenticateBiometricUseCase
+import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
 import com.eunilsung.ods.domain.usecase.IsBiometricAvailableUseCase
 import com.eunilsung.ods.domain.usecase.LockAppUseCase
-import com.eunilsung.ods.domain.usecase.ObserveAppLockUseCase
-import com.eunilsung.ods.domain.usecase.SetAppBiometricEnabledUseCase
-import com.eunilsung.ods.ui.applock.BiometricPromptText
-import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
 import com.eunilsung.ods.domain.usecase.LogoutUseCase
+import com.eunilsung.ods.domain.usecase.ObserveAppLockUseCase
 import com.eunilsung.ods.domain.usecase.ObserveListDensityUseCase
 import com.eunilsung.ods.domain.usecase.ObserveMaskPersonalInfoUseCase
 import com.eunilsung.ods.domain.usecase.ObserveStaffUseCase
+import com.eunilsung.ods.domain.usecase.SetAppBiometricEnabledUseCase
 import com.eunilsung.ods.domain.usecase.SetListDensityUseCase
 import com.eunilsung.ods.domain.usecase.SetMaskPersonalInfoUseCase
 import com.eunilsung.ods.domain.usecase.SettingUseCases
+import com.eunilsung.ods.testsupport.testSecureSettings
+import com.eunilsung.ods.ui.applock.BiometricPromptText
 import com.russhwolf.settings.MapSettings
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -33,13 +41,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingViewModelTest {
@@ -57,8 +58,8 @@ class SettingViewModelTest {
 
     private val preferences = LocalUserPreferenceRepositoryImpl(MapSettings())
     private val consultSession = LocalConsultSessionRepositoryImpl()
-    private val login = LocalLoginRepositoryImpl(MapSettings(), simulatedRoundTripMillis = 0)
-    private val appLock = LocalAppLockRepositoryImpl(MapSettings())
+    private val login = MapSettings().let { LocalLoginRepositoryImpl(it, testSecureSettings(it), simulatedRoundTripMillis = 0) }
+    private val appLock = MapSettings().let { LocalAppLockRepositoryImpl(it, testSecureSettings(it)) }
     private val prompt = BiometricPromptText("t", "s", "n")
 
     private fun viewModel(biometric: BiometricAuthenticator = FakeBiometric(true)) = SettingViewModel(

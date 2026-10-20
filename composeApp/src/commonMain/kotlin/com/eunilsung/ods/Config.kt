@@ -17,9 +17,13 @@ object Config {
         val IS_ENABLED: Boolean = BASE_URL.isNotBlank()
     }
 
-    /** 로컬 데이터베이스(SQLDelight). [NAME] 을 바꾸면 새 DB 로 시작한다. */
+    /**
+     * 로컬 데이터베이스(SQLDelight). [NAME] 을 바꾸면 새 DB 로 시작한다.
+     * v2 부터 개인정보 칸을 잠근다. 평문으로 저장했던 예전 DB([LEGACY_NAMES])는 앱이 DB 를 열 때 지운다 — 시연용 데이터라 옮기지 않는다.
+     */
     object Database {
-        const val NAME: String = "OdsDatabase_v1.db"
+        const val NAME: String = "OdsDatabase_v2.db"
+        val LEGACY_NAMES: List<String> = listOf("OdsDatabase_v1.db")
     }
 
     /** 화면 구성. 이 폭 이상이면 좌우 2-pane(태블릿·폴더블)으로 그린다. */

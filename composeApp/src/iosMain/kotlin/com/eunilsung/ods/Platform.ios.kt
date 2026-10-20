@@ -1,6 +1,9 @@
 package com.eunilsung.ods
 
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
+import com.eunilsung.ods.data.local.IosKeychainKeyStore
+import com.eunilsung.ods.data.local.IosLocalSecretCipher
+import com.eunilsung.ods.data.local.LocalSecretCipher
 import com.eunilsung.ods.data.local.IosAppVersionProvider
 import com.eunilsung.ods.data.local.IosBiometricAuthenticator
 import com.eunilsung.ods.domain.repository.AppVersionProvider
@@ -20,6 +23,7 @@ class IOSPlatform : Platform {
 val platformModule = module {
     single<Platform> { IOSPlatform() }
     single { DatabaseDriverFactory() }
+    single<LocalSecretCipher> { IosLocalSecretCipher(IosKeychainKeyStore) }
     single { HttpClient(Darwin) { install(WebSockets) } }
     single<BiometricAuthenticator> { IosBiometricAuthenticator() }
     single<AppVersionProvider> { IosAppVersionProvider() }

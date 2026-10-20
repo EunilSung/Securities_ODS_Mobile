@@ -118,7 +118,12 @@ Kotlin Multiplatform 으로 Android·iOS 를 한 코드로 만들었고, 폰·�
 
 - 사번 로그인(5회 오류 시 5분 잠금, 비밀번호 저장 안 함) 뒤 직원별 **6자리 앱 잠금 비밀번호**(+생체 인증)
 - **5분 무조작** 또는 **백그라운드에 1분 넘게** 있다 돌아오면 잠금. 잠겨도 보던 화면은 그대로 두고 풀면 이어 갑니다
-- 잠금 비밀번호를 **5번 틀리면 기기 안 업무 데이터와 잠금 비밀번호를 모두 지우고 로그아웃**합니다(시간으로 풀리지 않게 해 주운 사람이 계속 시도할 수 없게)
+- 잠금 비밀번호를 **5번 틀리면 기기 안 업무 데이터와 잠금 비밀번호를 모두 지우고 로그아웃**합니다(시간으로 풀리지 않게 해 주운 사람이 계속 시도할 수 없게).
+  데이터를 잠근 키도 함께 버려, DB 파일에 지운 행의 조각이 남아도 풀 수 없습니다
+- **기기 DB 의 개인정보 칸을 잠가 저장**합니다 — 고객 이름·생년월일·전화번호·주소, 상담 내용, 방문 장소·메모, 계좌번호.
+  앱 잠금 비밀번호의 salt·해시와 기억한 사번도 잠가 둡니다(설정 파일만 빼내서는 6자리를 대입해 볼 수 없게).
+  Android 는 Keystore 키로 감싼 데이터 키로 AES-256-GCM, iOS 는 Keychain(`ThisDeviceOnly`) 키로 AES-256-CBC + HMAC-SHA256 입니다.
+  키는 백업·기기 이전에 따라가지 않고 DB 도 백업에서 빠집니다. 키와 DB 의 짝이 맞지 않으면 풀 수 없는 업무 데이터를 지우고 새로 시작합니다
 - 앱 전환기 화면 가리기(Android·iOS), 배포용 Android 빌드의 화면 캡처 차단
 
 ---
@@ -142,7 +147,7 @@ Kotlin Multiplatform 으로 Android·iOS 를 한 코드로 만들었고, 폰·�
 | 영역 | 사용 |
 |---|---|
 | UI | Compose Multiplatform, Voyager(오른쪽 스택 하나를 폰·태블릿 레이아웃이 함께 씀) |
-| DI · 저장 | Koin, SQLDelight(기기 DB), multiplatform-settings, krypto(SHA-256) |
+| DI · 저장 | Koin, SQLDelight(기기 DB, 개인정보 칸 암호화), multiplatform-settings, krypto(SHA-256) · Keystore · Keychain/CommonCrypto |
 | 플랫폼 기능 | 생체 인증(BiometricPrompt · LAContext), 카메라(FileProvider · UIImagePickerController), 앱 전환기 가리기 |
 
 ```

@@ -29,6 +29,8 @@ import kotlin.time.Clock
 /**
  * 서버 없이 도는 고객 저장소 — 고객이 하나도 없을 때 시연용 고객·계좌·상담 이력을 기기 DB 에 넣는다.
  *
+ * 이름·계좌번호는 잠겨 저장되므로([CustomerMapper]) 이름 순 정렬과 계좌번호 순번 세기는 SQL 이 아니라 푼 뒤에 한다.
+ *
  * 업무 데이터를 지운 뒤(단말 분실 대비) 다시 로그인하면 시연용 데이터가 처음 상태로 돌아온다.
  * 서버 모드 구현이 생기면 이 클래스를 `by local` 로 위임받아 서버에서 받은 담당 고객만 기기 DB 에 반영한다.
  */
@@ -43,7 +45,7 @@ class LocalCustomerRepositoryImpl(
     override val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     override fun observeCustomers(): Flow<List<Customer>> =
-        queries.selectCustomers().asFlow().mapToList(Dispatchers.Default).map { rows -> rows.map(mapper::toModel) }
+        queries.selectCustomers().asFlow().mapToList(Dispatchers.Default).map { rows -> rows.map(mapper::toModel).sortedBy { it.name } }
 
     override fun observeCustomer(id: String): Flow<Customer?> =
         queries.selectCustomer(id).asFlow().mapToOneOrNull(Dispatchers.Default).map { it?.let(mapper::toModel) }
@@ -96,9 +98,9 @@ class LocalCustomerRepositoryImpl(
      */
     override suspend fun openAccount(customerId: String, type: AccountType, nowMillis: Long): Account = withContext(Dispatchers.Default) {
         val customer = queries.selectCustomer(customerId).executeAsOne()
-        val middle = customer.phone.split("-").getOrNull(1)?.takeLast(4)?.padStart(4, '0') ?: "0000"
+        val middle = mapper.toModel(customer).phone.split("-").getOrNull(1)?.takeLast(4)?.padStart(4, '0') ?: "0000"
         val prefix = "$BRANCH_CODE-$middle-"
-        val sequence = queries.countAccountsWithPrefix(prefix).executeAsOne() + 1
+        val sequence = queries.selectAccountNos().executeAsList().count { mapper.accountNo(it).startsWith(prefix) } + 1
         val account = Account(
             accountNo = prefix + sequence.toString().padStart(2, '0'),
             customerId = customerId,

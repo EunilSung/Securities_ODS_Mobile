@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  앱 데이터를 기기 밖으로 내보내지 않는다 (Android 12+).
+  allowBackup="false" 는 클라우드 백업을 막지만 기기 간 이전(device-transfer)은 이 파일로 따로 막는다.
+  기기 DB 는 Keystore 키로 잠겨 있고 그 키는 따라가지 않으므로, 옮겨 가도 풀 수 없는 데이터만 남는다.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

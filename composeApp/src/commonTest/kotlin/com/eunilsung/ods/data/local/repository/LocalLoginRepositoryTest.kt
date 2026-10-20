@@ -4,19 +4,20 @@ import com.eunilsung.ods.data.local.seed.DemoAccounts
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import com.eunilsung.ods.domain.util.LoginPolicy
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class LocalLoginRepositoryTest {
     private val now = 1_760_000_000L
 
     private fun repository(settings: MapSettings = MapSettings()) =
-        LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
+        LocalLoginRepositoryImpl(settings, testSecureSettings(settings), simulatedRoundTripMillis = 0)
 
     @Test
     fun successSetsStaffAndRemembersIdOnly() = runTest {

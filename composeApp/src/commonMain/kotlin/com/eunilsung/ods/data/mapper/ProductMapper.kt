@@ -1,5 +1,6 @@
 package com.eunilsung.ods.data.mapper
 
+import com.eunilsung.ods.data.local.LocalSecret
 import com.eunilsung.ods.data.local.seed.ProductSeedRow
 import com.eunilsung.ods.db.ProductEntity
 import com.eunilsung.ods.db.SubscriptionEntity
@@ -8,8 +9,12 @@ import com.eunilsung.ods.domain.model.ProductRiskGrade
 import com.eunilsung.ods.domain.model.ProductType
 import com.eunilsung.ods.domain.model.Subscription
 
-/** 기기 DB 행·시연용 데이터를 상품 도메인 모델로 바꾼다. 모르는 위험등급은 가장 위험한 1등급으로 읽는다. */
-class ProductMapper {
+/**
+ * 기기 DB 행·시연용 데이터를 상품 도메인 모델로 바꾼다. 모르는 위험등급은 가장 위험한 1등급으로 읽는다.
+ *
+ * 가입 내역의 계좌번호는 [secret] 으로 잠가 저장한다. 상품 정보는 공개된 값이라 잠그지 않는다.
+ */
+class ProductMapper(private val secret: LocalSecret) {
     fun toModel(entity: ProductEntity): Product = Product(
         id = entity.id,
         name = entity.name,
@@ -53,7 +58,7 @@ class ProductMapper {
         customerId = customerId,
         productId = productId,
         productName = productName,
-        accountNo = accountNo,
+        accountNo = secret.decrypt(accountNo),
         amount = amount,
         subscribedAtMillis = subscribedAt,
         unsuitableConfirmed = unsuitableConfirmed != 0L,
@@ -64,7 +69,7 @@ class ProductMapper {
         id = subscription.id,
         customerId = subscription.customerId,
         productId = subscription.productId,
-        accountNo = subscription.accountNo,
+        accountNo = secret.encrypt(subscription.accountNo),
         amount = subscription.amount,
         subscribedAt = subscription.subscribedAtMillis,
         unsuitableConfirmed = if (subscription.unsuitableConfirmed) 1L else 0L,

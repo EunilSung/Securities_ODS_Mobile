@@ -5,9 +5,9 @@ import com.eunilsung.ods.data.local.repository.LocalLoginRepositoryImpl
 import com.eunilsung.ods.data.local.seed.DemoAccounts
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
+import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.LoginRepository
-import com.eunilsung.ods.domain.model.LogoutReason
 import com.eunilsung.ods.domain.usecase.ClearLogoutReasonUseCase
 import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
 import com.eunilsung.ods.domain.usecase.GetLogoutReasonUseCase
@@ -18,14 +18,8 @@ import com.eunilsung.ods.domain.usecase.LoginUseCases
 import com.eunilsung.ods.domain.usecase.ObserveStaffUseCase
 import com.eunilsung.ods.domain.usecase.SetSaveIdUseCase
 import com.eunilsung.ods.domain.util.LoginPolicy
+import com.eunilsung.ods.testsupport.testSecureSettings
 import com.russhwolf.settings.MapSettings
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -33,6 +27,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -48,9 +49,9 @@ class LoginViewModelTest {
     }
 
     private val settings = MapSettings()
-    private val login = LocalLoginRepositoryImpl(settings, simulatedRoundTripMillis = 0)
+    private val login = LocalLoginRepositoryImpl(settings, testSecureSettings(settings), simulatedRoundTripMillis = 0)
 
-    private val appLock = LocalAppLockRepositoryImpl(settings)
+    private val appLock = LocalAppLockRepositoryImpl(settings, testSecureSettings(settings))
 
     private fun viewModel(repository: LoginRepository = login) = LoginViewModel(
         LoginUseCases(

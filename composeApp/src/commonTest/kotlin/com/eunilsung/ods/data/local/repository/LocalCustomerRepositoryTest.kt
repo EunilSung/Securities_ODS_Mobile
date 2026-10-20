@@ -1,8 +1,10 @@
 package com.eunilsung.ods.data.local.repository
 
 import com.eunilsung.ods.data.local.LocalDataWiperImpl
+import com.eunilsung.ods.data.local.LocalKeyGuard
 import com.eunilsung.ods.data.local.seed.CustomerSeed
 import com.eunilsung.ods.data.mapper.CustomerMapper
+import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.CustomerGrade
@@ -10,16 +12,21 @@ import com.eunilsung.ods.domain.model.Gender
 import com.eunilsung.ods.domain.model.NewConsultation
 import com.eunilsung.ods.domain.model.NewCustomer
 import com.eunilsung.ods.testsupport.createTestDatabase
+import com.eunilsung.ods.testsupport.testLocalSecret
+import com.russhwolf.settings.MapSettings
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class LocalCustomerRepositoryTest {
     private val database = createTestDatabase()
-    private val repository = LocalCustomerRepositoryImpl(database, CustomerMapper())
+    private val secret = testLocalSecret()
+    private val repository = LocalCustomerRepositoryImpl(database, CustomerMapper(secret))
 
     @Test
     fun seedsOnlyWhenEmpty() = runTest {
@@ -57,10 +64,45 @@ class LocalCustomerRepositoryTest {
     }
 
     @Test
-    fun wipeRemovesBusinessData() = runTest {
+    fun personalColumnsAreSealedOnDisk() = runTest {
         repository.refresh()
-        LocalDataWiperImpl(database).wipe()
+        val row = database.appDatabaseQueries.selectCustomer("C001").executeAsOne()
+        val customer = repository.observeCustomer("C001").first()!!
+        listOf(row.name, row.birthDate, row.phone, row.address).forEach { stored ->
+            assertTrue(secret.isSealed(stored))
+            assertFalse(stored.contains(customer.name))
+        }
+        val consultation = database.appDatabaseQueries.selectConsultations("C001").executeAsList().first()
+        assertTrue(secret.isSealed(consultation.content))
+        assertTrue(secret.isSealed(database.appDatabaseQueries.selectAccountNos().executeAsList().first()))
+    }
+
+    @Test
+    fun customersAreSortedByNameAfterOpening() = runTest {
+        repository.refresh()
+        val names = repository.observeCustomers().first().map { it.name }
+        assertEquals(names.sorted(), names)
+    }
+
+    @Test
+    fun accountSequenceCountsSealedNumbers() = runTest {
+        val created = repository.register(
+            NewCustomer("이순신", LocalDate(1985, 4, 28), Gender.MALE, "010-9999-1234", "서울 종로구"),
+            nowMillis = 1_000,
+        )
+        val first = repository.openAccount(created.id, AccountType.BROKERAGE, nowMillis = 2_000)
+        val second = repository.openAccount(created.id, AccountType.PENSION, nowMillis = 3_000)
+        assertEquals("7001-9999-01", first.accountNo)
+        assertEquals("7001-9999-02", second.accountNo)
+    }
+
+    @Test
+    fun wipeRemovesBusinessDataAndShredsKey() = runTest {
+        repository.refresh()
+        val storedName = database.appDatabaseQueries.selectCustomer("C001").executeAsOne().name
+        LocalDataWiperImpl(database, LocalKeyGuard(database, MapSettings(), secret)).wipe()
         assertEquals(0, repository.observeCustomers().first().size)
         assertEquals(0, repository.observeConsultations("C001").first().size)
+        assertNull(secret.decryptOrNull(storedName))
     }
 }
