@@ -162,6 +162,10 @@
     <string name="consult_pane_recent">최근 상담</string>
     <string name="week_previous">이전 주</string>
     <string name="week_next">다음 주</string>
+    <string name="calendar_mode_week">주</string>
+    <string name="calendar_mode_month">월</string>
+    <string name="month_previous">이전 달</string>
+    <string name="month_next">다음 달</string>
     <string name="year_month">%1$s년 %2$s월</string>
     <string name="weekday_mon">월</string>
     <string name="weekday_tue">화</string>

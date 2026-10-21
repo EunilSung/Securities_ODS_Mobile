@@ -55,8 +55,8 @@ import com.eunilsung.ods.domain.usecase.CompleteVisitUseCase
 import com.eunilsung.ods.domain.usecase.NewVisitUseCases
 import com.eunilsung.ods.domain.usecase.ObserveDayVisitsUseCase
 import com.eunilsung.ods.domain.usecase.ObserveUpcomingVisitsUseCase
+import com.eunilsung.ods.domain.usecase.ObserveVisitCountsUseCase
 import com.eunilsung.ods.domain.usecase.ObserveVisitUseCase
-import com.eunilsung.ods.domain.usecase.ObserveWeekVisitCountsUseCase
 import com.eunilsung.ods.domain.usecase.RefreshVisitsUseCase
 import com.eunilsung.ods.domain.usecase.ScheduleUseCases
 import com.eunilsung.ods.domain.usecase.VisitDetailUseCases
@@ -127,6 +127,7 @@ import com.eunilsung.ods.domain.usecase.LoginUseCases
 import com.eunilsung.ods.domain.usecase.LogoutUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCandlesUseCase
 import com.eunilsung.ods.domain.usecase.ObserveListDensityUseCase
+import com.eunilsung.ods.domain.usecase.ObserveScheduleCalendarModeUseCase
 import com.eunilsung.ods.domain.usecase.ObserveMaskPersonalInfoUseCase
 import com.eunilsung.ods.domain.usecase.ObserveOrderBookUseCase
 import com.eunilsung.ods.domain.usecase.ObserveStaffUseCase
@@ -135,6 +136,7 @@ import com.eunilsung.ods.domain.usecase.ObserveWatchlistFetchingUseCase
 import com.eunilsung.ods.domain.usecase.ObserveWatchlistUseCase
 import com.eunilsung.ods.domain.usecase.QuoteUseCases
 import com.eunilsung.ods.domain.usecase.SetListDensityUseCase
+import com.eunilsung.ods.domain.usecase.SetScheduleCalendarModeUseCase
 import com.eunilsung.ods.domain.usecase.SetMaskPersonalInfoUseCase
 import com.eunilsung.ods.domain.usecase.SetSaveIdUseCase
 import com.eunilsung.ods.domain.usecase.SettingUseCases
@@ -177,6 +179,8 @@ val appModule = module {
     single<UserPreferenceRepository> { LocalUserPreferenceRepositoryImpl(get()) }
     singleOf(::ObserveListDensityUseCase)
     singleOf(::SetListDensityUseCase)
+    singleOf(::ObserveScheduleCalendarModeUseCase)
+    singleOf(::SetScheduleCalendarModeUseCase)
     singleOf(::ObserveMaskPersonalInfoUseCase)
     singleOf(::SetMaskPersonalInfoUseCase)
 
@@ -232,7 +236,7 @@ val appModule = module {
         if (Config.Server.IS_ENABLED) VisitRepositoryImpl(get(), get(), get(), get(), get(), get()) else get<LocalVisitRepositoryImpl>()
     }
     singleOf(::ObserveDayVisitsUseCase)
-    singleOf(::ObserveWeekVisitCountsUseCase)
+    singleOf(::ObserveVisitCountsUseCase)
     singleOf(::ObserveVisitUseCase)
     singleOf(::ObserveUpcomingVisitsUseCase)
     singleOf(::RefreshVisitsUseCase)

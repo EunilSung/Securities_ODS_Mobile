@@ -162,6 +162,10 @@
     <string name="consult_pane_recent">Recent consultations</string>
     <string name="week_previous">Previous week</string>
     <string name="week_next">Next week</string>
+    <string name="calendar_mode_week">Week</string>
+    <string name="calendar_mode_month">Month</string>
+    <string name="month_previous">Previous month</string>
+    <string name="month_next">Next month</string>
     <string name="year_month">%2$s/%1$s</string>
     <string name="weekday_mon">Mon</string>
     <string name="weekday_tue">Tue</string>

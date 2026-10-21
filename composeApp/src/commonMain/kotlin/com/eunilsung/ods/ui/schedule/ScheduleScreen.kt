@@ -32,7 +32,7 @@ import com.eunilsung.ods.ui.theme.AppTypography
 import com.eunilsung.ods.ui.theme.Dimens
 import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.button.OutlineButton
-import com.eunilsung.ods.ui.uikit.calendar.WeekStrip
+import com.eunilsung.ods.ui.uikit.calendar.ScheduleCalendar
 import com.eunilsung.ods.ui.uikit.calendar.shortLabel
 import com.eunilsung.ods.ui.uikit.click.clickable
 import com.eunilsung.ods.ui.uikit.line.LineDivider
@@ -49,7 +49,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-/** 일정 탭 — 한 주 달력과 고른 날의 방문. 방문을 누르면 오른쪽 스택에 상세를 연다. */
+/** 일정 탭 — 주·월 달력과 고른 날의 방문. 방문을 누르면 오른쪽 스택에 상세를 연다. */
 object ScheduleScreen : Screen {
     @Composable
     override fun Content() {
@@ -107,14 +107,16 @@ fun ScheduleContent(uiState: ScheduleUiState, selectedVisitId: String?, onAction
                 }
             },
         )
-        WeekStrip(
-            days = uiState.weekDays,
+        ScheduleCalendar(
+            mode = uiState.calendarMode,
             selected = uiState.selected,
             today = uiState.today,
             counts = uiState.counts,
             onSelect = { onAction(ScheduleActions.OnSelectDate(it)) },
-            onPreviousWeek = { onAction(ScheduleActions.OnPreviousWeek) },
-            onNextWeek = { onAction(ScheduleActions.OnNextWeek) },
+            onPrevious = { onAction(ScheduleActions.OnPrevious) },
+            onNext = { onAction(ScheduleActions.OnNext) },
+            onModeChange = { onAction(ScheduleActions.OnModeChange(it)) },
+            onTitleClick = { onAction(ScheduleActions.OnTitleClick) },
             tagPrefix = TestTags.SCHEDULE_PREFIX,
         )
         LineDivider()

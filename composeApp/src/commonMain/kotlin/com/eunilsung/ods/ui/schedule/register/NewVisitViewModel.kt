@@ -2,14 +2,16 @@ package com.eunilsung.ods.ui.schedule.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.NewVisit
 import com.eunilsung.ods.domain.usecase.AddVisitResult
 import com.eunilsung.ods.domain.usecase.NewVisitUseCases
 import com.eunilsung.ods.domain.util.atTimeMillis
+import com.eunilsung.ods.domain.util.calendarDays
 import com.eunilsung.ods.domain.util.matchesQuery
+import com.eunilsung.ods.domain.util.movedBy
 import com.eunilsung.ods.domain.util.todayInSeoul
-import com.eunilsung.ods.domain.util.weekDays
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,15 +21,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
 
 /**
  * 방문 일정 등록 — 고객, 날·시각(30분 단위), 장소, 목적, 메모를 받는다.
  *
- * 고객은 이름·초성·전화번호로 찾아 고른다. 지난 시각은 받지 않는다.
+ * 고객은 이름·초성·전화번호로 찾아 고른다. 지난 날은 달력에서 고를 수 없고, 지난 시각은 저장할 때 한 번 더 막는다.
  */
 class NewVisitViewModel(
     private val useCases: NewVisitUseCases,
@@ -51,9 +50,11 @@ class NewVisitViewModel(
                 state.copy(customer = customers.firstOrNull { it.id == action.customerId }, customerQuery = "", customerMatches = emptyList())
             }
             NewVisitActions.OnCustomerClear -> _uiState.update { it.copy(customer = null, customerMatches = match("")) }
-            is NewVisitActions.OnDateSelect -> setDate(action.date)
-            NewVisitActions.OnPreviousWeek -> setDate(_uiState.value.date.minus(DatePeriod(days = 7)))
-            NewVisitActions.OnNextWeek -> setDate(_uiState.value.date.plus(DatePeriod(days = 7)))
+            is NewVisitActions.OnDateSelect -> if (_uiState.value.isSelectable(action.date)) setDate(action.date)
+            NewVisitActions.OnPrevious -> _uiState.value.let { setDate(maxOf(it.date.movedBy(it.calendarMode, -1), it.today)) }
+            NewVisitActions.OnNext -> _uiState.value.let { setDate(it.date.movedBy(it.calendarMode, 1)) }
+            is NewVisitActions.OnModeChange -> setMode(action.mode)
+            NewVisitActions.OnTitleClick -> setMode(if (_uiState.value.calendarMode == CalendarMode.WEEK) CalendarMode.MONTH else CalendarMode.WEEK)
             is NewVisitActions.OnTimeSelect -> _uiState.update { it.copy(time = action.hour to action.minute, inPast = false) }
             is NewVisitActions.OnPlaceChange -> _uiState.update { it.copy(place = action.place.take(MAX_TEXT)) }
             is NewVisitActions.OnPurposeChange -> _uiState.update { it.copy(purpose = action.purpose) }
@@ -63,8 +64,8 @@ class NewVisitViewModel(
     }
 
     private fun enter(date: LocalDate?, customerId: String?) {
-        val start = date ?: todayInSeoul()
-        _uiState.value = NewVisitUiState(date = start, weekDays = start.weekDays())
+        val today = todayInSeoul()
+        _uiState.value = NewVisitUiState(today = today, date = maxOf(date ?: today, today))
         viewModelScope.launch {
             customers = useCases.observeCustomers().first()
             _uiState.update { state ->
@@ -74,7 +75,9 @@ class NewVisitViewModel(
         }
     }
 
-    private fun setDate(date: LocalDate) = _uiState.update { it.copy(date = date, weekDays = date.weekDays(), inPast = false) }
+    private fun setDate(date: LocalDate) = _uiState.update { it.copy(date = date, days = date.calendarDays(it.calendarMode), inPast = false) }
+
+    private fun setMode(mode: CalendarMode) = _uiState.update { it.copy(calendarMode = mode, days = it.date.calendarDays(mode)) }
 
     private fun match(query: String): List<Customer> = customers.filter { it.matchesQuery(query) }.take(MAX_MATCHES)
 

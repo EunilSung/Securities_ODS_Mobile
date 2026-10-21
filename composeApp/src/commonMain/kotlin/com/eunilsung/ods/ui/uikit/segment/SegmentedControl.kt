@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -25,6 +26,7 @@ import com.eunilsung.ods.ui.uikit.click.clickable
  * 몇 개 중 하나를 고르는 버튼 묶음 — 차트 기간, 목록 밀도.
  *
  * @param label 항목마다 보일 이름.
+ * @param optionTestTag 항목마다 붙일 화면 자동화 이름. null 이면 붙이지 않는다.
  */
 @Composable
 fun <T> SegmentedControl(
@@ -33,6 +35,7 @@ fun <T> SegmentedControl(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    optionTestTag: (T) -> String? = { null },
 ) {
     val shape = RoundedCornerShape(6.dp)
     Row(
@@ -44,6 +47,7 @@ fun <T> SegmentedControl(
             val isSelected = option == selected
             Box(
                 modifier = Modifier
+                    .then(optionTestTag(option)?.let { Modifier.testTag(it) } ?: Modifier)
                     .background(if (isSelected) AppColors.PrimaryMain else AppColors.Transparent)
                     .clickable(onClick = { onSelect(option) })
                     .semantics {

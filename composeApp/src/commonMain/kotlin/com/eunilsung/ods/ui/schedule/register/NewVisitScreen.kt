@@ -43,7 +43,7 @@ import com.eunilsung.ods.ui.theme.Dimens
 import com.eunilsung.ods.ui.uikit.TestTags
 import com.eunilsung.ods.ui.uikit.button.OutlineButton
 import com.eunilsung.ods.ui.uikit.button.PrimaryButton
-import com.eunilsung.ods.ui.uikit.calendar.WeekStrip
+import com.eunilsung.ods.ui.uikit.calendar.ScheduleCalendar
 import com.eunilsung.ods.ui.uikit.click.clickable
 import com.eunilsung.ods.ui.uikit.line.LineDivider
 import com.eunilsung.ods.ui.uikit.segment.SegmentedControl
@@ -118,15 +118,18 @@ fun NewVisitContent(uiState: NewVisitUiState, onAction: (NewVisitActions) -> Uni
             if (uiState.showErrors && uiState.customerError) ErrorText(stringResource(Res.string.new_visit_customer_error))
 
             Label(stringResource(Res.string.new_visit_date))
-            WeekStrip(
-                days = uiState.weekDays,
+            ScheduleCalendar(
+                mode = uiState.calendarMode,
                 selected = uiState.date,
                 today = uiState.today,
                 counts = emptyMap(),
                 onSelect = { onAction(NewVisitActions.OnDateSelect(it)) },
-                onPreviousWeek = { onAction(NewVisitActions.OnPreviousWeek) },
-                onNextWeek = { onAction(NewVisitActions.OnNextWeek) },
+                onPrevious = { onAction(NewVisitActions.OnPrevious) },
+                onNext = { onAction(NewVisitActions.OnNext) },
+                onModeChange = { onAction(NewVisitActions.OnModeChange(it)) },
+                onTitleClick = { onAction(NewVisitActions.OnTitleClick) },
                 tagPrefix = TestTags.NEW_VISIT_PREFIX,
+                isSelectable = uiState::isSelectable,
             )
 
             Label(stringResource(Res.string.visit_time))

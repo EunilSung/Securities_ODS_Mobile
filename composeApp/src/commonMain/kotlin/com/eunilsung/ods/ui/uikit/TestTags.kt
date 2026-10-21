@@ -40,12 +40,19 @@ object TestTags {
     const val CONSULT_ITEM = "consult_item"
     const val CONSULT_PANE = "consult_pane"
 
-    /** 주간 달력은 화면마다 접두어가 붙는다(`schedule_week_next`·`new_visit_week_next`). 날짜 칸은 `<접두어>day_cell_<일>`. */
+    /**
+     * 일정 달력은 화면마다 접두어가 붙는다(`schedule_week_next`·`new_visit_week_next`). 날짜 칸은 `<접두어>day_cell_<일>`,
+     * 달 보기에서 앞뒤 달의 흐린 칸은 `<접두어>day_cell_outside_<일>`. 이전·다음 버튼은 달 보기에서도 같은 이름이다.
+     */
     const val SCHEDULE_PREFIX = "schedule_"
     const val NEW_VISIT_PREFIX = "new_visit_"
     const val WEEK_PREVIOUS = "week_previous"
     const val WEEK_NEXT = "week_next"
     const val DAY_CELL_PREFIX = "day_cell_"
+    const val DAY_CELL_OUTSIDE_PREFIX = "day_cell_outside_"
+    const val CALENDAR_TITLE = "calendar_title"
+    const val CALENDAR_MODE_WEEK = "calendar_mode_week"
+    const val CALENDAR_MODE_MONTH = "calendar_mode_month"
     const val SCHEDULE_ADD = "schedule_add"
     const val VISIT_ITEM = "visit_item"
     const val VISIT_COMPLETE = "visit_complete"

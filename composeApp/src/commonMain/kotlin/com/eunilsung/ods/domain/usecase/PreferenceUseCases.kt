@@ -1,5 +1,6 @@
 package com.eunilsung.ods.domain.usecase
 
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.ListDensity
 import com.eunilsung.ods.domain.repository.UserPreferenceRepository
 
@@ -17,4 +18,12 @@ class ObserveMaskPersonalInfoUseCase(private val repository: UserPreferenceRepos
 
 class SetMaskPersonalInfoUseCase(private val repository: UserPreferenceRepository) {
     operator fun invoke(mask: Boolean) = repository.setMaskPersonalInfo(mask)
+}
+
+class ObserveScheduleCalendarModeUseCase(private val repository: UserPreferenceRepository) {
+    operator fun invoke() = repository.scheduleCalendarMode
+}
+
+class SetScheduleCalendarModeUseCase(private val repository: UserPreferenceRepository) {
+    operator fun invoke(mode: CalendarMode) = repository.setScheduleCalendarMode(mode)
 }
