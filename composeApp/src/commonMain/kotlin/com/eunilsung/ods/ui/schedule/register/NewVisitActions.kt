@@ -1,5 +1,6 @@
 package com.eunilsung.ods.ui.schedule.register
 
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.VisitPurpose
 import kotlinx.datetime.LocalDate
 
@@ -18,9 +19,21 @@ sealed interface NewVisitActions {
     /** 고른 고객을 풀고 다시 찾는다. */
     data object OnCustomerClear : NewVisitActions
 
+    /** 날을 골랐다. 오늘보다 앞선 날은 받지 않는다. */
     data class OnDateSelect(val date: LocalDate) : NewVisitActions
-    data object OnPreviousWeek : NewVisitActions
-    data object OnNextWeek : NewVisitActions
+
+    /** 이전 주 또는 이전 달. 오늘보다 앞서면 오늘로 간다. */
+    data object OnPrevious : NewVisitActions
+
+    /** 다음 주 또는 다음 달. */
+    data object OnNext : NewVisitActions
+
+    /** 주·월 보기를 골랐다. 이 화면에서만 쓰고 남기지 않는다. */
+    data class OnModeChange(val mode: CalendarMode) : NewVisitActions
+
+    /** 연월을 눌렀다. 주·월 보기를 맞바꾼다. */
+    data object OnTitleClick : NewVisitActions
+
     data class OnTimeSelect(val hour: Int, val minute: Int) : NewVisitActions
     data class OnPlaceChange(val place: String) : NewVisitActions
     data class OnPurposeChange(val purpose: VisitPurpose) : NewVisitActions

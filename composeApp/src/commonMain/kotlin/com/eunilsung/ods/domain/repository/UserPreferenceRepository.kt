@@ -1,5 +1,6 @@
 package com.eunilsung.ods.domain.repository
 
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.ListDensity
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,4 +17,9 @@ interface UserPreferenceRepository {
     val maskPersonalInfo: StateFlow<Boolean>
 
     fun setMaskPersonalInfo(mask: Boolean)
+
+    /** 일정 탭 달력을 주로 볼지 달로 볼지. 마지막에 고른 것을 다음 실행에도 그대로 둔다. */
+    val scheduleCalendarMode: StateFlow<CalendarMode>
+
+    fun setScheduleCalendarMode(mode: CalendarMode)
 }

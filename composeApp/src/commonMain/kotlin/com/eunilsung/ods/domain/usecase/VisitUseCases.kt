@@ -7,7 +7,6 @@ import com.eunilsung.ods.domain.repository.ConsultSessionRepository
 import com.eunilsung.ods.domain.repository.VisitRepository
 import com.eunilsung.ods.domain.util.SeoulZone
 import com.eunilsung.ods.domain.util.dayRangeMillis
-import com.eunilsung.ods.domain.util.weekDays
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
@@ -22,13 +21,12 @@ class ObserveDayVisitsUseCase(private val repository: VisitRepository) {
     }
 }
 
-/** 한 주 날짜별 방문 건수(취소 제외). 주간 달력의 점에 쓴다. */
-class ObserveWeekVisitCountsUseCase(private val repository: VisitRepository) {
-    operator fun invoke(anyDayInWeek: LocalDate): Flow<Map<LocalDate, Int>> {
-        val days = anyDayInWeek.weekDays()
-        val from = days.first().dayRangeMillis().first
-        val until = days.last().dayRangeMillis().last + 1
-        return repository.observeVisits(from, until).map { visits ->
+/** [from]부터 [untilInclusive]까지 날짜별 방문 건수(취소 제외). 달력의 점에 쓴다. */
+class ObserveVisitCountsUseCase(private val repository: VisitRepository) {
+    operator fun invoke(from: LocalDate, untilInclusive: LocalDate): Flow<Map<LocalDate, Int>> {
+        val start = from.dayRangeMillis().first
+        val end = untilInclusive.dayRangeMillis().last + 1
+        return repository.observeVisits(start, end).map { visits ->
             visits.filter { it.status != VisitStatus.CANCELED }
                 .groupingBy { Instant.fromEpochMilliseconds(it.scheduledAtMillis).toLocalDateTime(SeoulZone).date }
                 .eachCount()
@@ -94,8 +92,10 @@ class CancelVisitUseCase(private val repository: VisitRepository) {
 /** 일정 화면이 쓰는 유스케이스 묶음. */
 class ScheduleUseCases(
     val observeDayVisits: ObserveDayVisitsUseCase,
-    val observeWeekVisitCounts: ObserveWeekVisitCountsUseCase,
+    val observeVisitCounts: ObserveVisitCountsUseCase,
     val refresh: RefreshVisitsUseCase,
+    val observeCalendarMode: ObserveScheduleCalendarModeUseCase,
+    val setCalendarMode: SetScheduleCalendarModeUseCase,
 )
 
 /** 방문 상세가 쓰는 유스케이스 묶음. */

@@ -1,5 +1,6 @@
 package com.eunilsung.ods.data.local.repository
 
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.ListDensity
 import com.eunilsung.ods.domain.repository.UserPreferenceRepository
 import com.russhwolf.settings.Settings
@@ -32,8 +33,21 @@ class LocalUserPreferenceRepositoryImpl(
         _maskPersonalInfo.value = mask
     }
 
+    private val _scheduleCalendarMode = MutableStateFlow(
+        settings.getStringOrNull(KEY_SCHEDULE_CALENDAR_MODE)
+            ?.let { saved -> CalendarMode.entries.firstOrNull { it.name == saved } }
+            ?: CalendarMode.WEEK
+    )
+    override val scheduleCalendarMode: StateFlow<CalendarMode> = _scheduleCalendarMode.asStateFlow()
+
+    override fun setScheduleCalendarMode(mode: CalendarMode) {
+        settings.putString(KEY_SCHEDULE_CALENDAR_MODE, mode.name)
+        _scheduleCalendarMode.value = mode
+    }
+
     private companion object {
         const val KEY_LIST_DENSITY = "pref.listDensity"
         const val KEY_MASK_PERSONAL_INFO = "pref.maskPersonalInfo"
+        const val KEY_SCHEDULE_CALENDAR_MODE = "pref.scheduleCalendarMode"
     }
 }

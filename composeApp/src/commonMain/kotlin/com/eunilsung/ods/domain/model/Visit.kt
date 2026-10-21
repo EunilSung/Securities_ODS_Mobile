@@ -27,6 +27,9 @@ enum class VisitPurpose(val topic: ConsultTopic) {
 
 enum class VisitStatus { SCHEDULED, COMPLETED, CANCELED }
 
+/** 일정 달력을 한 주로 볼지, 한 달로 볼지. */
+enum class CalendarMode { WEEK, MONTH }
+
 /** 새 방문 일정. */
 data class NewVisit(
     val customerId: String,

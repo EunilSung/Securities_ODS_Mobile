@@ -14,7 +14,7 @@ Kotlin Multiplatform 과 Compose Multiplatform 으로 Android · iOS 를 한 코
 | 아키텍처 | Clean Architecture(ui · domain · data) + MVI |
 | 데이터 | **서버 모드**(Ktor 서버 · PostgreSQL, 시세는 WebSocket) 와 서버 없이 시연용 데이터로 도는 **로컬 모드**를 빌드 설정 하나로 고름 |
 | 보안 | 직원별 앱 잠금, 5회 오류 시 업무 데이터 삭제, 개인정보 칸 암호화(Keystore · Keychain) |
-| 검증 | 서버 테스트 45 + 단위 · ViewModel 시나리오 · 실 서버 기능 테스트(JVM 151 · iOS 147) + Maestro 실화면 흐름 7개 × Android · iOS, 명령 하나로 실행 |
+| 검증 | 서버 테스트 45 + 단위 · ViewModel 시나리오 · 실 서버 기능 테스트(JVM 156 · iOS 152) + Maestro 실화면 흐름 7개 × Android · iOS, 명령 하나로 실행 |
 
 <p align="center">
   <img src="docs/screenshots/tablet-customer.jpg" width="560" alt="태블릿 3칸 — 고객 목록 · 고객 상세 · 상담 기록">
@@ -205,7 +205,7 @@ DEPLOY_HOST=ubuntu@168.110.2.222 deploy/deploy.sh   # 배포하는 PC 에서 서
 **밖에서 만나는 고객 상담, 태블릿 하나로 끝까지.**
 방문 일정부터 상담 기록, 투자성향 진단, 상품 가입, 계좌 개설까지 — 지점에 돌아가지 않고 고객 앞에서 마칩니다.
 
-- **오늘의 방문** — 주간 달력과 고른 날의 방문, 방문을 마치면 바로 상담 기록
+- **오늘의 방문** — 주 · 월 달력(밀어서 넘기기)과 고른 날의 방문, 방문을 마치면 바로 상담 기록
 - **고객 상담** — 이름 · 초성 · 전화번호로 찾고, 상담 이력과 보유 계좌 · 가입 상품을 한 화면에
 - **투자성향 진단 · 전자서명** — 7문항 진단 후 고객 확인과 서명까지
 - **적합성 원칙에 맞춘 가입** — 성향보다 위험한 상품은 고객 확인 없이 진행하지 않음

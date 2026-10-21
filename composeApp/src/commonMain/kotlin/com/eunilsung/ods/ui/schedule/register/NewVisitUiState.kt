@@ -1,16 +1,20 @@
 package com.eunilsung.ods.ui.schedule.register
 
+import com.eunilsung.ods.domain.model.CalendarMode
 import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.VisitPurpose
+import com.eunilsung.ods.domain.util.calendarDays
 import com.eunilsung.ods.domain.util.todayInSeoul
-import com.eunilsung.ods.domain.util.weekDays
 import kotlinx.datetime.LocalDate
 
 /** 일정 등록 양식의 상태. */
 data class NewVisitUiState(
     val today: LocalDate = todayInSeoul(),
     val date: LocalDate = today,
-    val weekDays: List<LocalDate> = date.weekDays(),
+    /** 달력 보기. 늘 주 보기로 연다. */
+    val calendarMode: CalendarMode = CalendarMode.WEEK,
+    /** 달력에 보일 날 — 고른 날이 든 주(월~일) 또는 달(6주). */
+    val days: List<LocalDate> = date.calendarDays(calendarMode),
     /** 고른 고객. 없으면 찾기 칸과 목록을 보인다. */
     val customer: Customer? = null,
     val customerQuery: String = "",
@@ -32,4 +36,7 @@ data class NewVisitUiState(
     val timeError: Boolean get() = time == null
     val placeError: Boolean get() = place.isBlank()
     val hasError: Boolean get() = customerError || timeError || placeError
+
+    /** 고를 수 있는 날 — 오늘부터(한국 시간). 지난 날은 달력에서 흐리게 보이고 눌리지 않는다. */
+    fun isSelectable(day: LocalDate): Boolean = day >= today
 }
