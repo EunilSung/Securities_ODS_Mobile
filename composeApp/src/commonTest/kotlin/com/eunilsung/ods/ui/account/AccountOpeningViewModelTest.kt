@@ -79,7 +79,7 @@ class AccountOpeningViewModelTest {
         assertEquals("C005", session.activeCustomerId.value)
         vm.onAction(AccountOpeningActions.OnPhotoCaptured(byteArrayOf(1, 2, 3)))
         vm.onAction(AccountOpeningActions.OnNext)
-        vm.onAction(AccountOpeningActions.OnIdNameChange("정우성"))
+        vm.onAction(AccountOpeningActions.OnIdNameChange("정민재"))
         vm.onAction(AccountOpeningActions.OnRrnFrontChange("900510"))
         vm.onAction(AccountOpeningActions.OnRrnBackChange("2"))
         vm.onAction(AccountOpeningActions.OnVerify)
@@ -122,7 +122,7 @@ class AccountOpeningViewModelTest {
 
         val done = vm.uiState.first { it.step == OpeningStep.DONE }
         val account = assertNotNull(done.opened)
-        assertEquals("7001-7781-01", account.accountNo)
+        assertEquals("7001-0005-01", account.accountNo)
         assertEquals(listOf(account), customers.observeAccounts("C005").first())
         assertEquals(ConsultTopic.ACCOUNT_OPENING, customers.observeConsultations("C005").first().first().topic)
         assertEquals(SignaturePurpose.ACCOUNT_OPENING, signatures.observeRecords("C005").first().single().purpose)

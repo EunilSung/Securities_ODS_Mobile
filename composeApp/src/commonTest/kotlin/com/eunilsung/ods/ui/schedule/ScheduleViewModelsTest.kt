@@ -102,7 +102,7 @@ class ScheduleViewModelsTest {
         backgroundScope.launch { vm.uiState.collect {} }
         val state = vm.uiState.first { it.visits.isNotEmpty() }
         assertEquals(today, state.selected)
-        assertEquals(listOf("정우성", "김서윤", "오세훈"), state.visits.map { it.customerName })
+        assertEquals(listOf("정민재", "김서윤", "오상훈"), state.visits.map { it.customerName })
         assertEquals(3, state.counts[today])
 
         assertEquals(CalendarMode.WEEK, state.calendarMode)
@@ -265,8 +265,8 @@ class ScheduleViewModelsTest {
         vm.onAction(NewVisitActions.OnEnter(null, null))
         vm.uiState.first { it.customerMatches.isNotEmpty() }
         vm.onAction(NewVisitActions.OnCustomerQueryChange("ㅇㅅㅎ"))
-        assertEquals(listOf("오세훈", "윤소희"), vm.uiState.value.customerMatches.map { it.name })
+        assertEquals(listOf("오상훈", "윤소희"), vm.uiState.value.customerMatches.map { it.name })
         vm.onAction(NewVisitActions.OnCustomerSelect("C009"))
-        assertEquals("오세훈", vm.uiState.value.customer?.name)
+        assertEquals("오상훈", vm.uiState.value.customer?.name)
     }
 }
