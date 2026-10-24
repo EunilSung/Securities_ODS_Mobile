@@ -70,9 +70,20 @@ jobs:
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
+          value=$(printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]')
+          value="${value#ANDROID_KEYSTORE_BASE64=}"
+          echo "ANDROID_KEYSTORE_BASE64 길이 ${#value} · SHA-256 앞자리 $(printf '%s' "$value" | sha256sum | cut -c1-16)"
+          echo "ANDROID_KEYSTORE_PASSWORD 길이 ${#ODS_KEYSTORE_PASSWORD} · ANDROID_KEY_PASSWORD 길이 ${#ODS_KEY_PASSWORD} · ANDROID_KEY_ALIAS 길이 ${#ODS_KEY_ALIAS}"
           export ODS_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
           trap 'rm -f "$ODS_KEYSTORE_FILE"' EXIT
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$ODS_KEYSTORE_FILE"
+          if ! printf '%s' "$value" | base64 --decode > "$ODS_KEYSTORE_FILE"; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 가 올바른 base64 가 아니다 — 키 파일을 base64 한 줄로 다시 넣는다"
+            exit 1
+          fi
+          if ! keytool -list -keystore "$ODS_KEYSTORE_FILE" -storepass "$ODS_KEYSTORE_PASSWORD" -alias "$ODS_KEY_ALIAS" > /dev/null; then
+            echo "::error::키 파일이 열리지 않는다 — ANDROID_KEYSTORE_PASSWORD 나 ANDROID_KEY_ALIAS 가 키와 맞지 않는다"
+            exit 1
+          fi
           ./gradlew :composeApp:assembleRelease --no-configuration-cache \
             -PappVersionName="$VERSION_NAME" -PappVersionCode="$VERSION_CODE"
       - name: 이름 붙이기 · 서명 확인 · 체크섬
