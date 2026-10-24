@@ -100,12 +100,12 @@ class SubscriptionTest {
 
     @Test
     fun useCaseRechecksEverythingBeforeSubscribing() = runTest {
-        val base = NewSubscription("C001", "P002", "7001-2231-01", 1_000_000, unsuitableConfirmed = false)
+        val base = NewSubscription("C001", "P002", "7001-0001-01", 1_000_000, unsuitableConfirmed = false)
         assertEquals(SubscribeResult.NeedsAssessment, subscribe(base.copy(customerId = "C005"), signature, "n"))
         assertEquals(SubscribeResult.UnsuitableNotConfirmed, subscribe(base.copy(productId = "P007"), signature, "n"))
         assertEquals(SubscribeResult.InvalidAmount, subscribe(base.copy(amount = 50_000), signature, "n"))
         assertEquals(SubscribeResult.InvalidAmount, subscribe(base.copy(amount = 1_005_000), signature, "n"))
-        assertEquals(SubscribeResult.InvalidAccount, subscribe(base.copy(accountNo = "7001-3342-01"), signature, "n"))
+        assertEquals(SubscribeResult.InvalidAccount, subscribe(base.copy(accountNo = "7001-0002-01"), signature, "n"))
         assertEquals(SubscribeResult.SignatureRequired, subscribe(base, Signature(emptyList()), "n"))
         assertTrue(products.observeSubscriptions("C001").first().isEmpty())
 
@@ -118,7 +118,7 @@ class SubscriptionTest {
 
     @Test
     fun elderlyComplexProductGetsCoolingOffAndUnsuitableNeedsConfirmation() = runTest {
-        val request = NewSubscription("C009", "P007", "7001-2105-01", 1_000_000, unsuitableConfirmed = true)
+        val request = NewSubscription("C009", "P007", "7001-0009-01", 1_000_000, unsuitableConfirmed = true)
         val result = subscribe(request, signature, "n")
         assertIs<SubscribeResult.Subscribed>(result)
         assertEquals(result.subscription.subscribedAtMillis + 2 * 24 * 60 * 60 * 1000L, result.subscription.coolingOffUntilMillis)
@@ -153,7 +153,7 @@ class SubscriptionTest {
         repeat(3) { vm.onAction(SubscriptionActions.OnKeyPointToggle(it)) }
         vm.onAction(SubscriptionActions.OnNext)
         assertEquals(SubscriptionStep.DETAILS, vm.uiState.value.step)
-        assertEquals("7001-6620-01", vm.uiState.value.accountNo)
+        assertEquals("7001-0007-01", vm.uiState.value.accountNo)
         assertEquals(300_000, vm.uiState.value.amount)
         vm.onAction(SubscriptionActions.OnAmountStep(up = true))
         assertEquals(400_000, vm.uiState.value.amount)

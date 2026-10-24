@@ -12,7 +12,7 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Android — **데이터 키로 잠그고, 데이터 키는 Keystore 키로 잠근다**(EzQ 와 같은 봉투 방식).
+ * Android — **데이터 키로 잠그고, 데이터 키는 Keystore 키로 잠근다**(봉투 방식).
  *
  * 칸마다 Keystore 를 부르면 보안 칩 IPC 때문에 칸당 수 ms 가 든다. 그래서 AES-256 데이터 키 하나를 [kek] 로 잠가
  * [dekFile] 에 두고, 프로세스에서 한 번만 풀어 메모리에 둔다. 칸은 그 키로 소프트웨어 AES-GCM 을 돌린다.

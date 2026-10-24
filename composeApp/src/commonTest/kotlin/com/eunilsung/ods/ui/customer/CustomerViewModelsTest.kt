@@ -118,9 +118,9 @@ class CustomerViewModelsTest {
     fun listFiltersByQueryAndOpensDetail() = runTest(dispatcher) {
         val vm = listViewModel()
         backgroundScope.launch { vm.uiState.collect {} }
-        vm.onAction(CustomerListActions.OnQueryChange("ㄱㅎㄴ"))
-        val state = vm.uiState.first { it.query == "ㄱㅎㄴ" && it.totalCount > 0 }
-        assertEquals(listOf("강하늘"), state.customers.map { it.name })
+        vm.onAction(CustomerListActions.OnQueryChange("ㄱㅌㅈ"))
+        val state = vm.uiState.first { it.query == "ㄱㅌㅈ" && it.totalCount > 0 }
+        assertEquals(listOf("강태준"), state.customers.map { it.name })
         assertEquals(12, state.totalCount)
 
         vm.onAction(CustomerListActions.OnCustomerClick("C001"))

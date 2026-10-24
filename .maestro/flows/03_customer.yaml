@@ -13,7 +13,7 @@ name: 고객을 전화번호로 찾아 상담을 기록하고, 신규 고객을 
     index: 0
 - assertVisible:
     id: customer_detail_name
-    text: "강하늘"
+    text: "강태준"
 - scrollUntilVisible:
     element:
       id: consult_add

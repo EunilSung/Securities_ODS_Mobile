@@ -30,7 +30,7 @@ import kotlin.concurrent.Volatile
 import kotlin.io.encoding.Base64
 
 /**
- * iOS — AES-256-CBC 로 잠그고 HMAC-SHA256 으로 위·변조를 막는다(EzQ 와 같은 방식, 암호화한 뒤 서명).
+ * iOS — AES-256-CBC 로 잠그고 HMAC-SHA256 으로 위·변조를 막는다(암호화한 뒤 서명).
  *
  * Kotlin 에 열린 CommonCrypto 에는 GCM 이 없어 두 단계로 나눈다. 잠금과 서명에 서로 다른 키를 쓴다.
  * 저장 형식은 `[16바이트 IV][암호문][32바이트 서명]` 이다.

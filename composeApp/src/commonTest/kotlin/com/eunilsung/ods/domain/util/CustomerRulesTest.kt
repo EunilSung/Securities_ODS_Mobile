@@ -17,8 +17,8 @@ class CustomerRulesTest {
     private fun millisOf(date: LocalDate) = LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 12, 0).toInstant(SeoulZone).toEpochMilliseconds()
 
     private fun customer(
-        name: String = "강하늘",
-        phone: String = "010-2231-4587",
+        name: String = "강태준",
+        phone: String = "010-0001-4587",
         birth: LocalDate = LocalDate(1968, 3, 14),
         profile: RiskProfile? = RiskProfile.NEUTRAL,
         assessedOn: LocalDate? = LocalDate(2026, 1, 10),
@@ -31,15 +31,15 @@ class CustomerRulesTest {
     fun findsByNamePartInitialsAndPhoneDigits() {
         val c = customer()
         assertTrue(c.matchesQuery(""))
-        assertTrue(c.matchesQuery("하늘"))
-        assertTrue(c.matchesQuery("ㄱㅎㄴ"))
-        assertTrue(c.matchesQuery("ㅎㄴ"))
+        assertTrue(c.matchesQuery("태준"))
+        assertTrue(c.matchesQuery("ㄱㅌㅈ"))
+        assertTrue(c.matchesQuery("ㅌㅈ"))
         assertTrue(c.matchesQuery("4587"))
-        assertTrue(c.matchesQuery("2231-4587"))
+        assertTrue(c.matchesQuery("0001-4587"))
         assertFalse(c.matchesQuery("ㄱㅁ"))
         assertFalse(c.matchesQuery("9999"))
         assertFalse(c.matchesQuery("4"))
-        assertFalse(c.matchesQuery("하늘4587"))
+        assertFalse(c.matchesQuery("태준4587"))
     }
 
     @Test
@@ -59,7 +59,7 @@ class CustomerRulesTest {
 
     @Test
     fun masksPhoneAndAddress() {
-        assertEquals("010-****-4587", maskPhone("010-2231-4587"))
+        assertEquals("010-****-4587", maskPhone("010-0001-4587"))
         assertEquals("011-***-4587", maskPhone("011-223-4587"))
         assertEquals("서울 강남구 ***", maskAddress("서울 강남구 테헤란로 152"))
         assertEquals("서울 강남구", maskAddress("서울 강남구"))
