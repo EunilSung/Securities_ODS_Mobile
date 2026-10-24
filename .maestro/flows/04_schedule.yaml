@@ -1,14 +1,6 @@
 appId: com.eunilsung.ods
 name: 다음 주 방문 일정을 잡고, 방문을 마쳐 상담을 기록
 ---
-- runScript:
-    label: 서버 모드 — 시연용 일정은 서버 DB 를 채운 날 기준이라, 오늘 일정이 비어 있으면 하나 잡아 둔다
-    file: ../scripts/server.js
-    env:
-      ACTION: ensureTodayVisit
-- evalScript:
-    label: 서버 모드 — 지난 실행의 상담 기록이 서버에 남으므로 이번에 남길 문구에 시각을 붙인다
-    script: ${output.note = 'Explained overseas equity fund ' + Date.now()}
 - runFlow: ../common/login.yaml
 - assertVisible:
     id: visit_item
@@ -51,7 +43,7 @@ name: 다음 주 방문 일정을 잡고, 방문을 마쳐 상담을 기록
     id: visit_complete
 - tapOn:
     id: consult_content
-- inputText: ${output.note}
+- inputText: "Explained overseas equity fund"
 - runFlow: ../common/dismiss_keyboard.yaml
 - tapOn:
     id: consult_save
@@ -63,5 +55,5 @@ name: 다음 주 방문 일정을 잡고, 방문을 마쳐 상담을 기록
     text: "박준호"
 - scrollUntilVisible:
     element:
-      text: ${output.note}
+      text: "Explained overseas equity fund"
     direction: DOWN

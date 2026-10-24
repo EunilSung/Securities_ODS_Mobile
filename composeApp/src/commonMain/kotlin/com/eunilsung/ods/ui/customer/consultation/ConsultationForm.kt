@@ -31,7 +31,6 @@ import ods.composeapp.generated.resources.consult_save
 import ods.composeapp.generated.resources.consult_save_failed
 import ods.composeapp.generated.resources.consult_saved
 import ods.composeapp.generated.resources.consult_topic
-import ods.composeapp.generated.resources.error_server_unreachable
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -77,10 +76,7 @@ fun ConsultationForm(
             modifier = Modifier.fillMaxWidth().heightIn(min = minContentHeight).testTag(TestTags.CONSULT_CONTENT),
         )
         when {
-            uiState.saveError == ConsultSaveError.NOT_SIGNED_IN ->
-                Text(text = stringResource(Res.string.consult_save_failed), style = AppTypography.Body, color = AppColors.Caution)
-            uiState.saveError == ConsultSaveError.UNREACHABLE ->
-                Text(text = stringResource(Res.string.error_server_unreachable), style = AppTypography.Body, color = AppColors.Caution)
+            uiState.saveFailed -> Text(text = stringResource(Res.string.consult_save_failed), style = AppTypography.Body, color = AppColors.Caution)
             uiState.justSaved -> Text(text = stringResource(Res.string.consult_saved), style = AppTypography.Body, color = AppColors.PrimaryMain)
         }
         PrimaryButton(

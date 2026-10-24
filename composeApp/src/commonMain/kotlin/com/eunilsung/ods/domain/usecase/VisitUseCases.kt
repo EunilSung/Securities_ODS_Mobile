@@ -53,40 +53,27 @@ sealed interface AddVisitResult {
 
     /** 이미 지난 시각이다. */
     data object InPast : AddVisitResult
-
-    /** 서버에 닿지 못했거나 서버가 받아 주지 않았다. */
-    data object Unreachable : AddVisitResult
 }
 
 /** 방문 일정을 잡는다. 지난 시각에는 잡지 않는다. */
 class AddVisitUseCase(private val repository: VisitRepository) {
-    suspend operator fun invoke(visit: NewVisit, now: Long = nowMillis()): AddVisitResult {
-        if (visit.scheduledAtMillis < now) return AddVisitResult.InPast
-        val added = orNullOnFailure { repository.add(visit) } ?: return AddVisitResult.Unreachable
-        return AddVisitResult.Added(added)
-    }
+    suspend operator fun invoke(visit: NewVisit, now: Long = nowMillis()): AddVisitResult =
+        if (visit.scheduledAtMillis < now) AddVisitResult.InPast else AddVisitResult.Added(repository.add(visit))
 }
 
-/**
- * 방문을 마쳤다. 그 고객과 상담 중인 것으로 두어 바로 상담을 기록할 수 있게 한다.
- *
- * 서버에 닿지 못했거나 서버가 받아 주지 않으면 상담도 시작하지 않고 false.
- */
+/** 방문을 마쳤다. 그 고객과 상담 중인 것으로 두어 바로 상담을 기록할 수 있게 한다. */
 class CompleteVisitUseCase(
     private val repository: VisitRepository,
     private val session: ConsultSessionRepository,
 ) {
-    suspend operator fun invoke(visit: Visit): Boolean {
-        orNullOnFailure { repository.setStatus(visit.id, VisitStatus.COMPLETED) } ?: return false
+    suspend operator fun invoke(visit: Visit) {
+        repository.setStatus(visit.id, VisitStatus.COMPLETED)
         session.start(visit.customerId)
-        return true
     }
 }
 
-/** 방문을 취소한다. 서버에 닿지 못했거나 서버가 받아 주지 않으면 false. */
 class CancelVisitUseCase(private val repository: VisitRepository) {
-    suspend operator fun invoke(id: String): Boolean =
-        orNullOnFailure { repository.setStatus(id, VisitStatus.CANCELED) } != null
+    suspend operator fun invoke(id: String) = repository.setStatus(id, VisitStatus.CANCELED)
 }
 
 /** 일정 화면이 쓰는 유스케이스 묶음. */

@@ -61,7 +61,7 @@ class LoginViewModel(
                     is LoginResult.Success -> it.copy(isLoading = false, password = "")
                     is LoginResult.Wrong -> it.copy(isLoading = false, password = "", error = LoginError.Wrong(result.remainingAttempts))
                     is LoginResult.Locked -> it.copy(isLoading = false, password = "", error = LoginError.Locked(result.untilEpochSeconds))
-                    LoginResult.Unreachable -> it.copy(isLoading = false, error = LoginError.Unreachable)
+                    LoginResult.Failed -> it.copy(isLoading = false, error = LoginError.Failed)
                 }
             }
         }
@@ -70,7 +70,6 @@ class LoginViewModel(
     private fun initialState() = LoginUiState(
         id = useCases.getSavedId().orEmpty(),
         saveId = useCases.isSaveId(),
-        usesDemoData = useCases.getAppInfo().usesDemoData,
         dataWiped = useCases.getLogoutReason() == LogoutReason.WIPED,
     )
 }

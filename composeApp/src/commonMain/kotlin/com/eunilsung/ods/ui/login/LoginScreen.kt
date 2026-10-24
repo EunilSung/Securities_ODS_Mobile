@@ -55,8 +55,8 @@ import ods.composeapp.generated.resources.app_name
 import ods.composeapp.generated.resources.login_button
 import ods.composeapp.generated.resources.login_data_wiped
 import ods.composeapp.generated.resources.login_demo_hint
+import ods.composeapp.generated.resources.login_error_failed
 import ods.composeapp.generated.resources.login_error_locked
-import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.login_error_wrong
 import ods.composeapp.generated.resources.login_hide_password
 import ods.composeapp.generated.resources.login_id
@@ -179,19 +179,17 @@ fun LoginContent(uiState: LoginUiState, onAction: (LoginActions) -> Unit) {
                 onAction(LoginActions.OnLoginClick)
             }
 
-            if (uiState.usesDemoData) {
-                Text(
-                    text = stringResource(Res.string.login_demo_hint),
-                    style = AppTypography.Caption,
-                    color = AppColors.TextSub,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(top = Dimens.Space8)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(AppColors.Gray50Bg)
-                        .padding(horizontal = Dimens.Space12, vertical = Dimens.Space8),
-                )
-            }
+            Text(
+                text = stringResource(Res.string.login_demo_hint),
+                style = AppTypography.Caption,
+                color = AppColors.TextSub,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = Dimens.Space8)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(AppColors.Gray50Bg)
+                    .padding(horizontal = Dimens.Space12, vertical = Dimens.Space8),
+            )
         }
     }
 }
@@ -273,5 +271,5 @@ private fun LoginButton(enabled: Boolean, loading: Boolean, onClick: () -> Unit)
 private fun LoginError.message(): String = when (this) {
     is LoginError.Wrong -> stringResource(Res.string.login_error_wrong, LoginPolicy.MAX_ATTEMPTS.toString(), remainingAttempts.toString())
     is LoginError.Locked -> stringResource(Res.string.login_error_locked, LoginPolicy.MAX_ATTEMPTS.toString(), formatOrderTime(untilEpochSeconds))
-    LoginError.Unreachable -> stringResource(Res.string.error_server_unreachable)
+    LoginError.Failed -> stringResource(Res.string.login_error_failed)
 }

@@ -14,8 +14,6 @@ data class NewCustomerUiState(
     /** 등록을 한 번 눌렀는지. 그 전에는 칸이 비어 있어도 오류를 보이지 않는다. */
     val showErrors: Boolean = false,
     val isSaving: Boolean = false,
-    /** 서버에 닿지 못했거나 서버가 받아 주지 않아 등록하지 못했다. 적은 내용은 그대로 두어 다시 누를 수 있다. */
-    val saveFailed: Boolean = false,
 ) {
     val nameError: Boolean get() = name.isBlank()
     val birthError: Boolean get() = parseBirthDate(birthDigits) == null

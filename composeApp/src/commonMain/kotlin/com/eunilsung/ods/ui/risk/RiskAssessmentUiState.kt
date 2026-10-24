@@ -26,4 +26,4 @@ data class RiskAssessmentUiState(
     val canSave: Boolean get() = isResult && confirmed && SignaturePolicy.isEnough(signature) && !isSaving
 }
 
-enum class RiskSaveError { SIGNATURE_REQUIRED, NOT_SIGNED_IN, UNREACHABLE }
+enum class RiskSaveError { SIGNATURE_REQUIRED, NOT_SIGNED_IN }

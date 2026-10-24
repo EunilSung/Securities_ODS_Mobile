@@ -17,8 +17,6 @@ import kotlinx.coroutines.withContext
 
 /**
  * 서명 기록을 기기 DB 에 남긴다. 획의 점을 글자로 늘어놓아 SHA-256 한 값을 지문으로 쓴다.
- *
- * 서버 모드 구현은 서명 그림을 서버로 보내고, 서버가 받아 준 뒤에만 이 기록을 남긴다.
  */
 class LocalSignatureRepositoryImpl(
     private val database: AppDatabase,

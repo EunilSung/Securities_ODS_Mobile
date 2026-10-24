@@ -15,7 +15,7 @@ data class SettingUiState(
     val biometricAvailable: Boolean = false,
     /** 잠금 비밀번호 변경 창이 떠 있는지. */
     val isChangingPin: Boolean = false,
-    val appInfo: AppInfo = AppInfo(versionName = "", versionCode = 0, usesDemoData = true),
+    val appInfo: AppInfo = AppInfo(versionName = "", versionCode = 0),
     /** 방금 끝난 일 알림. 화면을 다시 열면 지운다. */
     val notice: SettingNotice? = null,
 )

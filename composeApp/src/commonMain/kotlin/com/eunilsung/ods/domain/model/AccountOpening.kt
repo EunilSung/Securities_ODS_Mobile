@@ -50,6 +50,3 @@ enum class AccountTypeBlock {
     /** 연금저축은 시연에서는 한 사람에 하나로 둔다. */
     PENSION_DUPLICATE,
 }
-
-/** 저장소가 계좌를 열지 않았다 — 유스케이스가 본 뒤에 서버가 다시 보고 [block] 으로 막았다. */
-class AccountTypeBlockedException(val block: AccountTypeBlock) : IllegalStateException(block.name)

@@ -1,10 +1,6 @@
 package com.eunilsung.ods.domain.util
 
-/**
- * 로그인 잠금 규칙 — 같은 아이디로 연달아 [MAX_ATTEMPTS] 번 틀리면 [LOCK_SECONDS] 동안 막는다.
- *
- * 로컬 모드에서는 기기가 센다. 서버가 붙으면 서버가 세고 이 값은 안내 문구에만 쓴다.
- */
+/** 로그인 잠금 규칙 — 같은 아이디로 연달아 [MAX_ATTEMPTS] 번 틀리면 [LOCK_SECONDS] 동안 막는다. 틀린 횟수는 기기가 센다. */
 object LoginPolicy {
     const val MAX_ATTEMPTS = 5
     const val LOCK_SECONDS = 5 * 60L

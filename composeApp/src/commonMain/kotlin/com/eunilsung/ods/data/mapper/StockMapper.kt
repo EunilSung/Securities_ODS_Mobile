@@ -16,16 +16,6 @@ class StockMapper {
         volume = entity.volume,
     )
 
-    fun toEntity(stock: Stock, sortOrder: Long): WatchStockEntity = WatchStockEntity(
-        code = stock.code,
-        name = stock.name,
-        market = stock.market.name,
-        price = stock.price,
-        previousClose = stock.previousClose,
-        volume = stock.volume,
-        sortOrder = sortOrder,
-    )
-
     internal fun toEntity(row: StockSeedRow, sortOrder: Long): WatchStockEntity = WatchStockEntity(
         code = row.code,
         name = row.name,

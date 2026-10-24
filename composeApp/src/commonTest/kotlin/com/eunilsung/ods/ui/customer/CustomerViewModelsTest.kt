@@ -9,16 +9,10 @@ import com.eunilsung.ods.data.local.repository.LocalVisitRepositoryImpl
 import com.eunilsung.ods.data.mapper.CustomerMapper
 import com.eunilsung.ods.data.mapper.ProductMapper
 import com.eunilsung.ods.data.mapper.VisitMapper
-import com.eunilsung.ods.data.remote.server.ServerException
 import com.eunilsung.ods.domain.model.ConsultChannel
 import com.eunilsung.ods.domain.model.ConsultTopic
-import com.eunilsung.ods.domain.model.Consultation
-import com.eunilsung.ods.domain.model.Customer
 import com.eunilsung.ods.domain.model.Gender
 import com.eunilsung.ods.domain.model.LoginRequest
-import com.eunilsung.ods.domain.model.NewConsultation
-import com.eunilsung.ods.domain.model.NewCustomer
-import com.eunilsung.ods.domain.repository.CustomerRepository
 import com.eunilsung.ods.domain.usecase.AddConsultationUseCase
 import com.eunilsung.ods.domain.usecase.ConsultUseCases
 import com.eunilsung.ods.domain.usecase.CustomerDetailUseCases
@@ -40,7 +34,6 @@ import com.eunilsung.ods.domain.usecase.StartConsultUseCase
 import com.eunilsung.ods.testsupport.createTestDatabase
 import com.eunilsung.ods.testsupport.testLocalSecret
 import com.eunilsung.ods.testsupport.testSecureSettings
-import com.eunilsung.ods.ui.customer.consultation.ConsultSaveError
 import com.eunilsung.ods.ui.customer.consultation.ConsultationActions
 import com.eunilsung.ods.ui.customer.consultation.ConsultationEvent
 import com.eunilsung.ods.ui.customer.consultation.ConsultationViewModel
@@ -58,7 +51,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -72,13 +64,6 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CustomerViewModelsTest {
-    /** 서버에 닿지 못해 등록·기록하지 못하는 저장소. */
-    private class OfflineCustomers(delegate: CustomerRepository) : CustomerRepository by delegate {
-        override suspend fun register(customer: NewCustomer, nowMillis: Long): Customer = throw ServerException(status = null, code = null)
-        override suspend fun addConsultation(consultation: NewConsultation, staffName: String, nowMillis: Long): Consultation =
-            throw ServerException(status = null, code = null)
-    }
-
     private val dispatcher = StandardTestDispatcher()
     private val settings = MapSettings()
     private val database = createTestDatabase()
@@ -110,12 +95,12 @@ class CustomerViewModelsTest {
         )
     )
 
-    private fun consultationViewModel(repository: CustomerRepository = customers) = ConsultationViewModel(
+    private fun consultationViewModel() = ConsultationViewModel(
         ConsultUseCases(
             observeActiveCustomerId = ObserveActiveCustomerIdUseCase(session),
             observeCustomer = ObserveCustomerUseCase(customers),
             observeConsultations = ObserveConsultationsUseCase(customers),
-            addConsultation = AddConsultationUseCase(repository, login),
+            addConsultation = AddConsultationUseCase(customers, login),
             endConsult = EndConsultUseCase(session),
         )
     )
@@ -206,38 +191,7 @@ class CustomerViewModelsTest {
         vm.onAction(ConsultationActions.OnContentChange("메모"))
         vm.onAction(ConsultationActions.OnSave)
         advanceUntilIdle()
-        assertEquals(ConsultSaveError.NOT_SIGNED_IN, vm.uiState.value.saveError)
+        assertTrue(vm.uiState.value.saveFailed)
         assertEquals("메모", vm.uiState.value.content)
-    }
-
-    @Test
-    fun consultationServerFailureKeepsContent() = runTest(dispatcher) {
-        login.login(LoginRequest("test1", "1234"), nowEpochSeconds = 0)
-        val vm = consultationViewModel(OfflineCustomers(customers))
-        vm.onAction(ConsultationActions.OnEnter("C004"))
-        vm.onAction(ConsultationActions.OnContentChange("메모"))
-        vm.onAction(ConsultationActions.OnSave)
-        advanceUntilIdle()
-        assertEquals(ConsultSaveError.UNREACHABLE, vm.uiState.value.saveError)
-        assertFalse(vm.uiState.value.isSaving)
-        assertEquals("메모", vm.uiState.value.content)
-    }
-
-    @Test
-    fun newCustomerServerFailureKeepsInputSoStaffCanRetry() = runTest(dispatcher) {
-        val vm = NewCustomerViewModel(RegisterCustomerUseCase(OfflineCustomers(customers), session))
-        vm.onAction(NewCustomerActions.OnNameChange("홍길동"))
-        vm.onAction(NewCustomerActions.OnBirthChange("19900102"))
-        vm.onAction(NewCustomerActions.OnPhoneChange("01011112222"))
-        vm.onAction(NewCustomerActions.OnSubmit)
-        advanceUntilIdle()
-
-        val state = vm.uiState.value
-        assertTrue(state.saveFailed)
-        assertFalse(state.isSaving)
-        assertEquals("홍길동", state.name)
-        assertEquals("01011112222", state.phoneDigits)
-        assertNull(session.activeCustomerId.value)
-        assertTrue(customers.observeCustomers().first().none { it.name == "홍길동" })
     }
 }

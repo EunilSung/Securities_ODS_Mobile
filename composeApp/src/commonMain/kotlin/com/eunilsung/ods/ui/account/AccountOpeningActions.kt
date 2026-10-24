@@ -12,7 +12,7 @@ sealed interface AccountOpeningActions {
     /** 카메라에서 돌아왔다. 취소했으면 null. */
     data class OnPhotoCaptured(val photo: ByteArray?) : AccountOpeningActions
 
-    /** 시연용 신분증을 쓴다(서버 없이 도는 시연에서만). 고객 정보로 신분증 칸을 채운다. */
+    /** 시연용 신분증을 쓴다. 고객 정보로 신분증 칸을 채운다. */
     data object OnUseDemoId : AccountOpeningActions
 
     /** 다시 찍기. 찍은 사진과 확인 결과를 버린다. */

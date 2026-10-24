@@ -8,9 +8,6 @@ import com.eunilsung.ods.data.local.IosAppVersionProvider
 import com.eunilsung.ods.data.local.IosBiometricAuthenticator
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.BiometricAuthenticator
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.darwin.Darwin
-import io.ktor.client.plugins.websocket.WebSockets
 import org.koin.dsl.module
 import platform.UIKit.UIDevice
 
@@ -24,7 +21,6 @@ val platformModule = module {
     single<Platform> { IOSPlatform() }
     single { DatabaseDriverFactory() }
     single<LocalSecretCipher> { IosLocalSecretCipher(IosKeychainKeyStore) }
-    single { HttpClient(Darwin) { install(WebSockets) } }
     single<BiometricAuthenticator> { IosBiometricAuthenticator() }
     single<AppVersionProvider> { IosAppVersionProvider() }
 }

@@ -32,7 +32,6 @@ class QuoteViewModel(
     private val code = MutableStateFlow<String?>(null)
     private val period = MutableStateFlow(ChartPeriod.DAY)
     private val presenting = MutableStateFlow(false)
-    private val usesDemoData = quoteUseCases.getAppInfo().usesDemoData
 
     val uiState: StateFlow<QuoteUiState> = code.filterNotNull().flatMapLatest { selected ->
         combine(
@@ -56,7 +55,6 @@ class QuoteViewModel(
             isPresenting = presenting.value,
             previousName = if (index > 0) watchlist[index - 1].name else null,
             nextName = if (index >= 0) watchlist.getOrNull(index + 1)?.name else null,
-            usesDemoData = usesDemoData,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), QuoteUiState())
 

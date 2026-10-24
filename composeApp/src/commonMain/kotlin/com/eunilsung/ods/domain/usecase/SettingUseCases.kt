@@ -1,18 +1,12 @@
 package com.eunilsung.ods.domain.usecase
 
-import com.eunilsung.ods.Config
 import com.eunilsung.ods.domain.model.AppInfo
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 
-/** @param usesDemoData 시연용 데이터로 도는가. 서버 주소가 없는 빌드(로컬 모드)면 참이다. */
-class GetAppInfoUseCase(
-    private val provider: AppVersionProvider,
-    private val usesDemoData: Boolean = !Config.Server.IS_ENABLED,
-) {
+class GetAppInfoUseCase(private val provider: AppVersionProvider) {
     operator fun invoke(): AppInfo = AppInfo(
         versionName = provider.versionName(),
         versionCode = provider.versionCode(),
-        usesDemoData = usesDemoData,
     )
 }
 

@@ -66,7 +66,6 @@ import com.eunilsung.ods.ui.uikit.textfield.FormField
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import ods.composeapp.generated.resources.Res
 import ods.composeapp.generated.resources.app_lock_delete
-import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.opening_account_no
 import ods.composeapp.generated.resources.opening_block_isa_age
 import ods.composeapp.generated.resources.opening_block_isa_duplicate
@@ -221,13 +220,11 @@ private fun ColumnScope.CaptureStep(uiState: AccountOpeningUiState, onAction: (A
         onClick = onCapture,
         modifier = Modifier.testTag(TestTags.OPENING_CAPTURE),
     )
-    if (uiState.offersDemoId) {
-        OutlineButton(
-            text = stringResource(Res.string.opening_demo_id),
-            onClick = { onAction(AccountOpeningActions.OnUseDemoId) },
-            modifier = Modifier.testTag(TestTags.OPENING_DEMO_ID),
-        )
-    }
+    OutlineButton(
+        text = stringResource(Res.string.opening_demo_id),
+        onClick = { onAction(AccountOpeningActions.OnUseDemoId) },
+        modifier = Modifier.testTag(TestTags.OPENING_DEMO_ID),
+    )
 }
 
 /** 찍은 신분증 미리보기. 시연용 신분증이면 그림 대신 카드 모양을 그린다. */
@@ -516,6 +513,5 @@ private fun OpenError.message(): String = stringResource(
         OpenError.SIGNATURE -> Res.string.opening_error_signature
         OpenError.NOT_SIGNED_IN -> Res.string.opening_error_not_signed_in
         OpenError.NOT_FOUND -> Res.string.opening_error_not_found
-        OpenError.UNREACHABLE -> Res.string.error_server_unreachable
     }
 )

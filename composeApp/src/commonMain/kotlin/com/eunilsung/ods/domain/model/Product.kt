@@ -3,7 +3,7 @@ package com.eunilsung.ods.domain.model
 /**
  * 금융상품.
  *
- * 설명 문구([summary]·[keyPoints])는 상품 자료라 서버가 내려 주는 그대로 보인다(시연용은 한국어).
+ * 설명 문구([summary]·[keyPoints])는 상품 자료라 받은 그대로 보인다(시연용은 한국어).
  *
  * @param keyPoints 핵심설명서 항목. 가입 전에 고객에게 하나하나 설명하고 확인을 받는다.
  * @param minAmount 최소 가입금액(원).
@@ -60,8 +60,3 @@ data class NewSubscription(
     val amount: Long,
     val unsuitableConfirmed: Boolean,
 )
-
-/** 가입을 받지 않은 까닭 — 유스케이스가 본 뒤에도 서버가 한 번 더 보고 막을 수 있다. */
-enum class SubscriptionRejection { NEEDS_ASSESSMENT, UNSUITABLE_NOT_CONFIRMED, INVALID_AMOUNT, INVALID_ACCOUNT }
-
-class SubscriptionRejectedException(val reason: SubscriptionRejection) : IllegalStateException(reason.name)

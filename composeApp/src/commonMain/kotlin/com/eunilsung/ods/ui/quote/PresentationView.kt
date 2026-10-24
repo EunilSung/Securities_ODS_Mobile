@@ -117,11 +117,7 @@ fun PresentationView(
                     onClick = { onAction(QuoteActions.OnPresentStep(forward = false)) },
                     enabled = uiState.previousName != null,
                 )
-                if (uiState.usesDemoData) {
-                    Text(text = stringResource(Res.string.present_demo_notice), style = AppTypography.Caption, color = AppColors.TextSub, modifier = Modifier.weight(1f))
-                } else {
-                    Box(Modifier.weight(1f))
-                }
+                Text(text = stringResource(Res.string.present_demo_notice), style = AppTypography.Caption, color = AppColors.TextSub, modifier = Modifier.weight(1f))
                 OutlineButton(
                     text = stringResource(Res.string.present_next, uiState.nextName.orEmpty()),
                     onClick = { onAction(QuoteActions.OnPresentStep(forward = true)) },

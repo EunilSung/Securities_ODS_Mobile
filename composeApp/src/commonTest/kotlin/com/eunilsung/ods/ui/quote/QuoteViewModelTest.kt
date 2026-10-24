@@ -4,8 +4,6 @@ import com.eunilsung.ods.data.local.repository.LocalQuoteRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalStockRepositoryImpl
 import com.eunilsung.ods.data.local.repository.LocalTickSimulator
 import com.eunilsung.ods.data.mapper.StockMapper
-import com.eunilsung.ods.domain.repository.AppVersionProvider
-import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
 import com.eunilsung.ods.domain.usecase.ObserveCandlesUseCase
 import com.eunilsung.ods.domain.usecase.ObserveOrderBookUseCase
 import com.eunilsung.ods.domain.usecase.ObserveStockUseCase
@@ -26,18 +24,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuoteViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val database = createTestDatabase()
     private val stocks = LocalStockRepositoryImpl(database, StockMapper())
-
-    private object FakeVersion : AppVersionProvider {
-        override fun versionCode() = 1L
-        override fun versionName() = "1.0"
-    }
 
     @BeforeTest
     fun setUp() = runTest {
@@ -57,7 +49,6 @@ class QuoteViewModelTest {
                 observeOrderBook = ObserveOrderBookUseCase(quotes),
                 observeCandles = ObserveCandlesUseCase(quotes),
                 observeWatchlist = ObserveWatchlistUseCase(stocks),
-                getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
             )
         )
         backgroundScope.launch { vm.uiState.collect {} }
@@ -66,7 +57,6 @@ class QuoteViewModelTest {
         val first = vm.uiState.first { it.isPresenting && it.nextName != null }
         assertNull(first.previousName)
         assertEquals("SK하이닉스", first.nextName)
-        assertTrue(first.usesDemoData)
 
         vm.onAction(QuoteActions.OnPresentStep(forward = true))
         val second = vm.uiState.first { it.code == "000660" && it.previousName != null }

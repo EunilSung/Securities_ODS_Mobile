@@ -10,7 +10,7 @@ import com.eunilsung.ods.domain.model.RiskProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-/** 고객·상담 이력·계좌. 화면은 기기 DB 를 보고, [refresh] 가 서버(또는 시연용 데이터)에서 받아 채운다. */
+/** 고객·상담 이력·계좌. 화면은 기기 DB 를 보고, [refresh] 가 시연용 데이터로 채운다. */
 interface CustomerRepository {
     /** 담당 고객 전체(이름순). */
     fun observeCustomers(): Flow<List<Customer>>
