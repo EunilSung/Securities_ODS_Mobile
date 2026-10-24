@@ -4,6 +4,7 @@
 # 서명 키는 저장소에 없다. GitHub Secrets 의 ANDROID_KEYSTORE_BASE64 · ANDROID_KEYSTORE_PASSWORD · ANDROID_KEY_ALIAS · ANDROID_KEY_PASSWORD 로 받는다.
 # iOS 는 Apple 개발자 계정 · 서명이 없어 릴리즈 파일을 만들지 않는다(빌드 · 테스트는 CI 가 본다).
 # 서명 키를 다루는 잡이라 액션은 커밋 SHA 로 고정하고 Gradle 캐시를 쓰지 않는다. 키 파일은 빌드하는 단계에서만 풀었다가 지운다.
+# 릴리즈 노트의 바뀐 것은 마지막으로 공개된 릴리즈부터 모은다 — 실패해 릴리즈가 없는 태그는 건너뛴다.
 name: Release
 
 on:
@@ -101,8 +102,12 @@ jobs:
         env:
           APK: ${{ steps.apk.outputs.file }}
           CERT: ${{ steps.apk.outputs.cert }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          previous=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          previous=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || true)
+          if [ -z "$previous" ] || [ "$previous" = "$GITHUB_REF_NAME" ] || ! git rev-parse -q --verify "refs/tags/$previous" > /dev/null; then
+            previous=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          fi
           {
             echo "증권사 아웃도어 세일즈 앱 ODS 의 Android 빌드입니다. 서버 · 네트워크 없이 기기 안 시연용 데이터로 동작합니다."
             echo
@@ -117,7 +122,7 @@ jobs:
             echo
             echo "계정 \`test1\` ~ \`test3\` / 비밀번호 \`1234\`. 처음 로그인하면 앱 잠금 비밀번호 6자리를 정합니다."
             echo
-            echo "## 바뀐 것"
+            echo "## 바뀐 것${previous:+ ($previous 이후)}"
             echo
             if [ -n "$previous" ]; then
               git log --no-merges --format='- %s' "$previous..$GITHUB_REF_NAME"
