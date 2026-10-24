@@ -73,4 +73,7 @@ Kotlin Multiplatform(Android + iOS), Compose Multiplatform, Clean Architecture +
 - Android Studio 실행 구성: `검증 - 빠르게 (JVM)` · `검증 - 전체 (실화면 포함)`
 - 기기는 `local.properties` 의 `e2e.androidAvd`·`e2e.iosDevice`. 꺼져 있으면 `.maestro/run.sh` 가 켠다
 - 결과: `composeApp/build/test-results/`, `build/maestro/<android|ios>/report.xml`
+- CI(`.github/workflows/ci.yml`)는 `main` 푸시 · PR 마다 JVM 테스트 · 디버그 APK, iOS 시뮬레이터 테스트 · Xcode 빌드를 돌린다. 실화면 흐름은 로컬 `verifyAll` 만
+- 릴리즈: `v<major>.<minor>.<patch>` 태그를 푸시하면 `release.yml` 이 서명한 APK 를 GitHub Release 에 올린다. 태그 푸시도 사용자가 요청했을 때만 한다.
+  서명 값은 GitHub Secrets(`ANDROID_KEYSTORE_BASE64` 등)에만 두고 저장소 · 로그에 남기지 않는다
 
