@@ -86,13 +86,13 @@
   <img src="docs/screenshots/phone-app-lock.jpg" height="300" alt="앱 잠금">
 </p>
 <p align="center">
-  <img src="docs/screenshots/tablet-schedule.jpg" width="280" alt="태블릿 — 일정 월 달력과 방문 상세">
-  <img src="docs/screenshots/tablet-product.jpg" width="280" alt="태블릿 — 상품 상세와 적합성">
-  <img src="docs/screenshots/tablet-suitability.jpg" width="280" alt="태블릿 — 가입 적합성 확인">
+  <img src="docs/screenshots/tablet-schedule.jpg" width="240" alt="태블릿 — 일정 월 달력과 방문 상세">
+  <img src="docs/screenshots/tablet-product.jpg" width="240" alt="태블릿 — 상품 상세와 적합성">
+  <img src="docs/screenshots/tablet-suitability.jpg" width="240" alt="태블릿 — 가입 적합성 확인">
 </p>
 <p align="center">
-  <img src="docs/screenshots/tablet-market.jpg" width="280" alt="태블릿 — 시장 · 현재가 · 호가">
-  <img src="docs/screenshots/tablet-present.jpg" width="280" alt="태블릿 — 고객에게 보여 주기">
+  <img src="docs/screenshots/tablet-market.jpg" width="240" alt="태블릿 — 시장 · 현재가 · 호가">
+  <img src="docs/screenshots/tablet-present.jpg" width="240" alt="태블릿 — 고객에게 보여 주기">
 </p>
 <p align="center"><sub>폰은 iOS 시뮬레이터(iPhone 17 Pro), 태블릿은 Android 에뮬레이터(2560×1600). 디자인 방향은 <a href="docs/design-proposal.html">docs/design-proposal.html</a> 에 있습니다.</sub></p>
 
@@ -143,22 +143,22 @@ flowchart TD
 
 ```
 composeApp/src/
-├── commonMain/          225 files — 화면 · 도메인 · 데이터 전부 (Kotlin 208)
+├── commonMain/          225 files — 화면 · 도메인 · 데이터 (Kotlin 208)
 │   ├── kotlin/com/eunilsung/ods/
-│   │   ├── ui/          132 files — 화면 14갈래 (main · login · applock · schedule · customer · consult · risk · product · account · watchlist · quote · stockdetail · setting · more) · uikit(공용 부품) · theme
-│   │   ├── domain/       42 files — model · repository(interface 14) · usecase(59 + 화면별 묶음 17) · util(업무 규칙)
-│   │   ├── data/         27 files — local(저장소 구현 11 · 시세 흉내 · seed 시연용 데이터 · 칸 암호화 · 키 확인 · 데이터 삭제) · mapper
+│   │   ├── ui/          132 files — 화면 14갈래 · uikit(공용 부품) · theme
+│   │   ├── domain/       42 files — model · repository 14 · usecase 59 · util(규칙)
+│   │   ├── data/         27 files — local(저장소 · 시드 · 칸 암호화 · 삭제) · mapper
 │   │   ├── di/                    Koin 모듈 (ViewModel 19)
 │   │   └── Config.kt              DB 이름 · 화면 폭 기준 · 보안 설정
 │   ├── sqldelight/                AppDatabase.sq (테이블 8 · 쿼리 29)
 │   └── composeResources/          values(영문) · values-ko(한글) · drawable
-├── androidMain/          26 files — actual · BiometricPrompt · 카메라(FileProvider) · Keystore 암호 · 백업 제외 · 앱 전환기 가리기
-├── iosMain/              13 files — actual · LAContext · 카메라(UIImagePickerController) · Keychain 암호 · 백업 제외 · 앱 전환기 가리기
-├── commonTest/           25 files — 업무 규칙 · 저장소(인메모리 DB) · 칸 암호화 · ViewModel 시나리오 (Android · iOS 양쪽에서 돈다)
-├── androidUnitTest/       3 files — Keystore 봉투 암호 · 앱 전환기 가리기
+├── androidMain/          26 files — Keystore 암호 · 생체 인증 · 카메라 · 전환기 가림
+├── iosMain/              13 files — Keychain 암호 · 생체 인증 · 카메라 · 전환기 가림
+├── commonTest/           25 files — 업무 규칙 · 저장소 · 암호 · ViewModel 시나리오
+├── androidUnitTest/       3 files — Keystore 봉투 암호 · 전환기 가림
 └── iosTest/               2 files — iOS 암호(CommonCrypto)
-iosApp/                   Xcode 프로젝트 (Swift 진입점 · Info.plist · Config.xcconfig)
-.maestro/                 실화면 흐름 7개 · 공용 단계 5개 · run.sh — Android · iOS 에 같은 파일을 돌린다
+iosApp/                   Xcode 프로젝트 (Swift 진입점 · Info.plist)
+.maestro/                 실화면 흐름 7개 · run.sh (Android · iOS 공용)
 .run/                     Android Studio 실행 구성 2개
 .github/                  CI · 릴리즈 워크플로 (GitHub Actions)
 docs/                     디자인 제안서 · 스크린샷
