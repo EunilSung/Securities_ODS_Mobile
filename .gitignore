@@ -19,3 +19,8 @@ captures
 node_modules/
 
 
+
+# 서명 키 — 저장소에 두지 않는다(CI 는 GitHub Secrets 에서 받는다)
+*.jks
+*.keystore
+*.p12

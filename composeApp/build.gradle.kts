@@ -100,6 +100,14 @@ compose.resources {
     packageOfResClass = "ods.composeapp.generated.resources"
 }
 
+/**
+ * 배포용 서명 — 키 파일과 비밀번호는 저장소에 두지 않고 환경변수로만 받는다(CI 는 GitHub Secrets 에서 넣는다, `.github/workflows/release.yml`).
+ * 넷 중 하나라도 없으면 release 빌드는 서명하지 않은 APK 를 만든다.
+ */
+val releaseSigning: Map<String, String>? = listOf("ODS_KEYSTORE_FILE", "ODS_KEYSTORE_PASSWORD", "ODS_KEY_ALIAS", "ODS_KEY_PASSWORD")
+    .associateWith { providers.environmentVariable(it).orNull.orEmpty() }
+    .takeIf { values -> values.values.all { it.isNotBlank() } }
+
 android {
     namespace = "com.eunilsung.ods"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -108,8 +116,18 @@ android {
         applicationId = "com.eunilsung.ods"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = providers.gradleProperty("appVersionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("appVersionName").orNull ?: "1.0.0"
+    }
+    signingConfigs {
+        releaseSigning?.let { values ->
+            create("release") {
+                storeFile = file(values.getValue("ODS_KEYSTORE_FILE"))
+                storePassword = values.getValue("ODS_KEYSTORE_PASSWORD")
+                keyAlias = values.getValue("ODS_KEY_ALIAS")
+                keyPassword = values.getValue("ODS_KEY_PASSWORD")
+            }
+        }
     }
     packaging {
         resources {
@@ -119,6 +137,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            if (releaseSigning != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     testOptions {

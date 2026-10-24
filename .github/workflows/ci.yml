@@ -1,0 +1,87 @@
+# main 에 들어오거나 PR 이 열릴 때마다 양쪽 플랫폼을 빌드하고 테스트한다.
+# 실화면 흐름(Maestro)은 에뮬레이터 · 시뮬레이터를 오래 띄워야 해서 로컬 verifyAll 에서만 돈다.
+# 시뮬레이터용 Kotlin 프레임워크는 arm64 만 있어(iosSimulatorArm64) 앱도 arm64 로만 빌드한다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android — 테스트 · 디버그 APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: CI 러너에 맞춘 Gradle 메모리
+        run: bash .github/scripts/ci-gradle-properties.sh
+      - name: 단위 · ViewModel 시나리오 테스트 (JVM)
+        run: ./gradlew :composeApp:testDebugUnitTest
+      - name: 디버그 APK
+        run: ./gradlew :composeApp:assembleDebug
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ods-debug-apk
+          path: composeApp/build/outputs/apk/debug/composeApp-debug.apk
+          retention-days: 14
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: android-test-results
+          path: composeApp/build/test-results/
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS — 시뮬레이터 테스트 · 앱 빌드
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: CI 러너에 맞춘 Gradle 메모리
+        run: bash .github/scripts/ci-gradle-properties.sh
+      - name: 테스트할 iPhone 시뮬레이터 고르기
+        run: |
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          print(next(d["udid"] for runtime, ds in sorted(devices.items(), reverse=True) if ".iOS-" in runtime
+                     for d in ds if d["name"].startswith("iPhone")))')
+          echo "ODS_IOS_DEVICE=$udid" >> "$GITHUB_ENV"
+      - name: 단위 · ViewModel 시나리오 테스트 (iOS 시뮬레이터)
+        run: ./gradlew :composeApp:iosSimulatorArm64Test
+      - name: Xcode 로 iOS 앱 빌드
+        run: |
+          xcodebuild -version
+          xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived ARCHS=arm64 CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: ios-test-results
+          path: composeApp/build/test-results/
+          if-no-files-found: ignore

@@ -7,6 +7,8 @@
 ![Android](https://img.shields.io/badge/Android-24%2B-3DDC84?logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-16%2B%20arm64%20%2B%20sim-000000?logo=apple&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-126%20passing-success)
+[![CI](https://github.com/EunilSung/Securities_ODS_Mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/EunilSung/Securities_ODS_Mobile/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/EunilSung/Securities_ODS_Mobile?label=release)](https://github.com/EunilSung/Securities_ODS_Mobile/releases/latest)
 
 증권사 영업 직원이 태블릿을 들고 **지점 밖에서 고객을 만나** 상담 · 투자성향 진단 · 상품 가입 · 계좌 개설을 현장에서 마치는 앱입니다.
 
@@ -158,6 +160,7 @@ composeApp/src/
 iosApp/                   Xcode 프로젝트 (Swift 진입점 · Info.plist · Config.xcconfig)
 .maestro/                 실화면 흐름 7개 · 공용 단계 5개 · run.sh — Android · iOS 에 같은 파일을 돌린다
 .run/                     Android Studio 실행 구성 2개
+.github/                  CI · 릴리즈 워크플로 (GitHub Actions)
 docs/                     디자인 제안서 · 스크린샷
 ```
 
@@ -213,6 +216,44 @@ docs/                     디자인 제안서 · 스크린샷
 | 서명 | 점 10개 이상, 칸의 15% 이상 퍼져야 받음 | `SignaturePolicy` |
 | 방문 | 08:00~20:30 30분 간격, 지난 시각 금지 | `VisitPolicy` |
 | 로그인 · 앱 잠금 | 로그인 5회 실패 시 5분 잠금 / 6자리, 5분 무조작 · 백그라운드 1분 초과 시 잠금, 5회 오류 시 데이터 삭제 | `LoginPolicy` · `AppLockPolicy` |
+
+---
+
+## 빌드 · 릴리즈 자동화
+
+GitHub Actions 워크플로 두 개가 돕니다.
+
+| 워크플로 | 언제 | 하는 일 |
+|---|---|---|
+| [CI](.github/workflows/ci.yml) | `main` 푸시 · PR | Android — JVM 테스트 · 디버그 APK(실행 결과물로 14일 보관) / iOS — 시뮬레이터 테스트 · Xcode 앱 빌드 |
+| [Release](.github/workflows/release.yml) | `v*` 태그 푸시 | JVM 테스트 → 서명한 릴리스 APK → [GitHub Release](https://github.com/EunilSung/Securities_ODS_Mobile/releases) 에 `Securities_ODS_<버전>.apk` · SHA-256 · 바뀐 것 |
+
+```bash
+git tag v1.1.0              # v<major>.<minor>.<patch> — versionCode = major·10000 + minor·100 + patch
+git push origin v1.1.0
+```
+
+`v1.0.0` 은 워크플로 전에 손으로 만든 첫 릴리즈라, 태그는 그보다 큰 버전으로 답니다.
+
+```mermaid
+flowchart LR
+    TAG["v1.1.0 태그 푸시"] --> TEST["JVM 테스트"] --> APK["서명한 릴리스 APK<br/>apksigner 로 확인"] --> REL["GitHub Release<br/>APK · .sha256 · 바뀐 것"]
+```
+
+- **서명 키는 저장소에 없습니다.** 저장소 Settings → Secrets and variables → Actions 에 아래 넷을 넣어 두면 릴리즈 워크플로가 씁니다.
+  하나라도 없으면 릴리즈는 서명 단계에서 멈춥니다.
+
+  | Secret | 값 |
+  |---|---|
+  | `ANDROID_KEYSTORE_BASE64` | 릴리스 키 파일(.jks)을 `base64` 한 줄로 |
+  | `ANDROID_KEYSTORE_PASSWORD` · `ANDROID_KEY_PASSWORD` | 키 저장소 · 키 비밀번호 |
+  | `ANDROID_KEY_ALIAS` | 키 별칭 |
+
+- 같은 키로 서명해야 다음 릴리즈가 설치된 앱 위에 업데이트로 깔립니다. 키를 잃어버리면 같은 앱으로 업데이트할 수 없습니다.
+- PC 에서 서명한 APK 를 만들 때는 같은 값을 환경변수 `ODS_KEYSTORE_FILE` · `ODS_KEYSTORE_PASSWORD` · `ODS_KEY_ALIAS` · `ODS_KEY_PASSWORD` 로
+  주고 `./gradlew :composeApp:assembleRelease` 를 돌립니다. 넷이 다 없으면 서명하지 않은 APK 가 나옵니다.
+- iOS 는 Apple 개발자 계정과 서명이 없어 릴리즈 파일을 만들지 않습니다. 빌드와 테스트는 CI 가 확인합니다.
+- CI 는 실화면 흐름을 돌리지 않습니다 — 에뮬레이터 · 시뮬레이터를 오래 띄워야 해서 머지 전 로컬 `verifyAll` 이 맡습니다.
 
 ---
 
@@ -295,7 +336,7 @@ flowchart LR
 
 ## 빌드 & 실행
 
-JDK 17 이 필요합니다.
+설치 파일(Android APK)은 [Releases](https://github.com/EunilSung/Securities_ODS_Mobile/releases/latest) 에서 받습니다. 직접 빌드하려면 JDK 17 이 필요합니다.
 
 ```bash
 ./gradlew :composeApp:installDebug        # Android (에뮬레이터 또는 기기)

@@ -1,0 +1,124 @@
+# v<major>.<minor>.<patch> 태그를 올리면 테스트를 돌리고, 서명한 Android APK 를 GitHub Release 에 올린다.
+#   git tag v1.1.0 && git push origin v1.1.0
+# v1.0.0 은 손으로 만든 첫 릴리즈라 다시 쓰지 않는다. 다음 태그는 그보다 큰 버전으로 단다.
+# 서명 키는 저장소에 없다. GitHub Secrets 의 ANDROID_KEYSTORE_BASE64 · ANDROID_KEYSTORE_PASSWORD · ANDROID_KEY_ALIAS · ANDROID_KEY_PASSWORD 로 받는다.
+# iOS 는 Apple 개발자 계정 · 서명이 없어 릴리즈 파일을 만들지 않는다(빌드 · 테스트는 CI 가 본다).
+# 서명 키를 다루는 잡이라 액션은 커밋 SHA 로 고정하고 Gradle 캐시를 쓰지 않는다. 키 파일은 빌드하는 단계에서만 풀었다가 지운다.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android APK 릴리즈
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: 태그에서 버전 정하기
+        id: version
+        run: |
+          tag="$GITHUB_REF_NAME"
+          if [[ ! "$tag" =~ ^v([0-9]+)\.([0-9]{1,2})\.([0-9]{1,2})$ ]]; then
+            echo "::error::태그는 v<major>.<minor>.<patch> (minor · patch 는 0~99) 여야 한다 — 지금: $tag"
+            exit 1
+          fi
+          echo "name=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "code=$(( 10#${BASH_REMATCH[1]} * 10000 + 10#${BASH_REMATCH[2]} * 100 + 10#${BASH_REMATCH[3]} ))" >> "$GITHUB_OUTPUT"
+      - name: 서명 값이 있는지 확인
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::GitHub Secrets 에 ANDROID_$name 이 없다 — README 의 빌드 · 릴리즈 자동화 절대로 등록한다"
+              exit 1
+            fi
+          done
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-disabled: true
+      - name: CI 러너에 맞춘 Gradle 메모리
+        run: bash .github/scripts/ci-gradle-properties.sh
+      - name: 단위 · ViewModel 시나리오 테스트 (JVM)
+        run: ./gradlew :composeApp:testDebugUnitTest
+      - name: 서명한 릴리스 APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ODS_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ODS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ODS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          export ODS_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+          trap 'rm -f "$ODS_KEYSTORE_FILE"' EXIT
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$ODS_KEYSTORE_FILE"
+          ./gradlew :composeApp:assembleRelease --no-configuration-cache \
+            -PappVersionName="$VERSION_NAME" -PappVersionCode="$VERSION_CODE"
+      - name: 이름 붙이기 · 서명 확인 · 체크섬
+        id: apk
+        run: |
+          apk="Securities_ODS_${{ steps.version.outputs.name }}.apk"
+          cp composeApp/build/outputs/apk/release/composeApp-release.apk "$apk"
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          certs=$("$apksigner" verify --print-certs "$apk")
+          echo "$certs" | grep -E 'certificate (DN|SHA-256 digest)'
+          sha256sum "$apk" > "$apk.sha256"
+          echo "file=$apk" >> "$GITHUB_OUTPUT"
+          echo "cert=$(echo "$certs" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: 릴리즈 노트
+        env:
+          APK: ${{ steps.apk.outputs.file }}
+          CERT: ${{ steps.apk.outputs.cert }}
+        run: |
+          previous=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          {
+            echo "증권사 아웃도어 세일즈 앱 ODS 의 Android 빌드입니다. 서버 · 네트워크 없이 기기 안 시연용 데이터로 동작합니다."
+            echo
+            echo "## 설치"
+            echo
+            echo "Android 7.0 이상 기기에서 \`$APK\` 를 받아 설치합니다. 처음이면 '출처를 알 수 없는 앱' 설치를 허용해야 합니다."
+            echo
+            echo "- 받은 파일의 SHA-256 은 \`$APK.sha256\` 의 값과 같아야 합니다."
+            echo "- 서명 인증서 SHA-256: \`$CERT\`"
+            echo
+            echo "## 로그인"
+            echo
+            echo "계정 \`test1\` ~ \`test3\` / 비밀번호 \`1234\`. 처음 로그인하면 앱 잠금 비밀번호 6자리를 정합니다."
+            echo
+            echo "## 바뀐 것"
+            echo
+            if [ -n "$previous" ]; then
+              git log --no-merges --format='- %s' "$previous..$GITHUB_REF_NAME"
+            else
+              echo "- 첫 릴리즈"
+            fi
+          } > release-notes.md
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          name: ODS ${{ steps.version.outputs.name }} — 증권사 아웃도어 세일즈 앱
+          body_path: release-notes.md
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.apk.outputs.file }}
+            ${{ steps.apk.outputs.file }}.sha256
