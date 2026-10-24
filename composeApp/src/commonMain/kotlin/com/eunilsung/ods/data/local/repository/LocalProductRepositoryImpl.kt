@@ -18,8 +18,6 @@ import kotlinx.coroutines.withContext
 
 /**
  * 서버 없이 도는 상품 저장소 — 상품이 하나도 없을 때 시연용 상품을 넣고, 가입은 기기 DB 에만 남긴다.
- *
- * 서버 모드 구현은 가입을 서버로 보내고, 서버가 받아 준 결과만 기기 DB 에 남긴다.
  */
 class LocalProductRepositoryImpl(
     private val database: AppDatabase,

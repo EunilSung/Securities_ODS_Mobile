@@ -30,6 +30,6 @@ sealed interface LoginResult {
 
     data class Locked(val untilEpochSeconds: Long) : LoginResult
 
-    /** 서버에 닿지 못했다. 다시 시도할 수 있다. */
-    data object Unreachable : LoginResult
+    /** 로그인을 마치지 못했다(기기 저장소 오류 등). 다시 시도할 수 있다. */
+    data object Failed : LoginResult
 }

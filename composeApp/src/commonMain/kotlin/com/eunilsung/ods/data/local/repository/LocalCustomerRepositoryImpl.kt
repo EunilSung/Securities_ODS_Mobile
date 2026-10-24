@@ -32,7 +32,6 @@ import kotlin.time.Clock
  * 이름·계좌번호는 잠겨 저장되므로([CustomerMapper]) 이름 순 정렬과 계좌번호 순번 세기는 SQL 이 아니라 푼 뒤에 한다.
  *
  * 업무 데이터를 지운 뒤(단말 분실 대비) 다시 로그인하면 시연용 데이터가 처음 상태로 돌아온다.
- * 서버 모드 구현이 생기면 이 클래스를 `by local` 로 위임받아 서버에서 받은 담당 고객만 기기 DB 에 반영한다.
  */
 class LocalCustomerRepositoryImpl(
     private val database: AppDatabase,
@@ -94,7 +93,6 @@ class LocalCustomerRepositoryImpl(
 
     /**
      * 계좌번호는 `7001-<휴대폰 가운데 4자리>-<순번 2자리>` 로 만든다. 시연용 계좌와 같은 모양이다.
-     * 서버 모드에서는 서버가 발급한 번호를 받아 그대로 남긴다.
      */
     override suspend fun openAccount(customerId: String, type: AccountType, nowMillis: Long): Account = withContext(Dispatchers.Default) {
         val customer = queries.selectCustomer(customerId).executeAsOne()

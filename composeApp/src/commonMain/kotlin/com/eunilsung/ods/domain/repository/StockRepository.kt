@@ -11,7 +11,7 @@ interface StockRepository {
     /** 한 종목. 없으면 null. */
     fun observeStock(code: String): Flow<Stock?>
 
-    /** 서버(또는 시연용 데이터)에서 관심종목 시세를 다시 받는다. 실패하면 가지고 있던 값을 그대로 둔다. */
+    /** 관심종목을 채운다 — 시연용 관심종목 중 기기에 없는 것만 넣고, 있는 종목의 시세는 그대로 둔다. 채웠으면 true. */
     suspend fun fetchWatchlist(): Boolean
 
     /** 조회가 진행 중인지 — 상단 새로고침 표시에 쓴다. */

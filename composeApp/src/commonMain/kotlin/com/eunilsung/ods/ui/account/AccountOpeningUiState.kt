@@ -33,8 +33,6 @@ data class AccountOpeningUiState(
     val photo: ByteArray? = null,
     /** 시연용 신분증을 쓰는지. */
     val isDemoId: Boolean = false,
-    /** 서버 없이 도는 시연이라 시연용 신분증을 고를 수 있는지. */
-    val offersDemoId: Boolean = false,
     val idType: IdCardType = IdCardType.RESIDENT,
     val idName: String = "",
     val rrnFront: String = "",
@@ -75,4 +73,4 @@ data class AccountOpeningUiState(
 
 enum class IdError { REJECTED, UNREACHABLE }
 
-enum class OpenError { ID_NOT_VERIFIED, TYPE_BLOCKED, TERMS, PIN, SIGNATURE, NOT_SIGNED_IN, NOT_FOUND, UNREACHABLE }
+enum class OpenError { ID_NOT_VERIFIED, TYPE_BLOCKED, TERMS, PIN, SIGNATURE, NOT_SIGNED_IN, NOT_FOUND }

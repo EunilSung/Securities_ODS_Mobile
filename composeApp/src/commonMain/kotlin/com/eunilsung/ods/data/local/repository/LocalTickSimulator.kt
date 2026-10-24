@@ -21,7 +21,6 @@ import kotlin.random.Random
 /**
  * 서버 없이 실시간 시세를 흉내 낸다 — 누가 종목을 보고 있는 동안 1~3초마다 한 호가씩 움직여 기기 DB 에 쓴다.
  *
- * 서버 모드에서는 쓰지 않는다. 실제 체결 알림이 같은 자리(기기 DB 시세)를 갱신한다.
  * 같은 종목을 여러 화면이 보고 있어도 움직임은 하나만 돈다(보는 화면 수를 센다).
  */
 class LocalTickSimulator(private val database: AppDatabase) {

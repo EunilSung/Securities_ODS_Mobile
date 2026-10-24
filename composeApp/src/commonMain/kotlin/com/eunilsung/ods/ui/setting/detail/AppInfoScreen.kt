@@ -21,12 +21,11 @@ import ods.composeapp.generated.resources.setting_app_info
 import ods.composeapp.generated.resources.setting_app_version
 import ods.composeapp.generated.resources.setting_data_demo
 import ods.composeapp.generated.resources.setting_data_demo_description
-import ods.composeapp.generated.resources.setting_data_live
 import ods.composeapp.generated.resources.setting_data_source
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-/** 앱 정보 — 버전, 고객·시세 데이터가 시연용인지 실제인지. */
+/** 앱 정보 — 버전, 고객·시세 데이터가 시연용이라는 안내. */
 class AppInfoScreen : Screen {
     override val key: ScreenKey = uniqueScreenKey
 
@@ -49,16 +48,14 @@ fun AppInfoContent(uiState: SettingUiState) {
         LineDivider()
         SettingValueRow(
             label = stringResource(Res.string.setting_data_source),
-            value = stringResource(if (info.usesDemoData) Res.string.setting_data_demo else Res.string.setting_data_live),
+            value = stringResource(Res.string.setting_data_demo),
         )
         LineDivider()
-        if (info.usesDemoData) {
-            Text(
-                text = stringResource(Res.string.setting_data_demo_description),
-                style = AppTypography.Caption,
-                color = AppColors.TextSub,
-                modifier = Modifier.padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.Space16),
-            )
-        }
+        Text(
+            text = stringResource(Res.string.setting_data_demo_description),
+            style = AppTypography.Caption,
+            color = AppColors.TextSub,
+            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.Space16),
+        )
     }
 }

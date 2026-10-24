@@ -1,9 +1,6 @@
 appId: com.eunilsung.ods
 name: 고객을 전화번호로 찾아 상담을 기록하고, 신규 고객을 등록
 ---
-- evalScript:
-    label: 서버 모드 — 지난 실행의 상담 기록이 서버에 남으므로 이번에 남길 문구에 시각을 붙인다
-    script: ${output.note = 'Follow up on bond funds ' + Date.now()}
 - runFlow: ../common/login.yaml
 - tapOn:
     id: tab_customer
@@ -18,23 +15,20 @@ name: 고객을 전화번호로 찾아 상담을 기록하고, 신규 고객을 
     id: customer_detail_name
     text: "강하늘"
 - scrollUntilVisible:
-    label: 서버 모드 — 지난 실행의 가입이 서버에 쌓여 상담 버튼이 화면 아래 끝에 걸릴 수 있어 가운데로 올린다
     element:
       id: consult_add
     direction: DOWN
-    centerElement: true
-- waitForAnimationToEnd
 - tapOn:
     id: consult_add
 - tapOn:
     id: consult_content
-- inputText: ${output.note}
+- inputText: "Follow up on bond funds"
 - runFlow: ../common/dismiss_keyboard.yaml
 - tapOn:
     id: consult_save
 - scrollUntilVisible:
     element:
-      text: ${output.note}
+      text: "Follow up on bond funds"
     direction: DOWN
 - runFlow:
     when:

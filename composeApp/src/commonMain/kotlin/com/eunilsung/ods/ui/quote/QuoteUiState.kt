@@ -21,6 +21,4 @@ data class QuoteUiState(
     /** 관심종목에서 이전·다음 종목 이름. 끝이면 null. 보여 주는 중에만 채운다. */
     val previousName: String? = null,
     val nextName: String? = null,
-    /** 시연용 시세인지. 보여 줄 때 실제 시세가 아니라고 알린다. */
-    val usesDemoData: Boolean = true,
 )

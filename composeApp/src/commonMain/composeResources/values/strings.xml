@@ -35,7 +35,6 @@
     <string name="setting_app_version">Version</string>
     <string name="setting_data_source">Customer · market data</string>
     <string name="setting_data_demo">Demo data</string>
-    <string name="setting_data_live">Live</string>
     <string name="setting_data_demo_description">Not connected to a server, so the app runs on demo data stored on this device. Customers, schedules and quotes are not real, and nothing is sent anywhere.</string>
     <string name="login_tagline">Outdoor sales</string>
     <string name="login_id">Employee ID</string>
@@ -46,7 +45,7 @@
     <string name="login_button">Log in</string>
     <string name="login_error_wrong">Employee ID or password is incorrect. The account locks after %1$s failures (%2$s left).</string>
     <string name="login_error_locked">Login is locked after %1$s wrong tries. Try again after %2$s.</string>
-    <string name="error_server_unreachable">Couldn't reach the server. Check your connection and try again.</string>
+    <string name="login_error_failed">Couldn't log in. Please try again in a moment.</string>
     <string name="login_demo_hint">Demo accounts: test1 – test3 · password 1234</string>
     <string name="more_logout">Log out</string>
     <string name="tab_market">Market</string>

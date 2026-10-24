@@ -90,7 +90,7 @@ class NewVisitViewModel(
             _uiState.update { it.copy(showErrors = true) }
             return
         }
-        _uiState.update { it.copy(isSaving = true, saveFailed = false) }
+        _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             val visit = NewVisit(customer.id, state.date.atTimeMillis(time.first, time.second), state.place, state.purpose, state.memo)
             when (val result = useCases.addVisit(visit)) {
@@ -99,7 +99,6 @@ class NewVisitViewModel(
                     _events.send(NewVisitEvent.Added(result.visit.id))
                 }
                 AddVisitResult.InPast -> _uiState.update { it.copy(isSaving = false, inPast = true, showErrors = true) }
-                AddVisitResult.Unreachable -> _uiState.update { it.copy(isSaving = false, saveFailed = true) }
             }
         }
     }

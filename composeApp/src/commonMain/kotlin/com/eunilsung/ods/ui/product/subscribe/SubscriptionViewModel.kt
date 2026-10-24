@@ -159,7 +159,6 @@ class SubscriptionViewModel(
                     SubscribeResult.SignatureRequired -> it.copy(isSaving = false, error = SubscribeError.SIGNATURE)
                     SubscribeResult.NotSignedIn -> it.copy(isSaving = false, error = SubscribeError.NOT_SIGNED_IN)
                     SubscribeResult.NotFound -> it.copy(isSaving = false, error = SubscribeError.NOT_FOUND)
-                    SubscribeResult.Unreachable -> it.copy(isSaving = false, error = SubscribeError.UNREACHABLE)
                 }
             }
         }

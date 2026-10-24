@@ -2,7 +2,6 @@ package com.eunilsung.ods.ui.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.eunilsung.ods.Config
 import com.eunilsung.ods.domain.model.AccountType
 import com.eunilsung.ods.domain.model.IdCardInfo
 import com.eunilsung.ods.domain.model.Terms
@@ -33,7 +32,7 @@ class AccountOpeningViewModel(
     private val useCases: AccountOpeningUseCases,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AccountOpeningUiState(offersDemoId = !Config.Server.IS_ENABLED))
+    private val _uiState = MutableStateFlow(AccountOpeningUiState())
     val uiState: StateFlow<AccountOpeningUiState> = _uiState.asStateFlow()
 
     private var watchJob: Job? = null
@@ -182,7 +181,6 @@ class AccountOpeningViewModel(
                     OpenAccountResult.SignatureRequired -> it.copy(isSaving = false, error = OpenError.SIGNATURE)
                     OpenAccountResult.NotSignedIn -> it.copy(isSaving = false, error = OpenError.NOT_SIGNED_IN)
                     OpenAccountResult.NotFound -> it.copy(isSaving = false, error = OpenError.NOT_FOUND)
-                    OpenAccountResult.Unreachable -> it.copy(isSaving = false, error = OpenError.UNREACHABLE)
                 }
             }
         }

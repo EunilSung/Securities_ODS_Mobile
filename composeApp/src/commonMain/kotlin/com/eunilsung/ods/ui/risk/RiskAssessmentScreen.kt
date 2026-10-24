@@ -48,7 +48,6 @@ import com.eunilsung.ods.ui.uikit.line.LineDivider
 import com.eunilsung.ods.ui.uikit.signature.SignaturePad
 import com.eunilsung.ods.ui.uikit.topbar.TopBar
 import ods.composeapp.generated.resources.Res
-import ods.composeapp.generated.resources.error_server_unreachable
 import ods.composeapp.generated.resources.risk_assess
 import ods.composeapp.generated.resources.risk_error_not_signed_in
 import ods.composeapp.generated.resources.risk_error_signature
@@ -197,7 +196,6 @@ private fun ResultStep(uiState: RiskAssessmentUiState, result: RiskAssessmentRes
     when (uiState.error) {
         RiskSaveError.SIGNATURE_REQUIRED -> ErrorText(stringResource(Res.string.risk_error_signature))
         RiskSaveError.NOT_SIGNED_IN -> ErrorText(stringResource(Res.string.risk_error_not_signed_in))
-        RiskSaveError.UNREACHABLE -> ErrorText(stringResource(Res.string.error_server_unreachable))
         null -> Unit
     }
     val note = stringResource(Res.string.risk_note, result.profile.label(), result.score)

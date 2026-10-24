@@ -20,9 +20,6 @@ import kotlinx.coroutines.withContext
  * 서버 없이 도는 관심종목 저장소 — 시연용 데이터를 기기 DB 에 채워 쓴다.
  *
  * 시연용 관심종목은 없을 때만 넣는다. 이미 있는 종목의 시세는 [LocalTickSimulator] 가 움직인 값을 그대로 둔다.
- *
- * 서버 모드 구현(`data/repository/StockRepositoryImpl`)이 생기면 이 클래스를 `by local` 로 위임받아
- * 서버에서 받은 시세만 기기 DB 에 반영하게 한다. 화면은 어느 쪽이든 기기 DB 만 본다.
  */
 class LocalStockRepositoryImpl(
     private val database: AppDatabase,

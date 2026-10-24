@@ -6,10 +6,8 @@ import com.eunilsung.ods.data.local.seed.DemoAccounts
 import com.eunilsung.ods.domain.model.LoginRequest
 import com.eunilsung.ods.domain.model.LoginResult
 import com.eunilsung.ods.domain.model.LogoutReason
-import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.LoginRepository
 import com.eunilsung.ods.domain.usecase.ClearLogoutReasonUseCase
-import com.eunilsung.ods.domain.usecase.GetAppInfoUseCase
 import com.eunilsung.ods.domain.usecase.GetLogoutReasonUseCase
 import com.eunilsung.ods.domain.usecase.GetSavedIdUseCase
 import com.eunilsung.ods.domain.usecase.IsSaveIdUseCase
@@ -39,13 +37,8 @@ import kotlinx.coroutines.test.setMain
 class LoginViewModelTest {
     private val dispatcher = StandardTestDispatcher()
 
-    private object FakeVersion : AppVersionProvider {
-        override fun versionCode() = 1L
-        override fun versionName() = "1.0.0"
-    }
-
     private class FailingRepository(private val delegate: LoginRepository) : LoginRepository by delegate {
-        override suspend fun login(request: LoginRequest, nowEpochSeconds: Long): LoginResult = error("offline")
+        override suspend fun login(request: LoginRequest, nowEpochSeconds: Long): LoginResult = error("storage failure")
     }
 
     private val settings = MapSettings()
@@ -60,7 +53,6 @@ class LoginViewModelTest {
             getSavedId = GetSavedIdUseCase(repository),
             isSaveId = IsSaveIdUseCase(repository),
             setSaveId = SetSaveIdUseCase(repository),
-            getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
             getLogoutReason = GetLogoutReasonUseCase(repository),
             clearLogoutReason = ClearLogoutReasonUseCase(repository),
         ),
@@ -148,13 +140,13 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun failureToReachServerKeepsPassword() = runTest(dispatcher) {
+    fun failedLoginKeepsPassword() = runTest(dispatcher) {
         val viewModel = viewModel(FailingRepository(login))
         viewModel.enter("test1", DemoAccounts.PASSWORD)
         viewModel.onAction(LoginActions.OnLoginClick)
         advanceUntilIdle()
 
-        assertEquals(LoginError.Unreachable, viewModel.uiState.value.error)
+        assertEquals(LoginError.Failed, viewModel.uiState.value.error)
         assertEquals(DemoAccounts.PASSWORD, viewModel.uiState.value.password)
     }
 

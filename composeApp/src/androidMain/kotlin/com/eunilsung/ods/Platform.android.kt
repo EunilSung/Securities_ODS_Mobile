@@ -11,9 +11,6 @@ import com.eunilsung.ods.data.local.EnvelopeLocalSecretCipher
 import com.eunilsung.ods.data.local.LocalSecretCipher
 import com.eunilsung.ods.domain.repository.AppVersionProvider
 import com.eunilsung.ods.domain.repository.BiometricAuthenticator
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.websocket.WebSockets
 import org.koin.dsl.module
 import java.io.File
 
@@ -30,7 +27,6 @@ val platformModule = module {
     single<LocalSecretCipher> {
         EnvelopeLocalSecretCipher(kek = AndroidKeystoreKek, dekFile = File(get<Context>().noBackupFilesDir, "ods_local_dek_v1"))
     }
-    single { HttpClient(OkHttp) { install(WebSockets) } }
     single<BiometricAuthenticator> { AndroidBiometricAuthenticator(get()) }
     single<AppVersionProvider> { AndroidAppVersionProvider(get()) }
 }

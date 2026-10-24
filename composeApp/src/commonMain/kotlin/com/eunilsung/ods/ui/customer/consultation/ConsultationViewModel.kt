@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eunilsung.ods.domain.model.ConsultTopic
 import com.eunilsung.ods.domain.model.NewConsultation
-import com.eunilsung.ods.domain.usecase.AddConsultationResult
 import com.eunilsung.ods.domain.usecase.ConsultUseCases
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -38,7 +37,7 @@ class ConsultationViewModel(
             is ConsultationActions.OnChannelChange -> _uiState.update { it.copy(channel = action.channel) }
             is ConsultationActions.OnTopicChange -> _uiState.update { it.copy(topic = action.topic) }
             is ConsultationActions.OnContentChange -> _uiState.update {
-                it.copy(content = action.content.take(ConsultationUiState.MAX_LENGTH), justSaved = false, saveError = null)
+                it.copy(content = action.content.take(ConsultationUiState.MAX_LENGTH), justSaved = false, saveFailed = false)
             }
             ConsultationActions.OnSave -> save()
         }
@@ -48,15 +47,14 @@ class ConsultationViewModel(
         val state = _uiState.value
         val customerId = state.customerId ?: return
         if (!state.canSave) return
-        _uiState.update { it.copy(isSaving = true, saveError = null) }
+        _uiState.update { it.copy(isSaving = true, saveFailed = false) }
         viewModelScope.launch {
-            when (useCases.addConsultation(NewConsultation(customerId, state.channel, state.topic, state.content))) {
-                is AddConsultationResult.Added -> {
-                    _uiState.value = ConsultationUiState(customerId = customerId, channel = state.channel, justSaved = true)
-                    _events.send(ConsultationEvent.Saved)
-                }
-                AddConsultationResult.NotSignedIn -> _uiState.update { it.copy(isSaving = false, saveError = ConsultSaveError.NOT_SIGNED_IN) }
-                AddConsultationResult.Unreachable -> _uiState.update { it.copy(isSaving = false, saveError = ConsultSaveError.UNREACHABLE) }
+            val saved = useCases.addConsultation(NewConsultation(customerId, state.channel, state.topic, state.content))
+            if (saved == null) {
+                _uiState.update { it.copy(isSaving = false, saveFailed = true) }
+            } else {
+                _uiState.value = ConsultationUiState(customerId = customerId, channel = state.channel, justSaved = true)
+                _events.send(ConsultationEvent.Saved)
             }
         }
     }

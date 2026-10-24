@@ -1,22 +1,5 @@
 package com.eunilsung.ods.di
 
-import com.eunilsung.ods.Config
-import com.eunilsung.ods.data.mapper.ServerCustomerMapper
-import com.eunilsung.ods.data.mapper.ServerMarketMapper
-import com.eunilsung.ods.data.mapper.ServerProductMapper
-import com.eunilsung.ods.data.mapper.ServerVisitMapper
-import com.eunilsung.ods.data.remote.server.AuthTokenStore
-import com.eunilsung.ods.data.remote.server.OdsServer
-import com.eunilsung.ods.data.remote.server.OdsServerClient
-import com.eunilsung.ods.data.remote.server.OdsSocket
-import com.eunilsung.ods.data.remote.server.ServerEvents
-import com.eunilsung.ods.data.repository.CustomerRepositoryImpl
-import com.eunilsung.ods.data.repository.IdVerificationRepositoryImpl
-import com.eunilsung.ods.data.repository.LoginRepositoryImpl
-import com.eunilsung.ods.data.repository.ProductRepositoryImpl
-import com.eunilsung.ods.data.repository.SignatureRepositoryImpl
-import com.eunilsung.ods.data.repository.StockRepositoryImpl
-import com.eunilsung.ods.data.repository.VisitRepositoryImpl
 import com.eunilsung.ods.data.local.DatabaseDriverFactory
 import com.eunilsung.ods.data.local.LocalKeyGuard
 import com.eunilsung.ods.data.local.LocalSecret
@@ -164,18 +147,6 @@ val appModule = module {
     }
     single { LocalKeyGuard(get(), get(), get()) }
 
-    /**
-     * 서버 연동. 서버 주소가 있을 때(`Config.Server.IS_ENABLED`)만 아래 저장소들이 서버 구현으로 바뀐다.
-     * 서버 구현은 같은 일을 하는 로컬 구현을 감싸 쓴다 — 화면은 어느 쪽이든 기기 DB 만 본다.
-     */
-    single { AuthTokenStore(get()) }
-    single<OdsServer> { OdsServerClient(get(), get()) }
-    single<ServerEvents> { OdsSocket(get(), get()) }
-    singleOf(::ServerCustomerMapper)
-    singleOf(::ServerProductMapper)
-    singleOf(::ServerVisitMapper)
-    singleOf(::ServerMarketMapper)
-
     single<UserPreferenceRepository> { LocalUserPreferenceRepositoryImpl(get()) }
     singleOf(::ObserveListDensityUseCase)
     singleOf(::SetListDensityUseCase)
@@ -185,35 +156,24 @@ val appModule = module {
     singleOf(::SetMaskPersonalInfoUseCase)
 
     singleOf(::StockMapper)
-    single { LocalStockRepositoryImpl(get(), get()) }
-    single<StockRepository> {
-        if (Config.Server.IS_ENABLED) StockRepositoryImpl(get(), get(), get(), get(), get(), get()) else get<LocalStockRepositoryImpl>()
-    }
+    single<StockRepository> { LocalStockRepositoryImpl(get(), get()) }
     singleOf(::ObserveWatchlistUseCase)
     singleOf(::FetchWatchlistUseCase)
     singleOf(::ObserveWatchlistFetchingUseCase)
     singleOf(::ObserveStockUseCase)
     singleOf(::StockUseCases)
 
-    /** 서버 모드에서는 실시간 시세를 서버 알림이 채우므로 시세 흉내([LocalTickSimulator])를 쓰지 않는다. */
     singleOf(::LocalTickSimulator)
-    single<QuoteRepository> { LocalQuoteRepositoryImpl(get(), if (Config.Server.IS_ENABLED) null else get()) }
+    single<QuoteRepository> { LocalQuoteRepositoryImpl(get(), get()) }
     singleOf(::ObserveOrderBookUseCase)
     singleOf(::ObserveCandlesUseCase)
     singleOf(::QuoteUseCases)
 
-    single { GetAppInfoUseCase(get()) }
+    singleOf(::GetAppInfoUseCase)
     singleOf(::SettingUseCases)
 
     singleOf(::CustomerMapper)
-    single { LocalCustomerRepositoryImpl(get(), get()) }
-    single<CustomerRepository> {
-        if (Config.Server.IS_ENABLED) {
-            CustomerRepositoryImpl(get(), get(), get(), get(), get(), get(), get(), get())
-        } else {
-            get<LocalCustomerRepositoryImpl>()
-        }
-    }
+    single<CustomerRepository> { LocalCustomerRepositoryImpl(get(), get()) }
     single<ConsultSessionRepository> { LocalConsultSessionRepositoryImpl() }
     singleOf(::ObserveCustomersUseCase)
     singleOf(::RefreshCustomersUseCase)
@@ -231,10 +191,7 @@ val appModule = module {
     singleOf(::ConsultUseCases)
 
     singleOf(::VisitMapper)
-    single { LocalVisitRepositoryImpl(get(), get()) }
-    single<VisitRepository> {
-        if (Config.Server.IS_ENABLED) VisitRepositoryImpl(get(), get(), get(), get(), get(), get()) else get<LocalVisitRepositoryImpl>()
-    }
+    single<VisitRepository> { LocalVisitRepositoryImpl(get(), get()) }
     singleOf(::ObserveDayVisitsUseCase)
     singleOf(::ObserveVisitCountsUseCase)
     singleOf(::ObserveVisitUseCase)
@@ -248,10 +205,7 @@ val appModule = module {
     singleOf(::NewVisitUseCases)
 
     singleOf(::ProductMapper)
-    single { LocalProductRepositoryImpl(get(), get()) }
-    single<ProductRepository> {
-        if (Config.Server.IS_ENABLED) ProductRepositoryImpl(get(), get(), get(), get(), get()) else get<LocalProductRepositoryImpl>()
-    }
+    single<ProductRepository> { LocalProductRepositoryImpl(get(), get()) }
     singleOf(::ObserveProductsUseCase)
     singleOf(::ObserveProductUseCase)
     singleOf(::RefreshProductsUseCase)
@@ -261,25 +215,18 @@ val appModule = module {
     singleOf(::ProductDetailUseCases)
     singleOf(::SubscriptionUseCases)
 
-    /** 서버 모드에서는 서버가 발급기관에 진위를 묻는다. */
-    single<IdVerificationRepository> {
-        if (Config.Server.IS_ENABLED) IdVerificationRepositoryImpl(get(), get()) else LocalIdVerificationRepositoryImpl()
-    }
+    single<IdVerificationRepository> { LocalIdVerificationRepositoryImpl() }
     singleOf(::VerifyIdCardUseCase)
     singleOf(::OpenAccountUseCase)
     singleOf(::AccountOpeningUseCases)
 
-    /** 서버 모드에서는 서명 그림을 서버로 보낸다. 기기에는 지문만 남긴다. */
-    single { LocalSignatureRepositoryImpl(get()) }
-    single<SignatureRepository> {
-        if (Config.Server.IS_ENABLED) SignatureRepositoryImpl(get(), get(), get(), get()) else get<LocalSignatureRepositoryImpl>()
-    }
+    /** 서명 그림은 남기지 않고 지문만 남긴다. */
+    single<SignatureRepository> { LocalSignatureRepositoryImpl(get()) }
     singleOf(::SaveRiskAssessmentUseCase)
     singleOf(::RiskAssessmentUseCases)
 
-    /** 앱 잠금은 서버 모드에서도 기기 안의 일이라 이 구현을 그대로 쓴다. */
     single<AppLockRepository> { LocalAppLockRepositoryImpl(get(), get()) }
-    single<LocalDataWiper> { LocalDataWiperImpl(get(), get(), get()) }
+    single<LocalDataWiper> { LocalDataWiperImpl(get(), get()) }
     singleOf(::ObserveAppLockUseCase)
     singleOf(::RegisterAppPinUseCase)
     singleOf(::UnlockWithPinUseCase)
@@ -296,11 +243,7 @@ val appModule = module {
     singleOf(::AppLockUseCases)
     singleOf(::MainUseCases)
 
-    /** 서버 모드에서는 서버가 인증하고 틀린 횟수를 센다. 사번 기억하기는 로컬 구현을 함께 쓴다. */
-    single { LocalLoginRepositoryImpl(get(), get()) }
-    single<LoginRepository> {
-        if (Config.Server.IS_ENABLED) LoginRepositoryImpl(get(), get(), get(), get()) else get<LocalLoginRepositoryImpl>()
-    }
+    single<LoginRepository> { LocalLoginRepositoryImpl(get(), get()) }
     singleOf(::LoginUseCase)
     singleOf(::LogoutUseCase)
     singleOf(::ObserveStaffUseCase)

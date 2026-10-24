@@ -28,20 +28,6 @@ class ProductMapper(private val secret: LocalSecret) {
         isComplex = entity.isComplex != 0L,
     )
 
-    fun toEntity(product: Product, sortOrder: Long): ProductEntity = ProductEntity(
-        id = product.id,
-        name = product.name,
-        type = product.type.name,
-        riskGrade = product.riskGrade.name,
-        summary = product.summary,
-        expectedReturn = product.expectedReturn,
-        feeInfo = product.feeInfo,
-        minAmount = product.minAmount,
-        keyPoints = product.keyPoints.joinToString(KEY_POINT_SEPARATOR),
-        isComplex = if (product.isComplex) 1L else 0L,
-        sortOrder = sortOrder,
-    )
-
     internal fun toEntity(row: ProductSeedRow, sortOrder: Long): ProductEntity = ProductEntity(
         id = row.id,
         name = row.name,

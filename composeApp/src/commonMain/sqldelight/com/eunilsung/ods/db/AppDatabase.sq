@@ -17,9 +17,6 @@ SELECT * FROM WatchStockEntity WHERE code = ?;
 insertStockIfAbsent:
 INSERT OR IGNORE INTO WatchStockEntity VALUES ?;
 
-upsertStock:
-INSERT OR REPLACE INTO WatchStockEntity VALUES ?;
-
 updateQuote:
 UPDATE WatchStockEntity SET price = ?, volume = ? WHERE code = ?;
 
@@ -48,9 +45,6 @@ SELECT COUNT(*) FROM CustomerEntity;
 insertCustomer:
 INSERT INTO CustomerEntity VALUES ?;
 
-upsertCustomer:
-INSERT OR REPLACE INTO CustomerEntity VALUES ?;
-
 updateRiskProfile:
 UPDATE CustomerEntity SET riskProfile = ?, riskAssessedAt = ? WHERE id = ?;
 
@@ -72,9 +66,6 @@ SELECT * FROM ConsultationEntity WHERE customerId = ? ORDER BY consultedAt DESC;
 insertConsultation:
 INSERT INTO ConsultationEntity VALUES ?;
 
-upsertConsultation:
-INSERT OR REPLACE INTO ConsultationEntity VALUES ?;
-
 CREATE TABLE AccountEntity (
     accountNo TEXT NOT NULL PRIMARY KEY,
     customerId TEXT NOT NULL,
@@ -89,9 +80,6 @@ SELECT * FROM AccountEntity WHERE customerId = ? ORDER BY openedAt;
 
 insertAccount:
 INSERT INTO AccountEntity VALUES ?;
-
-upsertAccount:
-INSERT OR REPLACE INTO AccountEntity VALUES ?;
 
 selectAccountNos:
 SELECT accountNo FROM AccountEntity;
@@ -134,12 +122,6 @@ SELECT COUNT(*) FROM VisitEntity;
 insertVisit:
 INSERT INTO VisitEntity VALUES ?;
 
-upsertVisit:
-INSERT OR REPLACE INTO VisitEntity VALUES ?;
-
-deleteVisits:
-DELETE FROM VisitEntity;
-
 updateVisitStatus:
 UPDATE VisitEntity SET status = ? WHERE id = ?;
 
@@ -153,9 +135,6 @@ CREATE TABLE SignatureEntity (
 
 insertSignature:
 INSERT INTO SignatureEntity VALUES ?;
-
-upsertSignature:
-INSERT OR REPLACE INTO SignatureEntity VALUES ?;
 
 selectSignatures:
 SELECT * FROM SignatureEntity WHERE customerId = ? ORDER BY signedAt DESC;
@@ -186,9 +165,6 @@ SELECT COUNT(*) FROM ProductEntity;
 insertProduct:
 INSERT INTO ProductEntity VALUES ?;
 
-deleteProducts:
-DELETE FROM ProductEntity;
-
 CREATE TABLE SubscriptionEntity (
     id TEXT NOT NULL PRIMARY KEY,
     customerId TEXT NOT NULL,
@@ -204,9 +180,6 @@ CREATE INDEX SubscriptionEntity_customer ON SubscriptionEntity(customerId);
 
 insertSubscription:
 INSERT INTO SubscriptionEntity VALUES ?;
-
-upsertSubscription:
-INSERT OR REPLACE INTO SubscriptionEntity VALUES ?;
 
 selectSubscriptions:
 SELECT s.id, s.customerId, s.productId, COALESCE(p.name, s.productId) AS productName, s.accountNo, s.amount, s.subscribedAt, s.unsuitableConfirmed, s.coolingOffUntil

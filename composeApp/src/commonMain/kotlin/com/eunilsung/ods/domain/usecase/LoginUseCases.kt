@@ -16,7 +16,7 @@ class LoginUseCase(
     private val appLock: AppLockRepository,
 ) {
     suspend operator fun invoke(request: LoginRequest): LoginResult {
-        val result = runCatching { repository.login(request, Clock.System.now().epochSeconds) }.getOrDefault(LoginResult.Unreachable)
+        val result = runCatching { repository.login(request, Clock.System.now().epochSeconds) }.getOrDefault(LoginResult.Failed)
         if (result is LoginResult.Success) appLock.startSession(result.staff.id, nowMillis())
         return result
     }
@@ -59,7 +59,6 @@ class LoginUseCases(
     val getSavedId: GetSavedIdUseCase,
     val isSaveId: IsSaveIdUseCase,
     val setSaveId: SetSaveIdUseCase,
-    val getAppInfo: GetAppInfoUseCase,
     val getLogoutReason: GetLogoutReasonUseCase,
     val clearLogoutReason: ClearLogoutReasonUseCase,
 )

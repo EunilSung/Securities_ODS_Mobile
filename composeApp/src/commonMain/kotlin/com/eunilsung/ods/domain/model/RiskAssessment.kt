@@ -50,7 +50,6 @@ enum class SignaturePurpose { RISK_PROFILE, ACCOUNT_OPENING, PRODUCT_SUBSCRIPTIO
 
 /**
  * 남겨 둔 서명 기록. 서명 그림은 남기지 않고 지문(해시)만 남긴다 — 단말을 잃어버려도 서명이 새지 않게.
- * 서버 모드에서는 서명 그림을 서버로 보내고 이 기록만 기기에 둔다.
  */
 data class SignatureRecord(
     val id: String,

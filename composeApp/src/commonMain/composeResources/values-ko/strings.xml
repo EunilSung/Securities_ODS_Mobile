@@ -35,7 +35,6 @@
     <string name="setting_app_version">앱 버전</string>
     <string name="setting_data_source">고객·시세 데이터</string>
     <string name="setting_data_demo">시연용</string>
-    <string name="setting_data_live">실시간</string>
     <string name="setting_data_demo_description">서버에 연결되지 않아 기기 안의 시연용 데이터로 동작합니다. 고객·일정·시세는 실제 값이 아니며, 어디로도 전송되지 않습니다.</string>
     <string name="login_tagline">아웃도어 세일즈</string>
     <string name="login_id">사번</string>
@@ -46,7 +45,7 @@
     <string name="login_button">로그인</string>
     <string name="login_error_wrong">사번 또는 비밀번호가 맞지 않습니다. %1$s번 틀리면 잠깁니다(남은 횟수 %2$s번).</string>
     <string name="login_error_locked">%1$s번 틀려 로그인이 잠겼습니다. %2$s 이후에 다시 시도하세요.</string>
-    <string name="error_server_unreachable">서버에 연결하지 못했습니다. 네트워크를 확인한 뒤 다시 시도하세요.</string>
+    <string name="login_error_failed">로그인하지 못했습니다. 잠시 뒤 다시 시도하세요.</string>
     <string name="login_demo_hint">시연용 계정: test1 ~ test3 · 비밀번호 1234</string>
     <string name="more_logout">로그아웃</string>
     <string name="tab_market">시장</string>

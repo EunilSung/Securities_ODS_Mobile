@@ -68,7 +68,7 @@ class SettingViewModelTest {
             setListDensity = SetListDensityUseCase(preferences),
             observeMaskPersonalInfo = ObserveMaskPersonalInfoUseCase(preferences),
             setMaskPersonalInfo = SetMaskPersonalInfoUseCase(preferences),
-            getAppInfo = GetAppInfoUseCase(FakeVersion, usesDemoData = true),
+            getAppInfo = GetAppInfoUseCase(FakeVersion),
             observeStaff = ObserveStaffUseCase(login),
             logout = LogoutUseCase(login, appLock, consultSession),
             observeAppLock = ObserveAppLockUseCase(appLock),
@@ -104,7 +104,6 @@ class SettingViewModelTest {
         assertEquals(ListDensity.COMPACT, state.listDensity)
         assertFalse(state.maskPersonalInfo)
         assertEquals("1.2.3", state.appInfo.versionName)
-        assertTrue(state.appInfo.usesDemoData)
     }
 
     @Test
